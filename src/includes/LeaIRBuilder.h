@@ -1,5 +1,5 @@
-#ifndef _LEAIRBUILDER_H_
-#define _LEAIRBUILDER_H_
+#ifndef LEAIRBUILDER_H
+#define LEAIRBUILDER_H
 
 #include "BaseIRBuilder.h"
 #include "EflagsBuilder.h"
@@ -10,7 +10,7 @@
 class LeaIRBuilder: public BaseIRBuilder, public TwoOperandsTemplate {
 
   public:
-    LeaIRBuilder(uint64_t address, const std::string &disassembly);
+    LeaIRBuilder(uint64 address, const std::string &disassembly);
 
     // From BaseIRBuilder
     virtual Inst *process(AnalysisProcessor &ap) const;
@@ -27,4 +27,4 @@ class LeaIRBuilder: public BaseIRBuilder, public TwoOperandsTemplate {
     virtual void memReg(AnalysisProcessor &ap, Inst &inst) const;
 };
 
-#endif // _LEAIRBUILDER_H_
+#endif // LEAIRBUILDER_H

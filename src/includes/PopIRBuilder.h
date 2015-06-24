@@ -1,5 +1,5 @@
-#ifndef _POPIRBUILDER_H_
-#define _POPIRBUILDER_H_
+#ifndef POPIRBUILDER_H
+#define POPIRBUILDER_H
 
 #include "BaseIRBuilder.h"
 #include "EflagsBuilder.h"
@@ -10,7 +10,7 @@
 class PopIRBuilder: public BaseIRBuilder, public OneOperandTemplate {
 
   public:
-    PopIRBuilder(uint64_t address, const std::string &disassembly);
+    PopIRBuilder(uint64 address, const std::string &disassembly);
 
     // From BaseIRBuilder
     virtual Inst *process(AnalysisProcessor &ap) const;
@@ -25,4 +25,4 @@ class PopIRBuilder: public BaseIRBuilder, public OneOperandTemplate {
     virtual void mem(AnalysisProcessor &ap, Inst &inst) const;
 };
 
-#endif // _POPIRBUILDER_H_
+#endif // POPIRBUILDER_H

@@ -2,13 +2,13 @@
 #include <sstream>
 #include <stdexcept>
 
-#include "CdqeIRBuilder.h"
-#include "Registers.h"
-#include "SMT2Lib.h"
-#include "SymbolicElement.h"
+#include <CdqeIRBuilder.h>
+#include <Registers.h>
+#include <SMT2Lib.h>
+#include <SymbolicElement.h>
 
 
-CdqeIRBuilder::CdqeIRBuilder(uint64_t address, const std::string &disassembly):
+CdqeIRBuilder::CdqeIRBuilder(uint64 address, const std::string &disassembly):
   BaseIRBuilder(address, disassembly) {
 }
 

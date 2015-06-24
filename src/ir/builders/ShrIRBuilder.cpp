@@ -2,13 +2,13 @@
 #include <sstream>
 #include <stdexcept>
 
-#include "ShrIRBuilder.h"
-#include "Registers.h"
-#include "SMT2Lib.h"
-#include "SymbolicElement.h"
+#include <ShrIRBuilder.h>
+#include <Registers.h>
+#include <SMT2Lib.h>
+#include <SymbolicElement.h>
 
 
-ShrIRBuilder::ShrIRBuilder(uint64_t address, const std::string &disassembly):
+ShrIRBuilder::ShrIRBuilder(uint64 address, const std::string &disassembly):
   BaseIRBuilder(address, disassembly) {
 }
 
@@ -16,9 +16,9 @@ ShrIRBuilder::ShrIRBuilder(uint64_t address, const std::string &disassembly):
 void ShrIRBuilder::regImm(AnalysisProcessor &ap, Inst &inst) const {
   SymbolicElement   *se;
   std::stringstream expr, op1, op2;
-  uint64_t          reg     = this->operands[0].getValue();
-  uint64_t          imm     = this->operands[1].getValue();
-  uint32_t          regSize = this->operands[0].getSize();
+  uint64            reg     = this->operands[0].getValue();
+  uint64            imm     = this->operands[1].getValue();
+  uint32            regSize = this->operands[0].getSize();
 
   /* Create the SMT semantic */
   op1 << ap.buildSymbolicRegOperand(reg, regSize);
@@ -45,8 +45,8 @@ void ShrIRBuilder::regImm(AnalysisProcessor &ap, Inst &inst) const {
 void ShrIRBuilder::regReg(AnalysisProcessor &ap, Inst &inst) const {
   SymbolicElement   *se;
   std::stringstream expr, op1, op2;
-  uint64_t          reg     = this->operands[0].getValue();
-  uint32_t          regSize = this->operands[0].getSize();
+  uint64            reg     = this->operands[0].getValue();
+  uint32            regSize = this->operands[0].getSize();
 
   /* Create the SMT semantic */
   op1 << ap.buildSymbolicRegOperand(reg, regSize);
@@ -78,9 +78,9 @@ void ShrIRBuilder::regMem(AnalysisProcessor &ap, Inst &inst) const {
 void ShrIRBuilder::memImm(AnalysisProcessor &ap, Inst &inst) const {
   SymbolicElement   *se;
   std::stringstream expr, op1, op2;
-  uint32_t          writeSize = this->operands[0].getSize();
-  uint64_t          mem       = this->operands[0].getValue();
-  uint64_t          imm       = this->operands[1].getValue();
+  uint32            writeSize = this->operands[0].getSize();
+  uint64            mem       = this->operands[0].getValue();
+  uint64            imm       = this->operands[1].getValue();
 
   /* Create the SMT semantic */
   op1 << ap.buildSymbolicMemOperand(mem, writeSize);
@@ -93,7 +93,7 @@ void ShrIRBuilder::memImm(AnalysisProcessor &ap, Inst &inst) const {
   se = ap.createMemSE(inst, expr, mem, writeSize);
 
   /* Apply the taint */
-  ap.aluSpreadTaintMemMem(se, mem, mem);
+  ap.aluSpreadTaintMemMem(se, mem, mem, writeSize);
 
   /* Add the symbolic flags element to the current inst */
   EflagsBuilder::cfShr(inst, se, ap, writeSize, op1, op2);

@@ -1,7 +1,7 @@
-#ifndef _TRACE_H_
-#define _TRACE_H_
+#ifndef TRITON_TRACE_H
+#define TRITON_TRACE_H
 
-#include <cstdint>
+#include "TritonTypes.h"
 
 #include <iostream>
 #include <ostream>

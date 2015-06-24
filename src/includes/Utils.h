@@ -1,9 +1,9 @@
 
-#ifndef   __UTILS_H__
-#define   __UTILS_H__
+#ifndef   UTILS_H
+#define   UTILS_H
 
 #include <iostream>
 
-const char *syscallNumberLinux64ToString(uint64_t syscallNumber);
+const char *syscallNumberLinux64ToString(uint64 syscallNumber);
 
 #endif     /* !__UTILS_H__ */

@@ -2,13 +2,13 @@
 #include <sstream>
 #include <stdexcept>
 
-#include "SetnoIRBuilder.h"
-#include "Registers.h"
-#include "SMT2Lib.h"
-#include "SymbolicElement.h"
+#include <SetnoIRBuilder.h>
+#include <Registers.h>
+#include <SMT2Lib.h>
+#include <SymbolicElement.h>
 
 
-SetnoIRBuilder::SetnoIRBuilder(uint64_t address, const std::string &disassembly):
+SetnoIRBuilder::SetnoIRBuilder(uint64 address, const std::string &disassembly):
   BaseIRBuilder(address, disassembly) {
 }
 
@@ -21,8 +21,8 @@ void SetnoIRBuilder::imm(AnalysisProcessor &ap, Inst &inst) const {
 void SetnoIRBuilder::reg(AnalysisProcessor &ap, Inst &inst) const {
   SymbolicElement   *se;
   std::stringstream expr, reg1e, of;
-  uint64_t          reg     = this->operands[0].getValue();
-  uint64_t          regSize = this->operands[0].getSize();
+  uint64            reg     = this->operands[0].getValue();
+  uint64            regSize = this->operands[0].getSize();
 
   /* Create the SMT semantic */
   of << ap.buildSymbolicFlagOperand(ID_OF);
@@ -33,8 +33,8 @@ void SetnoIRBuilder::reg(AnalysisProcessor &ap, Inst &inst) const {
             smt2lib::equal(
               of.str(),
               smt2lib::bvfalse()),
-            smt2lib::bv(1, 8),
-            smt2lib::bv(0, 8));
+            smt2lib::bv(1, BYTE_SIZE_BIT),
+            smt2lib::bv(0, BYTE_SIZE_BIT));
 
   /* Create the symbolic element */
   se = ap.createRegSE(inst, expr, reg, regSize);
@@ -49,8 +49,8 @@ void SetnoIRBuilder::reg(AnalysisProcessor &ap, Inst &inst) const {
 void SetnoIRBuilder::mem(AnalysisProcessor &ap, Inst &inst) const {
   SymbolicElement   *se;
   std::stringstream expr, mem1e, of;
-  uint64_t          mem     = this->operands[0].getValue();
-  uint64_t          memSize = this->operands[0].getSize();
+  uint64            mem     = this->operands[0].getValue();
+  uint64            memSize = this->operands[0].getSize();
 
   /* Create the SMT semantic */
   of << ap.buildSymbolicFlagOperand(ID_OF);
@@ -61,8 +61,8 @@ void SetnoIRBuilder::mem(AnalysisProcessor &ap, Inst &inst) const {
             smt2lib::equal(
               of.str(),
               smt2lib::bvfalse()),
-            smt2lib::bv(1, 8),
-            smt2lib::bv(0, 8));
+            smt2lib::bv(1, BYTE_SIZE_BIT),
+            smt2lib::bv(0, BYTE_SIZE_BIT));
 
   /* Create the symbolic element */
   se = ap.createMemSE(inst, expr, mem, memSize);

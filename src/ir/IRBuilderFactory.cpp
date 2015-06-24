@@ -1,16 +1,16 @@
 #include <string>
 
-#include "pin.H"
+#include <pin.H>
 
-#include "IRBuilderHeaders.h"
-#include "PINConverter.h"
+#include <IRBuilderHeaders.h>
+#include <PINConverter.h>
 
 
 // Returns a pointer to an IRBuilder object.
 // It is up to the user to delete it when times come.
 IRBuilder *createIRBuilder(INS ins) {
 
-  UINT64 address         = INS_Address(ins);
+  uint64 address         = INS_Address(ins);
   std::string disas      = INS_Disassemble(ins);
   INT32 opcode           = INS_Opcode(ins);
 
@@ -44,6 +44,10 @@ IRBuilder *createIRBuilder(INS ins) {
 
     case XED_ICLASS_ANDPS:
       ir = new AndpsIRBuilder(address, disas);
+      break;
+
+    case XED_ICLASS_BSWAP:
+      ir = new BswapIRBuilder(address, disas);
       break;
 
     case XED_ICLASS_CALL_FAR:
@@ -149,6 +153,18 @@ IRBuilder *createIRBuilder(INS ins) {
 
     case XED_ICLASS_DEC:
       ir = new DecIRBuilder(address, disas);
+      break;
+
+    case XED_ICLASS_DIV:
+      ir = new DivIRBuilder(address, disas);
+      break;
+
+    case XED_ICLASS_IDIV:
+      ir = new IdivIRBuilder(address, disas);
+      break;
+
+    case XED_ICLASS_IMUL:
+      ir = new ImulIRBuilder(address, disas);
       break;
 
     case XED_ICLASS_INC:
@@ -284,6 +300,10 @@ IRBuilder *createIRBuilder(INS ins) {
       ir = new MovzxIRBuilder(address, disas);
       break;
 
+    case XED_ICLASS_MUL:
+      ir = new MulIRBuilder(address, disas);
+      break;
+
     case XED_ICLASS_NEG:
       ir = new NegIRBuilder(address, disas);
       break;
@@ -315,6 +335,14 @@ IRBuilder *createIRBuilder(INS ins) {
     case XED_ICLASS_RET_FAR:
     case XED_ICLASS_RET_NEAR:
       ir = new RetIRBuilder(address, disas);
+      break;
+
+    case XED_ICLASS_ROL:
+      ir = new RolIRBuilder(address, disas);
+      break;
+
+    case XED_ICLASS_ROR:
+      ir = new RorIRBuilder(address, disas);
       break;
 
     case XED_ICLASS_SAR:
@@ -440,18 +468,18 @@ IRBuilder *createIRBuilder(INS ins) {
   }
 
   // Populate the operands
-  const UINT32 n = INS_OperandCount(ins);
+  const uint32 n = INS_OperandCount(ins);
 
-  for (UINT32 i = 0; i < n; ++i) {
+  for (uint32 i = 0; i < n; ++i) {
     IRBuilderOperand::operand_t type;
-    UINT32 size = 0;
-    UINT64 val  = 0;
+    uint32 size = 0;
+    uint64 val  = 0;
 
     //Effective address = Displacement + BaseReg + IndexReg * Scale
-    UINT64 displacement = 0;
-    UINT64 baseReg = 0;
-    UINT64 indexReg = 0;
-    UINT64 memoryScale = 0;
+    uint64 displacement = 0;
+    uint64 baseReg      = ID_INVALID;
+    uint64 indexReg     = ID_INVALID;
+    uint64 memoryScale  = 0;
 
     /* Special case */
     if (INS_IsDirectBranchOrCall(ins)){
@@ -506,7 +534,7 @@ IRBuilder *createIRBuilder(INS ins) {
 
       reg = INS_OperandMemoryIndexReg(ins, i);
       if (REG_valid(reg))
-      indexReg = PINConverter::convertDBIReg2TritonReg(reg);
+        indexReg = PINConverter::convertDBIReg2TritonReg(reg);
     }
 
     /* Undefined */

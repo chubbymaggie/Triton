@@ -1,11 +1,12 @@
 
-#ifndef  __SMT2LIB_UTILS__
-#define  __SMT2LIB_UTILS__
+#ifndef  SMT2LIB_UTILS
+#define  SMT2LIB_UTILS
 
 #include <sstream>
-#include <cstdint>
+#include "TritonTypes.h"
 #include <string>
 #include <vector>
+#include <list>
 
 
 namespace smt2lib {
@@ -18,10 +19,11 @@ namespace smt2lib {
   /* (concat expr1 expr2) */
   std::string concat(std::string expr1, std::string expr2);
   std::string concat(std::vector<std::string> exprs);
+  std::string concat(std::list<std::string> exprs);
 
   /* Returns the 'bv' syntax based on a value and a size. */
   /* (_ bv<value> <size>) */
-  std::string bv(uint64_t value, uint64_t regSize);
+  std::string bv(uint64 value, uint64 regSize);
 
   /* This is an alias on (_ bv1 1) */
   std::string bvtrue(void);
@@ -34,27 +36,27 @@ namespace smt2lib {
   std::string bvadd(std::string op1, std::string op2);
 
   /* Returns a sign extended version to size bits of the expression. */
-  std::string sx(std::string expr, uint64_t size);
+  std::string sx(std::string expr, uint64 size);
 
   /* Returns a zero extendend version to size bits of the expression. */
-  std::string zx(std::string expr, uint64_t size);
+  std::string zx(std::string expr, uint64 size);
 
-  /* Returns the 'declare' syntax based on a id symbolic variable and a bit victor. */
-  std::string declare(uint64_t idSymVar, uint64_t BitVecSize);
-
-  /* Returns the 'extract' syntax based on a reg size. */
-  std::string extract(uint64_t regSize);
+  /* Returns the 'declare' syntax based on the symbolic variable name and its size. */
+  std::string declare(std::string symVarName, uint64 symVarSize);
 
   /* Returns the 'extract' syntax based on a reg size. */
-  std::string extract(uint64_t regSize, std::string expr);
+  std::string extract(uint64 regSize);
+
+  /* Returns the 'extract' syntax based on a reg size. */
+  std::string extract(uint64 regSize, std::string expr);
 
   /* Returns the 'extract' syntax based on a high and low bit. */
   /* (extract <high> <low>) */
-  std::string extract(uint64_t high, uint64_t low);
+  std::string extract(uint64 high, uint64 low);
 
   /* Returns the 'extract' syntax based on a high, low bit and an expression. */
   /* ((extract <high> <low>)<expr>) */
-  std::string extract(uint64_t high, uint64_t low, std::string expr);
+  std::string extract(uint64 high, uint64 low, std::string expr);
 
   /* Returns the 'assert' syntax. */
   std::string smtAssert(std::string expr);
@@ -105,6 +107,14 @@ namespace smt2lib {
   /* Returns the 'bvor' syntax. */
   /* (bvor <op1> <op2>) */
   std::string bvor(std::string op1, std::string op2);
+
+  /* Returns the 'bvror' syntax. */
+  /* ((_ rotate_right <op2>) <op1>) */
+  std::string bvror(std::string op1, std::string op2);
+
+  /* Returns the 'bvrol' syntax. */
+  /* ((_ rotate_left <op2>) <op1>) */
+  std::string bvrol(std::string op1, std::string op2);
 
   /* returns the 'bvsub' syntax. */
   /* (bvsub <op1> <op2>) */
@@ -169,5 +179,5 @@ namespace smt2lib {
   std::string bvsdiv(std::string op1, std::string op2);
 }
 
-#endif  /* !__SMTLIB2_UTILS__ */
+#endif  /* !SMTLIB2_UTILS */
 

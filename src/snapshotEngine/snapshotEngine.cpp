@@ -1,7 +1,7 @@
 
 #include <iostream>
 
-#include "SnapshotEngine.h"
+#include <SnapshotEngine.h>
 
 
 
@@ -19,7 +19,7 @@ SnapshotEngine::~SnapshotEngine()
 
 
 /* Add the modification byte. */
-void SnapshotEngine::addModification(uint64_t mem, char byte)
+void SnapshotEngine::addModification(uint64 mem, char byte)
 {
   if (this->locked == UNLOCKED)
     this->memory.push_front(make_pair(mem, byte));
@@ -47,7 +47,7 @@ void SnapshotEngine::takeSnapshot(const SymbolicEngine &currentSymEngine, const 
 void SnapshotEngine::restoreSnapshot(SymbolicEngine *currentSymEngine, TaintEngine *currentTaintEngine, CONTEXT *ctx)
 {
   /* 1 - Restore all memory modification. */
-  list< std::pair<uint64_t, char> >::iterator i;
+  list< std::pair<uint64, char> >::iterator i;
   for(i = this->memory.begin(); i != this->memory.end(); ++i){
     *(reinterpret_cast<char*>(i->first)) = i->second;
   }
@@ -79,12 +79,10 @@ void SnapshotEngine::resetEngine()
 {
   this->memory.clear();
 
-  if (this->snapshotSymEngine)
-    delete this->snapshotSymEngine;
+  delete this->snapshotSymEngine;
   this->snapshotSymEngine = nullptr;
 
-  if (this->snapshotTaintEngine)
-    delete this->snapshotTaintEngine;
+  delete this->snapshotTaintEngine;
   this->snapshotTaintEngine = nullptr;
 }
 

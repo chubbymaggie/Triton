@@ -1,7 +1,7 @@
 
-#include "Colors.h"
-#include "SMT2Lib.h"
-#include "SolverEngine.h"
+#include <Colors.h>
+#include <SMT2Lib.h>
+#include <SolverEngine.h>
 
 
 SolverEngine::SolverEngine(SymbolicEngine *symEngine)
@@ -22,12 +22,12 @@ std::list< std::pair<std::string, unsigned long long> > SolverEngine::getModel(s
   z3::check_result    checkResult;
   z3::context         *ctx;
   z3::solver          *solver;
-  
+
   /* First, set the QF_AUFBV flag */
   formula << smt2lib::init();
-  
+
   /* Then, delcare all symbolic variables */
-  formula << this->symEngine->getSmt2LibVarsDecl();
+  formula << this->symEngine->getVariablesDeclaration();
 
   /* And concat the user expression */
   formula << expr;
@@ -50,7 +50,7 @@ std::list< std::pair<std::string, unsigned long long> > SolverEngine::getModel(s
     z3::model m = solver->get_model();
     /* Traversing the model */
     for (unsigned i = 0; i < m.size(); i++) {
-      unsigned long long value = 0; 
+      unsigned long long value = 0;
       z3::func_decl v = m[i];
       Z3_get_numeral_uint64(*ctx, m.get_const_interp(v), &value);
       ret.push_back(make_pair(v.name().str(), value));

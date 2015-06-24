@@ -1,5 +1,5 @@
-#ifndef _ORPDIRBUILDER_H_
-#define _ORPDIRBUILDER_H_
+#ifndef ORPDIRBUILDER_H
+#define ORPDIRBUILDER_H
 
 #include "BaseIRBuilder.h"
 #include "EflagsBuilder.h"
@@ -10,7 +10,7 @@
 class OrpdIRBuilder: public BaseIRBuilder, public TwoOperandsTemplate {
 
   public:
-    OrpdIRBuilder(uint64_t address, const std::string &disassembly);
+    OrpdIRBuilder(uint64 address, const std::string &disassembly);
 
     // From BaseIRBuilder
     virtual Inst *process(AnalysisProcessor &ap) const;
@@ -27,4 +27,4 @@ class OrpdIRBuilder: public BaseIRBuilder, public TwoOperandsTemplate {
     virtual void memReg(AnalysisProcessor &ap, Inst &inst) const;
 };
 
-#endif // _ORPDIRBUILDER_H_
+#endif // ORPDIRBUILDER_H

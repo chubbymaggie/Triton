@@ -1,6 +1,6 @@
 
-#ifndef   __COLORS_H__
-#define   __COLORS_H__
+#ifndef   TRITON_COLORS_H
+#define   TRITON_COLORS_H
 
 #define BLUE   "\033[94m"
 #define GREEN  "\033[92m"

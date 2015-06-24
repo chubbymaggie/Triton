@@ -1,5 +1,5 @@
-#ifndef _SETNOIRBUILDER_H_
-#define _SETNOIRBUILDER_H_
+#ifndef SETNOIRBUILDER_H
+#define SETNOIRBUILDER_H
 
 #include "BaseIRBuilder.h"
 #include "EflagsBuilder.h"
@@ -10,7 +10,7 @@
 class SetnoIRBuilder: public BaseIRBuilder, public OneOperandTemplate {
 
   public:
-    SetnoIRBuilder(uint64_t address, const std::string &disassembly);
+    SetnoIRBuilder(uint64 address, const std::string &disassembly);
 
     // From BaseIRBuilder
     virtual Inst *process(AnalysisProcessor &ap) const;
@@ -25,4 +25,4 @@ class SetnoIRBuilder: public BaseIRBuilder, public OneOperandTemplate {
     virtual void mem(AnalysisProcessor &ap, Inst &inst) const;
 };
 
-#endif // _SETNOIRBUILDER_H_
+#endif // SETNOIRBUILDER_H

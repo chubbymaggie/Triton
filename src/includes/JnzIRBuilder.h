@@ -1,5 +1,5 @@
-#ifndef _JNZIRBUILDER_H_
-#define _JNZIRBUILDER_H_
+#ifndef JNZIRBUILDER_H
+#define JNZIRBUILDER_H
 
 #include "BaseIRBuilder.h"
 #include "EflagsBuilder.h"
@@ -10,7 +10,7 @@
 class JnzIRBuilder: public BaseIRBuilder, public OneOperandTemplate {
 
   public:
-    JnzIRBuilder(uint64_t address, const std::string &disassembly);
+    JnzIRBuilder(uint64 address, const std::string &disassembly);
 
     // From BaseIRBuilder
     virtual Inst *process(AnalysisProcessor &ap) const;
@@ -25,4 +25,4 @@ class JnzIRBuilder: public BaseIRBuilder, public OneOperandTemplate {
     virtual void mem(AnalysisProcessor &ap, Inst &inst) const;
 };
 
-#endif // _JNZIRBUILDER_H_
+#endif // JNZIRBUILDER_H

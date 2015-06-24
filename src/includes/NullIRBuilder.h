@@ -1,7 +1,7 @@
-#ifndef _NULLIRBUILDER_H_
-#define _NULLIRBUILDER_H_
+#ifndef NULLIRBUILDER_H
+#define NULLIRBUILDER_H
 
-#include <cstdint>
+#include "TritonTypes.h"
 
 #include <string>
 
@@ -12,12 +12,13 @@
 // Null object, it's purpose is to handle "nicely" not implemented instructions.
 class NullIRBuilder: public BaseIRBuilder {
   public:
-    NullIRBuilder(uint64_t address, const std::string &disas):
+    NullIRBuilder(uint64 address, const std::string &disas):
       BaseIRBuilder(address, disas) { }
 
     void addOperand(const TritonOperand &operand){
     }
 
+    using BaseIRBuilder::getOperands;
     const std::vector<TritonOperand> &getOperands(void){
       return this->operands;
     }
@@ -28,4 +29,4 @@ class NullIRBuilder: public BaseIRBuilder {
     }
 };
 
-#endif // _NULLIRBUILDER_H_
+#endif // NULLIRBUILDER_H

@@ -2,13 +2,13 @@
 #include <sstream>
 #include <stdexcept>
 
-#include "CwdeIRBuilder.h"
-#include "Registers.h"
-#include "SMT2Lib.h"
-#include "SymbolicElement.h"
+#include <CwdeIRBuilder.h>
+#include <Registers.h>
+#include <SMT2Lib.h>
+#include <SymbolicElement.h>
 
 
-CwdeIRBuilder::CwdeIRBuilder(uint64_t address, const std::string &disassembly):
+CwdeIRBuilder::CwdeIRBuilder(uint64 address, const std::string &disassembly):
   BaseIRBuilder(address, disassembly) {
 }
 

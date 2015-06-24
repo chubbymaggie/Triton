@@ -1,5 +1,5 @@
-#ifndef _ANDPDIRBUILDER_H_
-#define _ANDPDIRBUILDER_H_
+#ifndef ANDPDIRBUILDER_H
+#define ANDPDIRBUILDER_H
 
 #include "BaseIRBuilder.h"
 #include "EflagsBuilder.h"
@@ -10,7 +10,7 @@
 class AndpdIRBuilder: public BaseIRBuilder, public TwoOperandsTemplate {
 
   public:
-    AndpdIRBuilder(uint64_t address, const std::string &disassembly);
+    AndpdIRBuilder(uint64 address, const std::string &disassembly);
 
     // From BaseIRBuilder
     virtual Inst *process(AnalysisProcessor &ap) const;
@@ -27,4 +27,4 @@ class AndpdIRBuilder: public BaseIRBuilder, public TwoOperandsTemplate {
     virtual void memReg(AnalysisProcessor &ap, Inst &inst) const;
 };
 
-#endif // _ANDPDIRBUILDER_H_
+#endif // ANDPDIRBUILDER_H

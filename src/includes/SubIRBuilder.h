@@ -1,5 +1,5 @@
-#ifndef _SUBIRBUILDER_H_
-#define _SUBIRBUILDER_H_
+#ifndef SUBIRBUILDER_H
+#define SUBIRBUILDER_H
 
 #include "BaseIRBuilder.h"
 #include "EflagsBuilder.h"
@@ -10,7 +10,7 @@
 class SubIRBuilder: public BaseIRBuilder, public TwoOperandsTemplate {
 
   public:
-    SubIRBuilder(uint64_t address, const std::string &disassembly);
+    SubIRBuilder(uint64 address, const std::string &disassembly);
 
     // From BaseIRBuilder
     virtual Inst *process(AnalysisProcessor &ap) const;
@@ -27,4 +27,4 @@ class SubIRBuilder: public BaseIRBuilder, public TwoOperandsTemplate {
     virtual void memReg(AnalysisProcessor &ap, Inst &inst) const;
 };
 
-#endif // _ADDIRBUILDER_H_
+#endif // ADDIRBUILDER_H

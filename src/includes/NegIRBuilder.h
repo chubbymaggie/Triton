@@ -1,5 +1,5 @@
-#ifndef _NEGIRBUILDER_H_
-#define _NEGIRBUILDER_H_
+#ifndef NEGIRBUILDER_H
+#define NEGIRBUILDER_H
 
 #include "BaseIRBuilder.h"
 #include "EflagsBuilder.h"
@@ -10,7 +10,7 @@
 class NegIRBuilder: public BaseIRBuilder, public OneOperandTemplate {
 
   public:
-    NegIRBuilder(uint64_t address, const std::string &disassembly);
+    NegIRBuilder(uint64 address, const std::string &disassembly);
 
     // From BaseIRBuilder
     virtual Inst *process(AnalysisProcessor &ap) const;
@@ -25,4 +25,4 @@ class NegIRBuilder: public BaseIRBuilder, public OneOperandTemplate {
     virtual void mem(AnalysisProcessor &ap, Inst &inst) const;
 };
 
-#endif // _NEGIRBUILDER_H_
+#endif // NEGIRBUILDER_H

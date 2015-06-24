@@ -1,5 +1,5 @@
-#ifndef _CQOIRBUILDER_H_
-#define _CQOIRBUILDER_H_
+#ifndef CQOIRBUILDER_H
+#define CQOIRBUILDER_H
 
 #include "BaseIRBuilder.h"
 #include "EflagsBuilder.h"
@@ -10,7 +10,7 @@
 class CqoIRBuilder: public BaseIRBuilder, public NoneOperandTemplate {
 
   public:
-    CqoIRBuilder(uint64_t address, const std::string &disassembly);
+    CqoIRBuilder(uint64 address, const std::string &disassembly);
 
     // From BaseIRBuilder
     virtual Inst *process(AnalysisProcessor &ap) const;
@@ -19,4 +19,4 @@ class CqoIRBuilder: public BaseIRBuilder, public NoneOperandTemplate {
     virtual void none(AnalysisProcessor &ap, Inst &inst) const;
 };
 
-#endif // _CQOIRBUILDER_H_
+#endif // CQOIRBUILDER_H

@@ -1,5 +1,5 @@
-#ifndef _RETIRBUILDER_H_
-#define _RETIRBUILDER_H_
+#ifndef RETIRBUILDER_H
+#define RETIRBUILDER_H
 
 #include "BaseIRBuilder.h"
 #include "EflagsBuilder.h"
@@ -10,7 +10,7 @@
 class RetIRBuilder: public BaseIRBuilder, public OneOperandTemplate {
 
   public:
-    RetIRBuilder(uint64_t address, const std::string &disassembly);
+    RetIRBuilder(uint64 address, const std::string &disassembly);
 
     // From BaseIRBuilder
     virtual Inst *process(AnalysisProcessor &ap) const;
@@ -25,4 +25,4 @@ class RetIRBuilder: public BaseIRBuilder, public OneOperandTemplate {
     virtual void mem(AnalysisProcessor &ap, Inst &inst) const;
 };
 
-#endif // _RETIRBUILDER_H_
+#endif // RETIRBUILDER_H

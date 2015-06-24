@@ -1,5 +1,5 @@
-#ifndef _CALLIRBUILDER_H_
-#define _CALLIRBUILDER_H_
+#ifndef CALLIRBUILDER_H
+#define CALLIRBUILDER_H
 
 #include "BaseIRBuilder.h"
 #include "EflagsBuilder.h"
@@ -10,7 +10,7 @@
 class CallIRBuilder: public BaseIRBuilder, public OneOperandTemplate {
 
   public:
-    CallIRBuilder(uint64_t address, const std::string &disassembly);
+    CallIRBuilder(uint64 address, const std::string &disassembly);
 
     // From BaseIRBuilder
     virtual Inst *process(AnalysisProcessor &ap) const;
@@ -25,4 +25,4 @@ class CallIRBuilder: public BaseIRBuilder, public OneOperandTemplate {
     virtual void mem(AnalysisProcessor &ap, Inst &inst) const;
 };
 
-#endif // _CALLIRBUILDER_H_
+#endif // CALLIRBUILDER_H

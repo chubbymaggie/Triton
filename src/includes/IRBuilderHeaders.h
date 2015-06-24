@@ -1,5 +1,5 @@
-#ifndef   __IRBUILDERHEADERS_H__
-#define   __IRBUILDERHEADERS_H__
+#ifndef   IRBUILDERHEADERS_H
+#define   IRBUILDERHEADERS_H
 
 #include "AdcIRBuilder.h"
 #include "AddIRBuilder.h"
@@ -8,6 +8,7 @@
 #include "AndnpsIRBuilder.h"
 #include "AndpdIRBuilder.h"
 #include "AndpsIRBuilder.h"
+#include "BswapIRBuilder.h"
 #include "CallIRBuilder.h"
 #include "CbwIRBuilder.h"
 #include "CdqeIRBuilder.h"
@@ -34,7 +35,10 @@
 #include "CqoIRBuilder.h"
 #include "CwdeIRBuilder.h"
 #include "DecIRBuilder.h"
+#include "DivIRBuilder.h"
 #include "IRBuilderFactory.h"
+#include "IdivIRBuilder.h"
+#include "ImulIRBuilder.h"
 #include "IncIRBuilder.h"
 #include "JbIRBuilder.h"
 #include "JbeIRBuilder.h"
@@ -68,6 +72,7 @@
 #include "MovlpsIRBuilder.h"
 #include "MovsxIRBuilder.h"
 #include "MovzxIRBuilder.h"
+#include "MulIRBuilder.h"
 #include "NegIRBuilder.h"
 #include "NotIRBuilder.h"
 #include "NullIRBuilder.h"
@@ -77,6 +82,8 @@
 #include "PopIRBuilder.h"
 #include "PushIRBuilder.h"
 #include "RetIRBuilder.h"
+#include "RolIRBuilder.h"
+#include "RorIRBuilder.h"
 #include "SarIRBuilder.h"
 #include "SbbIRBuilder.h"
 #include "SetbIRBuilder.h"

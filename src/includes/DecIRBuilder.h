@@ -1,5 +1,5 @@
-#ifndef _DECIRBUILDER_H_
-#define _DECIRBUILDER_H_
+#ifndef DECIRBUILDER_H
+#define DECIRBUILDER_H
 
 #include "BaseIRBuilder.h"
 #include "EflagsBuilder.h"
@@ -10,7 +10,7 @@
 class DecIRBuilder: public BaseIRBuilder, public OneOperandTemplate {
 
   public:
-    DecIRBuilder(uint64_t address, const std::string &disassembly);
+    DecIRBuilder(uint64 address, const std::string &disassembly);
 
     // From BaseIRBuilder
     virtual Inst *process(AnalysisProcessor &ap) const;
@@ -25,4 +25,4 @@ class DecIRBuilder: public BaseIRBuilder, public OneOperandTemplate {
     virtual void mem(AnalysisProcessor &ap, Inst &inst) const;
 };
 
-#endif // _DECIRBUILDER_H_
+#endif // DECIRBUILDER_H

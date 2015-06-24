@@ -1,7 +1,9 @@
 #include <string>
 #include <stdexcept>
 
-#include "SMT2Lib.h"
+#include <CpuSize.h>
+#include <SMT2Lib.h>
+
 
 static const std::string parityDef =
   "(define-fun parity_flag ((x!1 (_ BitVec 8))) (_ BitVec 1) "
@@ -33,7 +35,7 @@ std::string smt2lib::concat(std::string expr1, std::string expr2)
 std::string smt2lib::concat(std::vector<std::string> exprs)
 {
   std::stringstream   expr;
-  uint64_t            index;
+  uint64            index;
 
   if (exprs.size() <= 1)
     throw std::runtime_error("Error: smt2lib::concat invalid vector size");
@@ -50,23 +52,41 @@ std::string smt2lib::concat(std::vector<std::string> exprs)
 }
 
 
+/* Returns the 'concat' syntax. */
+std::string smt2lib::concat(std::list<std::string> exprs)
+{
+  std::list<std::string>::const_iterator it;
+  std::stringstream                      expr;
+
+  if (exprs.size() <= 1)
+    throw std::runtime_error("Error: smt2lib::concat invalid list size");
+
+  expr << "(concat";
+  for (it = exprs.begin(); it != exprs.end(); it++)
+    expr << " " << *it;
+  expr << ")";
+
+  return expr.str();
+}
+
+
 /* Returns the 'bv' syntax based on a value and a size.
  * Mainly used for the SMT translation */
-std::string smt2lib::bv(uint64_t value, uint64_t size)
+std::string smt2lib::bv(uint64 value, uint64 size)
 {
   return "(_ bv" + std::to_string(value) + " " + std::to_string(size) + ")";
 }
 
 
 /* Returns the 'bv' syntax with sign extension applied to it. */
-std::string smt2lib::sx(std::string expr, uint64_t size)
+std::string smt2lib::sx(std::string expr, uint64 size)
 {
   return "((_ sign_extend " + std::to_string(size) + ") " + expr + ")";
 }
 
 
 /* Returns the 'bv' syntax with zero extension applied to it. */
-std::string smt2lib::zx(std::string expr, uint64_t size)
+std::string smt2lib::zx(std::string expr, uint64 size)
 {
   return "((_ zero_extend " + std::to_string(size) + ") " + expr + ")";;
 }
@@ -104,6 +124,38 @@ std::string smt2lib::bvand(std::string op1, std::string op2)
 std::string smt2lib::bvor(std::string op1, std::string op2)
 {
   return "(bvor " + op1 + " " + op2 + ")";
+}
+
+
+/* Returns the 'bvror' syntax. */
+/* op2 must be a concretization constant */
+std::string smt2lib::bvror(std::string op1, std::string op2)
+{
+  /* Check if op1 is a concretization constant */
+  std::string::const_iterator it = op2.begin();
+  while (it != op2.end()) {
+    if (std::isdigit(*it) == false)
+      throw std::runtime_error("Error: invalid smt2lib::ror - op2 must be a concretization constant");
+    it++;
+  }
+
+  return "((_ rotate_right " + op2 + ") " + op1 + ")";
+}
+
+
+/* Returns the 'bvrol' syntax. */
+/* op2 must be a concretization constant */
+std::string smt2lib::bvrol(std::string op1, std::string op2)
+{
+  /* Check if op1 is a concretization constant */
+  std::string::const_iterator it = op2.begin();
+  while (it != op2.end()) {
+    if (std::isdigit(*it) == false)
+      throw std::runtime_error("Error: invalid smt2lib::rol - op2 must be a concretization constant");
+    it++;
+  }
+
+  return "((_ rotate_left " + op2 + ") " + op1 + ")";
 }
 
 
@@ -196,24 +248,24 @@ std::string smt2lib::bvult(std::string op1, std::string op2)
 
 /* Returns the 'extract' syntax based on a regSize.
  * Mainly used for the SMT translation */
-std::string smt2lib::extract(uint64_t regSize)
+std::string smt2lib::extract(uint64 regSize)
 {
   std::stringstream stream;
 
   switch(regSize){
-    case 1:
+    case BYTE_SIZE:
       stream << "(_ extract 7 0)";
       break;
-    case 2:
+    case WORD_SIZE:
       stream << "(_ extract 15 0)";
       break;
-    case 4:
+    case DWORD_SIZE:
       stream << "(_ extract 31 0)";
       break;
-    case 8:
+    case QWORD_SIZE:
       stream << "(_ extract 63 0)";
       break;
-    case 16:
+    case DQWORD_SIZE:
       stream << "(_ extract 127 0)";
       break;
     default:
@@ -225,21 +277,21 @@ std::string smt2lib::extract(uint64_t regSize)
 
 
 /* Returns the 'extract' syntax based on a regSize and expression */
-std::string smt2lib::extract(uint64_t regSize, std::string expr)
+std::string smt2lib::extract(uint64 regSize, std::string expr)
 {
   return "(" + smt2lib::extract(regSize) + " " + expr + ")";
 }
 
 
 /* Returns the 'extract' syntax. */
-std::string smt2lib::extract(uint64_t high, uint64_t low)
+std::string smt2lib::extract(uint64 high, uint64 low)
 {
   return "(_ extract " + std::to_string(high) + " " + std::to_string(low) + ")";
 }
 
 
 /* Returns the 'extract' syntax. */
-std::string smt2lib::extract(uint64_t high, uint64_t low, std::string expr)
+std::string smt2lib::extract(uint64 high, uint64 low, std::string expr)
 {
   return "(" + smt2lib::extract(high, low) + " " + expr + ")";
 }
@@ -247,25 +299,25 @@ std::string smt2lib::extract(uint64_t high, uint64_t low, std::string expr)
 
 /* Returns the 'declare' syntax is symbolic variable and a bit vector.
  * Mainly used for the SMT translation */
-std::string smt2lib::declare(uint64_t idSymVar, uint64_t BitVecSize)
+std::string smt2lib::declare(std::string symVarName, uint64 symVarSize)
 {
   std::stringstream stream;
 
-  switch(BitVecSize){
-    case 1:
-      stream << "(declare-fun SymVar_" << idSymVar << " () (_ BitVec 8))";
+  switch(symVarSize){
+    case BYTE_SIZE:
+      stream << "(declare-fun " << symVarName << " () (_ BitVec 8))";
       break;
-    case 2:
-      stream << "(declare-fun SymVar_" << idSymVar << " () (_ BitVec 16))";
+    case WORD_SIZE:
+      stream << "(declare-fun " << symVarName << " () (_ BitVec 16))";
       break;
-    case 4:
-      stream << "(declare-fun SymVar_" << idSymVar << " () (_ BitVec 32))";
+    case DWORD_SIZE:
+      stream << "(declare-fun " << symVarName << " () (_ BitVec 32))";
       break;
-    case 8:
-      stream << "(declare-fun SymVar_" << idSymVar << " () (_ BitVec 64))";
+    case QWORD_SIZE:
+      stream << "(declare-fun " << symVarName << " () (_ BitVec 64))";
       break;
-    case 16:
-      stream << "(declare-fun SymVar_" << idSymVar << " () (_ BitVec 128))";
+    case DQWORD_SIZE:
+      stream << "(declare-fun " << symVarName << " () (_ BitVec 128))";
       break;
   }
 

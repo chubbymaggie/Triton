@@ -1,5 +1,5 @@
-#ifndef _XADDIRBUILDER_H_
-#define _XADDIRBUILDER_H_
+#ifndef XADDIRBUILDER_H
+#define XADDIRBUILDER_H
 
 #include "BaseIRBuilder.h"
 #include "EflagsBuilder.h"
@@ -10,7 +10,7 @@
 class XaddIRBuilder: public BaseIRBuilder, public TwoOperandsTemplate {
 
   public:
-    XaddIRBuilder(uint64_t address, const std::string &disassembly);
+    XaddIRBuilder(uint64 address, const std::string &disassembly);
 
     // From BaseIRBuilder
     virtual Inst *process(AnalysisProcessor &ap) const;
@@ -27,4 +27,4 @@ class XaddIRBuilder: public BaseIRBuilder, public TwoOperandsTemplate {
     virtual void memReg(AnalysisProcessor &ap, Inst &inst) const;
 };
 
-#endif // _XADDIRBUILDER_H_
+#endif // XADDIRBUILDER_H

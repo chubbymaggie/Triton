@@ -1,5 +1,5 @@
-#ifndef _CMCIRBUILDER_H_
-#define _CMCIRBUILDER_H_
+#ifndef CMCIRBUILDER_H
+#define CMCIRBUILDER_H
 
 #include "BaseIRBuilder.h"
 #include "EflagsBuilder.h"
@@ -10,7 +10,7 @@
 class CmcIRBuilder: public BaseIRBuilder, public NoneOperandTemplate {
 
   public:
-    CmcIRBuilder(uint64_t address, const std::string &disassembly);
+    CmcIRBuilder(uint64 address, const std::string &disassembly);
 
     // From BaseIRBuilder
     virtual Inst *process(AnalysisProcessor &ap) const;
@@ -19,4 +19,4 @@ class CmcIRBuilder: public BaseIRBuilder, public NoneOperandTemplate {
     virtual void none(AnalysisProcessor &ap, Inst &inst) const;
 };
 
-#endif // _CMCIRBUILDER_H_
+#endif // CMCIRBUILDER_H

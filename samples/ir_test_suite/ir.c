@@ -71,6 +71,7 @@ void check(void)
   asm("lea rsi, [rbx+8*rax]");
   asm("lea rsi, [rbx+8*rax+4]");
   asm("lea rsi, [rbx+8+4*rax]");
+  asm("lea rsi, [r12*4+0x8]");
   asm("cqo");
 
   // Check concat symbolic expression
@@ -86,6 +87,35 @@ void check(void)
   asm("shr rax, 0");
   asm("shr rax, cl");
   asm("shr rax");
+
+  asm("idiv cl");
+  asm("idiv cx");
+  asm("idiv ecx");
+  asm("idiv rcx");
+
+  asm("mov rcx, 2");
+  asm("mov rdx, 3");
+  asm("imul cx");
+  asm("imul ecx, edx");
+  asm("imul ecx, 1");
+  asm("imul rcx, rcx, 4");
+
+  asm("mul cl");
+  asm("mul cx");
+  asm("mul ecx");
+  asm("mul rcx");
+
+  asm("bswap ecx");
+  asm("bswap rdx");
+
+  asm("xor rcx, rcx");
+  asm("mov cl, 3");
+  asm("rol rdx, cl");
+  asm("rol rdx, 4");
+  asm("rol rdx, 1");
+  asm("ror rdx, cl");
+  asm("ror rdx, 4");
+  asm("ror rdx, 1");
 
   // SSE
   asm("movapd xmm0, xmmword ptr [%0]" :: "r"(tab));

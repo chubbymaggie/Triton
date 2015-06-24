@@ -1,5 +1,5 @@
-#ifndef _CLDIRBUILDER_H_
-#define _CLDIRBUILDER_H_
+#ifndef CLDIRBUILDER_H
+#define CLDIRBUILDER_H
 
 #include "BaseIRBuilder.h"
 #include "EflagsBuilder.h"
@@ -10,7 +10,7 @@
 class CldIRBuilder: public BaseIRBuilder, public NoneOperandTemplate {
 
   public:
-    CldIRBuilder(uint64_t address, const std::string &disassembly);
+    CldIRBuilder(uint64 address, const std::string &disassembly);
 
     // From BaseIRBuilder
     virtual Inst *process(AnalysisProcessor &ap) const;
@@ -19,4 +19,4 @@ class CldIRBuilder: public BaseIRBuilder, public NoneOperandTemplate {
     virtual void none(AnalysisProcessor &ap, Inst &inst) const;
 };
 
-#endif // _CLDIRBUILDER_H_
+#endif // CLDIRBUILDER_H

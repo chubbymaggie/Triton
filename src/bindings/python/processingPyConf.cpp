@@ -1,7 +1,7 @@
 
-#include "ProcessingPyConf.h"
-#include "TritonPyObject.h"
-#include "xPyFunc.h"
+#include <ProcessingPyConf.h>
+#include <TritonPyObject.h>
+#include <xPyFunc.h>
 
 
 
@@ -32,6 +32,19 @@ void ProcessingPyConf::stopAnalysisFromAddr(IRBuilder *irb)
     this->analysisTrigger->update(false);
 }
 
+void ProcessingPyConf::taintMemFromAddr(IRBuilder *irb)
+{
+  // Apply this bindings only if the analysis is enable
+  if (!this->analysisTrigger->getState())
+    return;
+
+  // Check if there is memory tainted via the python bindings
+  std::list<uint64> memsTainted = PyTritonOptions::taintMemFromAddr[irb->getAddress()];
+  std::list<uint64>::iterator it = memsTainted.begin();
+  for ( ; it != memsTainted.end(); it++)
+    this->ap->taintMem(*it);
+}
+
 
 void ProcessingPyConf::taintRegFromAddr(IRBuilder *irb)
 {
@@ -40,12 +53,25 @@ void ProcessingPyConf::taintRegFromAddr(IRBuilder *irb)
     return;
 
   // Check if there is registers tainted via the python bindings
-  std::list<uint64_t> regsTainted = PyTritonOptions::taintRegFromAddr[irb->getAddress()];
-  std::list<uint64_t>::iterator it = regsTainted.begin();
+  std::list<uint64> regsTainted = PyTritonOptions::taintRegFromAddr[irb->getAddress()];
+  std::list<uint64>::iterator it = regsTainted.begin();
   for ( ; it != regsTainted.end(); it++)
     this->ap->taintReg(*it);
 }
 
+
+void ProcessingPyConf::untaintMemFromAddr(IRBuilder *irb)
+{
+  // Apply this bindings only if the analysis is enable
+  if (!this->analysisTrigger->getState())
+    return;
+
+  // Check if there is memories untainted via the python bindings
+  std::list<uint64> memsUntainted = PyTritonOptions::untaintMemFromAddr[irb->getAddress()];
+  std::list<uint64>::iterator it = memsUntainted.begin();
+  for ( ; it != memsUntainted.end(); it++)
+    this->ap->untaintMem(*it);
+}
 
 void ProcessingPyConf::untaintRegFromAddr(IRBuilder *irb)
 {
@@ -54,8 +80,8 @@ void ProcessingPyConf::untaintRegFromAddr(IRBuilder *irb)
     return;
 
   // Check if there is registers untainted via the python bindings
-  std::list<uint64_t> regsUntainted = PyTritonOptions::untaintRegFromAddr[irb->getAddress()];
-  std::list<uint64_t>::iterator it = regsUntainted.begin();
+  std::list<uint64> regsUntainted = PyTritonOptions::untaintRegFromAddr[irb->getAddress()];
+  std::list<uint64>::iterator it = regsUntainted.begin();
   for ( ; it != regsUntainted.end(); it++)
     this->ap->untaintReg(*it);
 }
@@ -152,7 +178,7 @@ void ProcessingPyConf::callbackFini(void)
 }
 
 
-void ProcessingPyConf::callbackSyscallEntry(uint64_t threadId, uint64_t std)
+void ProcessingPyConf::callbackSyscallEntry(uint64 threadId, uint64 std)
 {
   // Check if there is a callback wich must be called before the syscall processing
   if (PyTritonOptions::callbackSyscallEntry){
@@ -172,7 +198,7 @@ void ProcessingPyConf::callbackSyscallEntry(uint64_t threadId, uint64_t std)
 }
 
 
-void ProcessingPyConf::callbackSyscallExit(uint64_t threadId, uint64_t std)
+void ProcessingPyConf::callbackSyscallExit(uint64 threadId, uint64 std)
 {
   // Check if there is a callback wich must be called after the syscall processing
   if (PyTritonOptions::callbackSyscallExit){
@@ -196,12 +222,14 @@ void ProcessingPyConf::applyConfBeforeProcessing(IRBuilder *irb)
 {
   this->startAnalysisFromAddr(irb);
   this->stopAnalysisFromAddr(irb);
+  this->taintMemFromAddr(irb);
   this->taintRegFromAddr(irb);
+  this->untaintMemFromAddr(irb);
   this->untaintRegFromAddr(irb);
 }
 
 
-void ProcessingPyConf::callbackRoutine(uint64_t threadId, PyObject *callback)
+void ProcessingPyConf::callbackRoutine(uint64 threadId, PyObject *callback)
 {
   PyObject *args = xPyTuple_New(1);
   PyTuple_SetItem(args, 0, PyLong_FromLong(threadId));

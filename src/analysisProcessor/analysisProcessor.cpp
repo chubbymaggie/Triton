@@ -1,5 +1,5 @@
-#include "AnalysisProcessor.h"
-#include "PINContextHandler.h"
+#include <AnalysisProcessor.h>
+#include <PINContextHandler.h>
 
 
 AnalysisProcessor::AnalysisProcessor():
@@ -16,8 +16,7 @@ AnalysisProcessor::AnalysisProcessor():
 
 void AnalysisProcessor::updateCurrentCtxH(ContextHandler *ctxtHandler)
 {
-  if (this->currentCtxH != nullptr)
-    delete this->currentCtxH;
+  delete this->currentCtxH;
   this->currentCtxH = ctxtHandler;
 }
 
@@ -37,7 +36,7 @@ SymbolicEngine &AnalysisProcessor::getSymbolicEngine(void)
 }
 
 
-SymbolicElement *AnalysisProcessor::createRegSE(Inst &inst, std::stringstream &expr, uint64_t regID)
+SymbolicElement *AnalysisProcessor::createRegSE(Inst &inst, std::stringstream &expr, uint64 regID)
 {
   SymbolicElement *se = this->symEngine.newSymbolicElement(expr);
   this->symEngine.symbolicReg[regID] = se->getID();
@@ -46,7 +45,7 @@ SymbolicElement *AnalysisProcessor::createRegSE(Inst &inst, std::stringstream &e
 }
 
 
-SymbolicElement *AnalysisProcessor::createRegSE(Inst &inst, std::stringstream &expr, uint64_t regID, std::string comment)
+SymbolicElement *AnalysisProcessor::createRegSE(Inst &inst, std::stringstream &expr, uint64 regID, std::string comment)
 {
   SymbolicElement *se = this->symEngine.newSymbolicElement(expr, comment);
   this->symEngine.symbolicReg[regID] = se->getID();
@@ -55,27 +54,27 @@ SymbolicElement *AnalysisProcessor::createRegSE(Inst &inst, std::stringstream &e
 }
 
 
-SymbolicElement *AnalysisProcessor::createRegSE(Inst &inst, std::stringstream &expr, uint64_t regID, uint64_t regSize)
+SymbolicElement *AnalysisProcessor::createRegSE(Inst &inst, std::stringstream &expr, uint64 regID, uint64 regSize)
 {
   std::stringstream finalExpr, origReg;
 
   origReg << this->buildSymbolicRegOperand(regID, REG_SIZE);
 
   switch (regSize) {
-    case 1:
+    case BYTE_SIZE:
       finalExpr << smt2lib::concat(smt2lib::extract(63, 8, origReg.str()), expr.str());
       break;
-    case 2:
+    case WORD_SIZE:
       finalExpr << smt2lib::concat(smt2lib::extract(63, 16, origReg.str()), expr.str());
       break;
-    case 4:
+    case DWORD_SIZE:
       /* In AMD64, if a reg32 is written, it clears the 32-bit MSB of the corresponding register (Thx Wisk!) */
-      finalExpr << smt2lib::zx(expr.str(), 32);
+      finalExpr << smt2lib::zx(expr.str(), DWORD_SIZE_BIT);
       break;
-    case 8:
+    case QWORD_SIZE:
       finalExpr << expr.str();
       break;
-    case 16:
+    case DQWORD_SIZE:
       finalExpr << expr.str();
       break;
   }
@@ -88,27 +87,27 @@ SymbolicElement *AnalysisProcessor::createRegSE(Inst &inst, std::stringstream &e
 }
 
 
-SymbolicElement *AnalysisProcessor::createRegSE(Inst &inst, std::stringstream &expr, uint64_t regID, uint64_t regSize, std::string comment)
+SymbolicElement *AnalysisProcessor::createRegSE(Inst &inst, std::stringstream &expr, uint64 regID, uint64 regSize, std::string comment)
 {
   std::stringstream finalExpr, origReg;
 
   origReg << this->buildSymbolicRegOperand(regID, REG_SIZE);
 
   switch (regSize) {
-    case 1:
+    case BYTE_SIZE:
       finalExpr << smt2lib::concat(smt2lib::extract(63, 8, origReg.str()), expr.str());
       break;
-    case 2:
+    case WORD_SIZE:
       finalExpr << smt2lib::concat(smt2lib::extract(63, 16, origReg.str()), expr.str());
       break;
-    case 4:
+    case DWORD_SIZE:
       /* In AMD64, if a reg32 is written, it clears the 32-bit MSB of the corresponding register (Thx Wisk!) */
-      finalExpr << smt2lib::zx(expr.str(), 32);
+      finalExpr << smt2lib::zx(expr.str(), DWORD_SIZE_BIT);
       break;
-    case 8:
+    case QWORD_SIZE:
       finalExpr << expr.str();
       break;
-    case 16:
+    case DQWORD_SIZE:
       finalExpr << expr.str();
       break;
   }
@@ -121,7 +120,7 @@ SymbolicElement *AnalysisProcessor::createRegSE(Inst &inst, std::stringstream &e
 }
 
 
-SymbolicElement *AnalysisProcessor::createMemSE(Inst &inst, std::stringstream &expr, uint64_t address, uint64_t writeSize)
+SymbolicElement *AnalysisProcessor::createMemSE(Inst &inst, std::stringstream &expr, uint64 address, uint64 writeSize)
 {
   SymbolicElement   *ret = nullptr;
   std::stringstream tmp;
@@ -131,8 +130,8 @@ SymbolicElement *AnalysisProcessor::createMemSE(Inst &inst, std::stringstream &e
    * memory must be assigned to an unique reference.
    */
   while (writeSize){
-    /* Extract each byte if the size > 8 bit */
-    if (writeSize > 1){
+    /* Extract each byte if the size > 1 byte (8 bits) */
+    if (writeSize > BYTE_SIZE){
       tmp.str(smt2lib::extract(((writeSize * REG_SIZE) - 1), ((writeSize * REG_SIZE) - REG_SIZE), expr.str()));
       SymbolicElement *se = symEngine.newSymbolicElement(tmp, "byte reference");
       inst.addElement(se);
@@ -153,7 +152,7 @@ SymbolicElement *AnalysisProcessor::createMemSE(Inst &inst, std::stringstream &e
 }
 
 
-SymbolicElement *AnalysisProcessor::createMemSE(Inst &inst, std::stringstream &expr, uint64_t address, uint64_t writeSize, std::string comment)
+SymbolicElement *AnalysisProcessor::createMemSE(Inst &inst, std::stringstream &expr, uint64 address, uint64 writeSize, std::string comment)
 {
   SymbolicElement   *ret = nullptr;
   std::stringstream tmp;
@@ -163,8 +162,8 @@ SymbolicElement *AnalysisProcessor::createMemSE(Inst &inst, std::stringstream &e
    * memory must be assigned to an unique reference.
    */
   while (writeSize){
-    /* Extract each byte if the size > 8 bit */
-    if (writeSize > 1){
+    /* Extract each byte if the size > 1 byte (8 bits) */
+    if (writeSize > BYTE_SIZE){
       tmp.str(smt2lib::extract(((writeSize * REG_SIZE) - 1), ((writeSize * REG_SIZE) - REG_SIZE), expr.str()));
       SymbolicElement *se = symEngine.newSymbolicElement(tmp, "byte reference");
       inst.addElement(se);
@@ -201,81 +200,88 @@ SymbolicElement *AnalysisProcessor::createSE(Inst &inst, std::stringstream &expr
 }
 
 
-uint64_t AnalysisProcessor::getRegSymbolicID(uint64_t regID)
+uint64 AnalysisProcessor::getRegSymbolicID(uint64 regID)
 {
   return this->symEngine.getRegSymbolicID(regID);
 }
 
 
-uint64_t AnalysisProcessor::getMemSymbolicID(uint64_t address)
+uint64 AnalysisProcessor::getMemSymbolicID(uint64 address)
 {
   return this->symEngine.getMemSymbolicID(address);
 }
 
 
-uint64_t AnalysisProcessor::getSymVarFromMemory(uint64_t address)
+SymbolicVariable *AnalysisProcessor::getSymVar(uint64 symVarId)
 {
-  return this->symEngine.getSymVarFromMemory(address);
-}
-
-uint64_t AnalysisProcessor::getSymVarSize(uint64_t symVarId)
-{
-  return this->symEngine.getSymVarSize(symVarId);
+  return this->symEngine.getSymVar(symVarId);
 }
 
 
-uint64_t AnalysisProcessor::getMemoryFromSymVar(uint64_t symVar)
+SymbolicVariable *AnalysisProcessor::getSymVar(std::string symVarName)
 {
-  return this->symEngine.getMemoryFromSymVar(symVar);
+  return this->symEngine.getSymVar(symVarName);
 }
 
 
-SymbolicElement *AnalysisProcessor::getElementFromId(uint64_t id)
+std::vector<SymbolicVariable *> AnalysisProcessor::getSymVars(void)
+{
+  return this->symEngine.getSymVars();
+}
+
+
+SymbolicElement *AnalysisProcessor::getElementFromId(uint64 id)
 {
   return this->symEngine.getElementFromId(id);
 }
 
 
-std::string AnalysisProcessor::getBacktrackedExpressionFromId(uint64_t id)
+std::string AnalysisProcessor::getBacktrackedExpressionFromId(uint64 id)
 {
   return this->symEngine.getBacktrackedExpressionFromId(id);
 }
 
 
-bool AnalysisProcessor::convertExprToSymVar(uint64_t exprId, uint64_t symVarSize)
+uint64 AnalysisProcessor::convertExprToSymVar(uint64 exprId, uint64 symVarSize, std::string symVarComment)
 {
-  return this->symEngine.convertExprToSymVar(exprId, symVarSize);
+  return this->symEngine.convertExprToSymVar(exprId, symVarSize, symVarComment);
 }
 
 
-bool AnalysisProcessor::assignExprToSymVar(uint64_t exprId, uint64_t symVarId)
+uint64 AnalysisProcessor::convertMemToSymVar(uint64 memAddr, uint64 symVarSize, std::string symVarComment)
 {
-  return this->symEngine.assignExprToSymVar(exprId, symVarId);
+  return this->symEngine.convertMemToSymVar(memAddr, symVarSize, symVarComment);
 }
 
 
-void AnalysisProcessor::addPathConstraint(uint64_t exprId)
+uint64 AnalysisProcessor::convertRegToSymVar(uint64 regId, uint64 symVarSize, std::string symVarComment)
+{
+  return this->symEngine.convertRegToSymVar(regId, symVarSize, symVarComment);
+}
+
+
+void AnalysisProcessor::addPathConstraint(uint64 exprId)
 {
   this->symEngine.addPathConstraint(exprId);
 }
 
 
-std::list<uint64_t> AnalysisProcessor::getPathConstraints(void)
+std::list<uint64> AnalysisProcessor::getPathConstraints(void)
 {
   return this->symEngine.getPathConstraints();
 }
 
 
-std::string AnalysisProcessor::buildSymbolicRegOperand(uint64_t regID, uint64_t regSize)
+std::string AnalysisProcessor::buildSymbolicRegOperand(uint64 regID, uint64 regSize)
 {
   std::stringstream   op;
-  uint64_t            symReg = this->getRegSymbolicID(regID);
+  uint64              symReg = this->getRegSymbolicID(regID);
 
   if (symReg != UNSET)
     op << smt2lib::extract(regSize, "#" + std::to_string(symReg));
   else {
     if (regID >= ID_XMM0 && regID <= ID_XMM15)
-      op << smt2lib::extract(regSize, smt2lib::bv(this->getSSERegisterValue(regID), REG_SIZE_SSE_BIT));
+      op << smt2lib::extract(regSize, smt2lib::bv(this->getSSERegisterValue(regID), SSE_REG_SIZE_BIT));
     else
       op << smt2lib::extract(regSize, smt2lib::bv(this->getRegisterValue(regID), REG_SIZE_BIT));
   }
@@ -284,16 +290,16 @@ std::string AnalysisProcessor::buildSymbolicRegOperand(uint64_t regID, uint64_t 
 }
 
 
-std::string AnalysisProcessor::buildSymbolicRegOperand(uint64_t regID, uint64_t regSize, uint64_t highExtract, uint64_t lowExtract)
+std::string AnalysisProcessor::buildSymbolicRegOperand(uint64 regID, uint64 regSize, uint64 highExtract, uint64 lowExtract)
 {
   std::stringstream   op;
-  uint64_t            symReg = this->getRegSymbolicID(regID);
+  uint64              symReg = this->getRegSymbolicID(regID);
 
   if (symReg != UNSET)
     op << smt2lib::extract(highExtract, lowExtract, "#" + std::to_string(symReg));
   else {
     if (regID >= ID_XMM0 && regID <= ID_XMM15)
-      op << smt2lib::extract(highExtract, lowExtract, smt2lib::bv(this->getSSERegisterValue(regID), REG_SIZE_SSE_BIT));
+      op << smt2lib::extract(highExtract, lowExtract, smt2lib::bv(this->getSSERegisterValue(regID), SSE_REG_SIZE_BIT));
     else
       op << smt2lib::extract(highExtract, lowExtract, smt2lib::bv(this->getRegisterValue(regID), REG_SIZE_BIT));
   }
@@ -302,11 +308,11 @@ std::string AnalysisProcessor::buildSymbolicRegOperand(uint64_t regID, uint64_t 
 }
 
 
-std::string AnalysisProcessor::buildSymbolicMemOperand(uint64_t mem, uint64_t memSize)
+std::string AnalysisProcessor::buildSymbolicMemOperand(uint64 mem, uint64 memSize)
 {
   std::vector<std::string>  opVec;
   std::stringstream         tmp;
-  uint64_t                  symMem, offset;
+  uint64                    symMem, offset;
 
   offset = 0;
   while (memSize) {
@@ -316,20 +322,20 @@ std::string AnalysisProcessor::buildSymbolicMemOperand(uint64_t mem, uint64_t me
       tmp << "#" << std::dec << symMem;
     else
       tmp << smt2lib::bv(this->getMemValue(mem + offset, 1), REG_SIZE);
-    opVec.push_back(smt2lib::extract(7, 0, tmp.str())); 
+    opVec.push_back(smt2lib::extract(7, 0, tmp.str()));
     offset++;
     memSize--;
   }
 
   tmp.str("");
   switch (opVec.size()) {
-    case 16:
-    case 8:
-    case 4:
-    case 2:
+    case DQWORD_SIZE:
+    case QWORD_SIZE:
+    case DWORD_SIZE:
+    case WORD_SIZE:
       tmp.str(smt2lib::concat(opVec));
       break;
-    case 1:
+    case BYTE_SIZE:
       tmp.str(opVec[0]);
       break;
   }
@@ -338,10 +344,10 @@ std::string AnalysisProcessor::buildSymbolicMemOperand(uint64_t mem, uint64_t me
 }
 
 
-std::string AnalysisProcessor::buildSymbolicFlagOperand(uint64_t flagID, uint64_t size)
+std::string AnalysisProcessor::buildSymbolicFlagOperand(uint64 flagID, uint64 size)
 {
   std::stringstream   op;
-  uint64_t            symFlag = this->getRegSymbolicID(flagID);
+  uint64              symFlag = this->getRegSymbolicID(flagID);
 
   if (symFlag != UNSET)
     op << smt2lib::zx("#" + std::to_string(symFlag), (size * REG_SIZE) - 1);
@@ -352,10 +358,10 @@ std::string AnalysisProcessor::buildSymbolicFlagOperand(uint64_t flagID, uint64_
 }
 
 
-std::string AnalysisProcessor::buildSymbolicFlagOperand(uint64_t flagID)
+std::string AnalysisProcessor::buildSymbolicFlagOperand(uint64 flagID)
 {
   std::stringstream   op;
-  uint64_t            symFlag = this->getRegSymbolicID(flagID);
+  uint64              symFlag = this->getRegSymbolicID(flagID);
 
   if (symFlag != UNSET)
     op << "#" + std::to_string(symFlag);
@@ -367,13 +373,13 @@ std::string AnalysisProcessor::buildSymbolicFlagOperand(uint64_t flagID)
 
 
 
-void AnalysisProcessor::concretizeReg(uint64_t regID)
+void AnalysisProcessor::concretizeReg(uint64 regID)
 {
   this->symEngine.concretizeReg(regID);
 }
 
 
-void AnalysisProcessor::concretizeMem(uint64_t mem)
+void AnalysisProcessor::concretizeMem(uint64 mem)
 {
   this->symEngine.concretizeMem(mem);
 }
@@ -388,159 +394,147 @@ TaintEngine &AnalysisProcessor::getTaintEngine(void)
 }
 
 
-void AnalysisProcessor::assignmentSpreadTaintRegReg(SymbolicElement *se, uint64_t regDst, uint64_t regSrc)
+void AnalysisProcessor::assignmentSpreadTaintExprMem(SymbolicElement *se, uint64 memSrc, uint32 readSize)
+{
+  se->isTainted = this->taintEngine.assignmentSpreadTaintExprMem(memSrc, readSize);
+}
+
+
+void AnalysisProcessor::assignmentSpreadTaintExprReg(SymbolicElement *se, uint64 regSrc)
+{
+  se->isTainted = this->taintEngine.assignmentSpreadTaintExprReg(regSrc);
+}
+
+
+void AnalysisProcessor::assignmentSpreadTaintExprRegMem(SymbolicElement *se, uint64 regSrc, uint64 memSrc, uint32 readSize)
+{
+  se->isTainted = this->taintEngine.assignmentSpreadTaintExprRegMem(regSrc, memSrc, readSize);
+}
+
+
+void AnalysisProcessor::assignmentSpreadTaintExprRegReg(SymbolicElement *se, uint64 regSrc1, uint64 regSrc2)
+{
+  se->isTainted = this->taintEngine.assignmentSpreadTaintExprRegReg(regSrc1, regSrc2);
+}
+
+
+void AnalysisProcessor::assignmentSpreadTaintRegReg(SymbolicElement *se, uint64 regDst, uint64 regSrc)
 {
   se->isTainted = this->taintEngine.assignmentSpreadTaintRegReg(regDst, regSrc);
 }
 
 
-void AnalysisProcessor::assignmentSpreadTaintRegImm(SymbolicElement *se, uint64_t regDst)
+void AnalysisProcessor::assignmentSpreadTaintRegImm(SymbolicElement *se, uint64 regDst)
 {
   se->isTainted = this->taintEngine.assignmentSpreadTaintRegImm(regDst);
 }
 
 
-void AnalysisProcessor::assignmentSpreadTaintRegMem(SymbolicElement *se, uint64_t regDst, uint64_t memSrc, uint32_t readSize)
+void AnalysisProcessor::assignmentSpreadTaintRegMem(SymbolicElement *se, uint64 regDst, uint64 memSrc, uint32 readSize)
 {
   se->isTainted = this->taintEngine.assignmentSpreadTaintRegMem(regDst, memSrc, readSize);
-
-  /* Use symbolic variable if the memory is tainted */
-  if (se->isTainted) {
-
-    std::stringstream newExpr, finalExpr;
-    uint64_t          symVarID;
-
-    /* Check if this memory area is already known as a symbolic variable */
-    symVarID = this->symEngine.getSymVarFromMemory(memSrc); // TODO: Must use the readSize
-    if (symVarID == UNSET){
-      symVarID = this->symEngine.getUniqueSymVarID();
-      this->symEngine.addSmt2LibVarDecl(symVarID, readSize);
-      this->symEngine.addSymVarMemoryReference(memSrc, symVarID);
-    }
-    newExpr << SYMVAR_NAME << std::dec << symVarID;
-    finalExpr << smt2lib::zx(newExpr.str(), REG_SIZE_BIT - (readSize * REG_SIZE));
-    se->setSrcExpr(finalExpr);
-  }
 }
 
 
-void AnalysisProcessor::assignmentSpreadTaintMemMem(SymbolicElement *se, uint64_t memDst, uint64_t memSrc, uint32_t readSize)
+void AnalysisProcessor::assignmentSpreadTaintMemMem(SymbolicElement *se, uint64 memDst, uint64 memSrc, uint32 readSize)
 {
   se->isTainted = this->taintEngine.assignmentSpreadTaintMemMem(memDst, memSrc, readSize);
-
-  /* Use symbolic variable if the memory is tainted */
-  if (se->isTainted) {
-
-    std::stringstream newExpr, finalExpr;
-    uint64_t          symVarID;
-
-    /* Check if this memory area is already known as a symbolic variable */
-    symVarID = this->symEngine.getSymVarFromMemory(memSrc); // TODO: Must use the readSize
-    if (symVarID == UNSET){
-      symVarID = this->symEngine.getUniqueSymVarID();
-      this->symEngine.addSmt2LibVarDecl(symVarID, readSize);
-      this->symEngine.addSymVarMemoryReference(memSrc, symVarID);
-    }
-    newExpr << SYMVAR_NAME << std::dec << symVarID;
-    finalExpr << smt2lib::zx(newExpr.str(), REG_SIZE_BIT - (readSize * REG_SIZE));
-    se->setSrcExpr(finalExpr);
-  }
 }
 
 
-void AnalysisProcessor::assignmentSpreadTaintMemImm(SymbolicElement *se, uint64_t memDst, uint64_t writeSize)
+void AnalysisProcessor::assignmentSpreadTaintMemImm(SymbolicElement *se, uint64 memDst, uint64 writeSize)
 {
   se->isTainted = this->taintEngine.assignmentSpreadTaintMemImm(memDst, writeSize);
 }
 
 
-void AnalysisProcessor::assignmentSpreadTaintMemReg(SymbolicElement *se, uint64_t memDst, uint64_t regSrc, uint64_t writeSize)
+void AnalysisProcessor::assignmentSpreadTaintMemReg(SymbolicElement *se, uint64 memDst, uint64 regSrc, uint64 writeSize)
 {
   se->isTainted = this->taintEngine.assignmentSpreadTaintMemReg(memDst, regSrc, writeSize);
 }
 
 
-bool AnalysisProcessor::isRegTainted(uint64_t reg)
+bool AnalysisProcessor::isRegTainted(uint64 reg)
 {
   return this->taintEngine.isRegTainted(reg);
 }
 
 
-bool AnalysisProcessor::isMemTainted(uint64_t addr)
+bool AnalysisProcessor::isMemTainted(uint64 addr)
 {
   return this->taintEngine.isMemTainted(addr);
 }
 
 
-void AnalysisProcessor::taintReg(uint64_t reg)
+void AnalysisProcessor::taintReg(uint64 reg)
 {
   this->taintEngine.taintReg(reg);
 }
 
 
-void AnalysisProcessor::setTaintMem(SymbolicElement *se, uint64_t mem, uint64_t flag)
+void AnalysisProcessor::setTaintMem(SymbolicElement *se, uint64 mem, uint64 flag)
 {
   this->taintEngine.setTaintMem(mem, flag);
   se->isTainted = flag;
 }
 
 
-void AnalysisProcessor::setTaintReg(SymbolicElement *se, uint64_t reg, uint64_t flag)
+void AnalysisProcessor::setTaintReg(SymbolicElement *se, uint64 reg, uint64 flag)
 {
   this->taintEngine.setTaintReg(reg, flag);
   se->isTainted = flag;
 }
 
 
-void AnalysisProcessor::untaintReg(uint64_t reg)
+void AnalysisProcessor::untaintReg(uint64 reg)
 {
   this->taintEngine.untaintReg(reg);
 }
 
 
-void AnalysisProcessor::taintMem(uint64_t addr)
+void AnalysisProcessor::taintMem(uint64 addr)
 {
   this->taintEngine.taintMem(addr);
 }
 
 
-void AnalysisProcessor::untaintMem(uint64_t addr)
+void AnalysisProcessor::untaintMem(uint64 addr)
 {
   this->taintEngine.untaintMem(addr);
 }
 
 
-void AnalysisProcessor::aluSpreadTaintRegImm(SymbolicElement *se, uint64_t regDst)
+void AnalysisProcessor::aluSpreadTaintRegImm(SymbolicElement *se, uint64 regDst)
 {
   se->isTainted = this->taintEngine.aluSpreadTaintRegImm(regDst);
 }
 
 
-void AnalysisProcessor::aluSpreadTaintRegReg(SymbolicElement *se, uint64_t regDst, uint64_t regSrc)
+void AnalysisProcessor::aluSpreadTaintRegReg(SymbolicElement *se, uint64 regDst, uint64 regSrc)
 {
   se->isTainted = this->taintEngine.aluSpreadTaintRegReg(regDst, regSrc);
 }
 
 
-void AnalysisProcessor::aluSpreadTaintMemMem(SymbolicElement *se, uint64_t memDst, uint64_t memSrc)
+void AnalysisProcessor::aluSpreadTaintMemMem(SymbolicElement *se, uint64 memDst, uint64 memSrc, uint32 writeSize)
 {
-  se->isTainted = this->taintEngine.aluSpreadTaintMemMem(memDst, memSrc);
+  se->isTainted = this->taintEngine.aluSpreadTaintMemMem(memDst, memSrc, writeSize);
 }
 
 
-void AnalysisProcessor::aluSpreadTaintRegMem(SymbolicElement *se, uint64_t regDst, uint64_t memSrc, uint32_t readSize)
+void AnalysisProcessor::aluSpreadTaintRegMem(SymbolicElement *se, uint64 regDst, uint64 memSrc, uint32 readSize)
 {
   se->isTainted = this->taintEngine.aluSpreadTaintRegMem(regDst, memSrc, readSize);
 }
 
 
-void AnalysisProcessor::aluSpreadTaintMemImm(SymbolicElement *se, uint64_t memDst, uint32_t writeSize)
+void AnalysisProcessor::aluSpreadTaintMemImm(SymbolicElement *se, uint64 memDst, uint32 writeSize)
 {
   se->isTainted = this->taintEngine.aluSpreadTaintMemImm(memDst, writeSize);
 }
 
 
-void AnalysisProcessor::aluSpreadTaintMemReg(SymbolicElement *se, uint64_t memDst, uint64_t regSrc, uint32_t writeSize)
+void AnalysisProcessor::aluSpreadTaintMemReg(SymbolicElement *se, uint64 memDst, uint64 regSrc, uint32 writeSize)
 {
   se->isTainted = this->taintEngine.aluSpreadTaintMemReg(memDst, regSrc, writeSize);
 }
@@ -574,7 +568,7 @@ void AnalysisProcessor::incNumberOfExpressions(void)
 }
 
 
-void AnalysisProcessor::incNumberOfExpressions(uint64_t val)
+void AnalysisProcessor::incNumberOfExpressions(uint64 val)
 {
   this->stats.incNumberOfExpressions(val);
 }
@@ -599,25 +593,25 @@ void AnalysisProcessor::incNumberOfBranchesTaken(bool isBranch)
 }
 
 
-uint64_t AnalysisProcessor::getNumberOfBranchesTaken(void)
+uint64 AnalysisProcessor::getNumberOfBranchesTaken(void)
 {
   return this->stats.getNumberOfBranchesTaken();
 }
 
 
-uint64_t AnalysisProcessor::getNumberOfExpressions(void)
+uint64 AnalysisProcessor::getNumberOfExpressions(void)
 {
   return this->stats.getNumberOfExpressions();
 }
 
 
-uint64_t AnalysisProcessor::getNumberOfUnknownInstruction(void)
+uint64 AnalysisProcessor::getNumberOfUnknownInstruction(void)
 {
   return this->stats.getNumberOfUnknownInstruction();
 }
 
 
-uint64_t AnalysisProcessor::getTimeOfExecution(void)
+uint64 AnalysisProcessor::getTimeOfExecution(void)
 {
   return this->stats.getTimeOfExecution();
 }
@@ -626,7 +620,7 @@ uint64_t AnalysisProcessor::getTimeOfExecution(void)
 // ContextHandler Facade
 
 /* Returns the thread id  */
-uint32_t AnalysisProcessor::getThreadID(void)
+uint32 AnalysisProcessor::getThreadID(void)
 {
   if (!this->currentCtxH)
     return -1;
@@ -635,7 +629,7 @@ uint32_t AnalysisProcessor::getThreadID(void)
 
 
 // There is no verification on the validity of the ID.
-uint64_t AnalysisProcessor::getRegisterValue(uint64_t regID)
+uint64 AnalysisProcessor::getRegisterValue(uint64 regID)
 {
   if (!this->currentCtxH)
     return 0;
@@ -643,7 +637,7 @@ uint64_t AnalysisProcessor::getRegisterValue(uint64_t regID)
 }
 
 
-uint64_t AnalysisProcessor::getFlagValue(uint64_t flagID)
+uint64 AnalysisProcessor::getFlagValue(uint64 flagID)
 {
   if (!this->currentCtxH)
     return 0;
@@ -651,7 +645,7 @@ uint64_t AnalysisProcessor::getFlagValue(uint64_t flagID)
 }
 
 
-__uint128_t AnalysisProcessor::getSSERegisterValue(uint64_t regID)
+uint128 AnalysisProcessor::getSSERegisterValue(uint64 regID)
 {
   if (!this->currentCtxH)
     return 0;
@@ -660,7 +654,7 @@ __uint128_t AnalysisProcessor::getSSERegisterValue(uint64_t regID)
 
 
 // There is no verification on the validity of the ID.
-void AnalysisProcessor::setRegisterValue(uint64_t regID, uint64_t value)
+void AnalysisProcessor::setRegisterValue(uint64 regID, uint64 value)
 {
   if (!this->currentCtxH)
     return ;
@@ -668,7 +662,7 @@ void AnalysisProcessor::setRegisterValue(uint64_t regID, uint64_t value)
 }
 
 
-void AnalysisProcessor::setSSERegisterValue(uint64_t regID, __uint128_t value)
+void AnalysisProcessor::setSSERegisterValue(uint64 regID, uint128 value)
 {
   if (!this->currentCtxH)
     return ;
@@ -676,10 +670,17 @@ void AnalysisProcessor::setSSERegisterValue(uint64_t regID, __uint128_t value)
 }
 
 
-uint64_t AnalysisProcessor::getMemValue(uint64_t mem, uint32_t readSize)
+uint128 AnalysisProcessor::getMemValue(uint64 mem, uint32 readSize)
 {
   return this->currentCtxH->getMemValue(mem, readSize);
 }
+
+
+void AnalysisProcessor::setMemValue(uint64 mem, uint32 writeSize, uint128 value)
+{
+  this->currentCtxH->setMemValue(mem, writeSize, value);
+}
+
 
 // Trace Facade
 
@@ -723,7 +724,7 @@ bool AnalysisProcessor::isSnapshotLocked(void)
 }
 
 
-void AnalysisProcessor::addSnapshotModification(uint64_t addr, char byte)
+void AnalysisProcessor::addSnapshotModification(uint64 addr, char byte)
 {
   this->snapshotEngine.addModification(addr, byte);
 }

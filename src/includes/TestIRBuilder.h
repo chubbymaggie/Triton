@@ -1,5 +1,5 @@
-#ifndef _TESTIRBUILDER_H_
-#define _TESTIRBUILDER_H_
+#ifndef TESTIRBUILDER_H
+#define TESTIRBUILDER_H
 
 #include "BaseIRBuilder.h"
 #include "EflagsBuilder.h"
@@ -10,7 +10,7 @@
 class TestIRBuilder: public BaseIRBuilder, public TwoOperandsTemplate {
 
   public:
-    TestIRBuilder(uint64_t address, const std::string &disassembly);
+    TestIRBuilder(uint64 address, const std::string &disassembly);
 
     // From BaseIRBuilder
     virtual Inst *process(AnalysisProcessor &ap) const;
@@ -27,4 +27,4 @@ class TestIRBuilder: public BaseIRBuilder, public TwoOperandsTemplate {
     virtual void memReg(AnalysisProcessor &ap, Inst &inst) const;
 };
 
-#endif // _TESTIRBUILDER_H_
+#endif // TESTIRBUILDER_H

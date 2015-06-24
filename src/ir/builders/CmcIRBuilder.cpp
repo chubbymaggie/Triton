@@ -2,13 +2,13 @@
 #include <sstream>
 #include <stdexcept>
 
-#include "CmcIRBuilder.h"
-#include "Registers.h"
-#include "SMT2Lib.h"
-#include "SymbolicElement.h"
+#include <CmcIRBuilder.h>
+#include <Registers.h>
+#include <SMT2Lib.h>
+#include <SymbolicElement.h>
 
 
-CmcIRBuilder::CmcIRBuilder(uint64_t address, const std::string &disassembly):
+CmcIRBuilder::CmcIRBuilder(uint64 address, const std::string &disassembly):
   BaseIRBuilder(address, disassembly) {
 }
 

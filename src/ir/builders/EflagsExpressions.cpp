@@ -1,11 +1,11 @@
 
-#include "EflagsExpressions.h"
-#include "Registers.h"
+#include <EflagsExpressions.h>
+#include <Registers.h>
 
 
 
 std::string EflagsExpressions::af(SymbolicElement *parent,
-                                  uint32_t bvSize,
+                                  uint32 bvSize,
                                   std::stringstream &op1,
                                   std::stringstream &op2)
 {
@@ -35,7 +35,7 @@ std::string EflagsExpressions::af(SymbolicElement *parent,
 
 
 std::string EflagsExpressions::afNeg(SymbolicElement *parent,
-                                     uint32_t bvSize, 
+                                     uint32 bvSize,
                                      std::stringstream &op1)
 {
   std::stringstream expr;
@@ -85,7 +85,49 @@ std::string EflagsExpressions::cfAdd(SymbolicElement *parent,
 }
 
 
-std::string EflagsExpressions::cfNeg(uint32_t bvSize,
+std::string EflagsExpressions::cfImul(SymbolicElement *parent,
+                                     std::stringstream &op1)
+{
+  std::stringstream expr;
+
+  /*
+   * Create the SMT semantic.
+   * cf = 0 if res == op1 else 1
+   */
+  expr << smt2lib::ite(
+            smt2lib::equal(
+              parent->getID2Str(),
+              op1.str()
+            ),
+            smt2lib::bv(0, 1),
+            smt2lib::bv(1, 1));
+
+  return expr.str();
+}
+
+
+std::string EflagsExpressions::cfMul(uint32 bvSize,
+                                     std::stringstream &up)
+{
+  std::stringstream expr;
+
+  /*
+   * Create the SMT semantic.
+   * cf = 0 if up == 0 else 1
+   */
+  expr << smt2lib::ite(
+            smt2lib::equal(
+              up.str(),
+              smt2lib::bv(0, bvSize)
+            ),
+            smt2lib::bv(0, 1),
+            smt2lib::bv(1, 1));
+
+  return expr.str();
+}
+
+
+std::string EflagsExpressions::cfNeg(uint32 bvSize,
                                      std::stringstream &op1)
 {
   std::stringstream expr;
@@ -106,9 +148,65 @@ std::string EflagsExpressions::cfNeg(uint32_t bvSize,
 }
 
 
+std::string EflagsExpressions::cfRol(SymbolicElement *parent,
+                                     AnalysisProcessor &ap,
+                                     uint32 bvSize,
+                                     std::stringstream &op2)
+{
+  std::stringstream expr;
+
+  /*
+   * Create the SMT semantic.
+   * cf = (res & 1) if op2 != 0 else undefined
+   * As the second operand can't be symbolized, there is
+   * no symbolic expression available. So, we must use the
+   * op2's concretization.
+   */
+  if (std::stoi(op2.str()) != 0)
+    expr << smt2lib::extract(0, 0, parent->getID2Str());
+  else
+    expr << ap.buildSymbolicFlagOperand(ID_CF);
+
+  return expr.str();
+}
+
+
+std::string EflagsExpressions::cfRor(SymbolicElement *parent,
+                                     AnalysisProcessor &ap,
+                                     uint32 bvSize,
+                                     std::stringstream &op2)
+{
+  std::stringstream expr;
+
+  /*
+   * Create the SMT semantic.
+   * cf = (res >> bvSize - 1) & 1 if op2 != 0 else undefined
+   * As the second operand can't be symbolized, there is
+   * no symbolic expression available. So, we must use the
+   * op2's concretization.
+   */
+  if (std::stoi(op2.str()) != 0) {
+    expr << smt2lib::extract(0, 0,
+      smt2lib::bvlshr(
+        parent->getID2Str(),
+        smt2lib::bvsub(
+          smt2lib::bv(bvSize, bvSize),
+          smt2lib::bv(1, bvSize)
+        )
+      )
+    );
+  }
+  else {
+    expr << ap.buildSymbolicFlagOperand(ID_CF);
+  }
+
+  return expr.str();
+}
+
+
 std::string EflagsExpressions::cfSar(SymbolicElement *parent,
                                      AnalysisProcessor &ap,
-                                     uint32_t bvSize,
+                                     uint32 bvSize,
                                      std::stringstream &op1,
                                      std::stringstream &op2)
 {
@@ -119,7 +217,7 @@ std::string EflagsExpressions::cfSar(SymbolicElement *parent,
    * if op2 != 0:
    *   if op2 > bvSize:
    *     cf.id = ((op1 >> (bvSize - 1)) & 1)
-   *   else: 
+   *   else:
    *     cf.id = ((op1 >> (op2 - 1)) & 1)
    */
   expr << smt2lib::ite(
@@ -138,7 +236,7 @@ std::string EflagsExpressions::cfSar(SymbolicElement *parent,
 
 std::string EflagsExpressions::cfShl(SymbolicElement *parent,
                                      AnalysisProcessor &ap,
-                                     uint32_t bvSize,
+                                     uint32 bvSize,
                                      std::stringstream &op1,
                                      std::stringstream &op2)
 {
@@ -160,7 +258,7 @@ std::string EflagsExpressions::cfShl(SymbolicElement *parent,
 
 std::string EflagsExpressions::cfShr(SymbolicElement *parent,
                                      AnalysisProcessor &ap,
-                                     uint32_t bvSize,
+                                     uint32 bvSize,
                                      std::stringstream &op1,
                                      std::stringstream &op2)
 {
@@ -213,7 +311,7 @@ std::string EflagsExpressions::clearFlag(void)
 
 
 std::string EflagsExpressions::ofAdd(SymbolicElement *parent,
-                                     uint32_t extractSize,
+                                     uint32 extractSize,
                                      std::stringstream &op1,
                                      std::stringstream &op2)
 {
@@ -241,8 +339,50 @@ std::string EflagsExpressions::ofAdd(SymbolicElement *parent,
 }
 
 
+std::string EflagsExpressions::ofImul(SymbolicElement *parent,
+                                     std::stringstream &op1)
+{
+  std::stringstream expr;
+
+  /*
+   * Create the SMT semantic.
+   * of = 0 if res == op1 else 1
+   */
+  expr << smt2lib::ite(
+            smt2lib::equal(
+              parent->getID2Str(),
+              op1.str()
+            ),
+            smt2lib::bv(0, 1),
+            smt2lib::bv(1, 1));
+
+  return expr.str();
+}
+
+
+std::string EflagsExpressions::ofMul(uint32 bvSize,
+                                     std::stringstream &up)
+{
+  std::stringstream expr;
+
+  /*
+   * Create the SMT semantic.
+   * of = 0 if up == 0 else 1
+   */
+  expr << smt2lib::ite(
+            smt2lib::equal(
+              up.str(),
+              smt2lib::bv(0, bvSize)
+            ),
+            smt2lib::bv(0, 1),
+            smt2lib::bv(1, 1));
+
+  return expr.str();
+}
+
+
 std::string EflagsExpressions::ofNeg(SymbolicElement *parent,
-                                     uint32_t bvSize,
+                                     uint32 bvSize,
                                      std::stringstream &op1)
 {
   std::stringstream expr;
@@ -269,9 +409,78 @@ std::string EflagsExpressions::ofNeg(SymbolicElement *parent,
 }
 
 
+std::string EflagsExpressions::ofRol(SymbolicElement *parent,
+                                     AnalysisProcessor &ap,
+                                     uint32 bvSize,
+                                     std::stringstream &op2)
+{
+  std::stringstream expr;
+
+  /*
+   * Create the SMT semantic.
+   * of = ((cf ^ (res >> (bvsize - 1))) & 1) if op2 == 1 else undefined
+   * As the second operand can't be symbolized, there is
+   * no symbolic expression available. So, we must use the
+   * op2's concretization.
+   */
+  if (std::stoi(op2.str()) == 1) {
+    expr << smt2lib::extract(0, 0,
+              smt2lib::bvxor(
+                ap.buildSymbolicFlagOperand(ID_CF),
+                smt2lib::bvshl(
+                  parent->getID2Str(),
+                  smt2lib::bvsub(smt2lib::bv(bvSize, bvSize), smt2lib::bv(1, bvSize))
+                )
+              )
+            );
+  }
+  else {
+    expr << ap.buildSymbolicFlagOperand(ID_OF);
+  }
+
+  return expr.str();
+}
+
+
+std::string EflagsExpressions::ofRor(SymbolicElement *parent,
+                                     AnalysisProcessor &ap,
+                                     uint32 bvSize,
+                                     std::stringstream &op2)
+{
+  std::stringstream expr;
+
+  /*
+   * Create the SMT semantic.
+   * of = (((res >> (bvSize - 1)) ^ (res >> (bvSize - 2))) & 1) if op2 == 1 else undefined
+   * As the second operand can't be symbolized, there is
+   * no symbolic expression available. So, we must use the
+   * op2's concretization.
+   */
+  if (std::stoi(op2.str()) == 1) {
+    expr << smt2lib::extract(0, 0,
+              smt2lib::bvxor(
+                smt2lib::bvshl(
+                  parent->getID2Str(),
+                  smt2lib::bvsub(smt2lib::bv(bvSize, bvSize), smt2lib::bv(1, bvSize))
+                ),
+                smt2lib::bvshl(
+                  parent->getID2Str(),
+                  smt2lib::bvsub(smt2lib::bv(bvSize, bvSize), smt2lib::bv(2, bvSize))
+                )
+              )
+            );
+  }
+  else {
+    expr << ap.buildSymbolicFlagOperand(ID_OF);
+  }
+
+  return expr.str();
+}
+
+
 std::string EflagsExpressions::ofSar(SymbolicElement *parent,
                                      AnalysisProcessor &ap,
-                                     uint32_t bvSize,
+                                     uint32 bvSize,
                                      std::stringstream &op2)
 {
   std::stringstream expr;
@@ -292,7 +501,7 @@ std::string EflagsExpressions::ofSar(SymbolicElement *parent,
 
 std::string EflagsExpressions::ofShl(SymbolicElement *parent,
                                      AnalysisProcessor &ap,
-                                     uint32_t bvSize,
+                                     uint32 bvSize,
                                      std::stringstream &op1,
                                      std::stringstream &op2)
 {
@@ -319,7 +528,7 @@ std::string EflagsExpressions::ofShl(SymbolicElement *parent,
 
 std::string EflagsExpressions::ofShr(SymbolicElement *parent,
                                      AnalysisProcessor &ap,
-                                     uint32_t bvSize,
+                                     uint32 bvSize,
                                      std::stringstream &op1,
                                      std::stringstream &op2)
 {
@@ -342,7 +551,7 @@ std::string EflagsExpressions::ofShr(SymbolicElement *parent,
 
 
 std::string EflagsExpressions::ofSub(SymbolicElement *parent,
-                                     uint32_t extractSize,
+                                     uint32 extractSize,
                                      std::stringstream &op1,
                                      std::stringstream &op2)
 {
@@ -388,7 +597,7 @@ std::string EflagsExpressions::pf(SymbolicElement *parent)
             ),
             smt2lib::bv(1, 1),
             smt2lib::bv(0, 1)
-          ); 
+          );
 
   return expr.str();
 }
@@ -396,7 +605,7 @@ std::string EflagsExpressions::pf(SymbolicElement *parent)
 
 std::string EflagsExpressions::pfShl(SymbolicElement *parent,
                                      AnalysisProcessor &ap,
-                                     uint32_t bvSize,
+                                     uint32 bvSize,
                                      std::stringstream &op2)
 {
   std::stringstream expr;
@@ -426,7 +635,7 @@ std::string EflagsExpressions::setFlag(void)
 
 
 std::string EflagsExpressions::sf(SymbolicElement *parent,
-                                  uint32_t extractSize)
+                                  uint32 extractSize)
 {
   std::stringstream expr;
 
@@ -449,8 +658,8 @@ std::string EflagsExpressions::sf(SymbolicElement *parent,
 
 std::string EflagsExpressions::sfShl(SymbolicElement *parent,
                                      AnalysisProcessor &ap,
-                                     uint32_t bvSize,
-                                     uint32_t extractSize,
+                                     uint32 bvSize,
+                                     uint32 extractSize,
                                      std::stringstream &op2)
 {
   std::stringstream expr;
@@ -470,7 +679,7 @@ std::string EflagsExpressions::sfShl(SymbolicElement *parent,
 
 
 std::string EflagsExpressions::zf(SymbolicElement *parent,
-                                  uint32_t bvSize)
+                                  uint32 bvSize)
 {
   std::stringstream expr;
 
@@ -493,7 +702,7 @@ std::string EflagsExpressions::zf(SymbolicElement *parent,
 
 std::string EflagsExpressions::zfShl(SymbolicElement *parent,
                                      AnalysisProcessor &ap,
-                                     uint32_t bvSize,
+                                     uint32 bvSize,
                                      std::stringstream &op2)
 {
   std::stringstream expr;

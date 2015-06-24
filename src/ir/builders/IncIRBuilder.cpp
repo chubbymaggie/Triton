@@ -2,13 +2,13 @@
 #include <sstream>
 #include <stdexcept>
 
-#include "IncIRBuilder.h"
-#include "Registers.h"
-#include "SMT2Lib.h"
-#include "SymbolicElement.h"
+#include <IncIRBuilder.h>
+#include <Registers.h>
+#include <SMT2Lib.h>
+#include <SymbolicElement.h>
 
 
-IncIRBuilder::IncIRBuilder(uint64_t address, const std::string &disassembly):
+IncIRBuilder::IncIRBuilder(uint64 address, const std::string &disassembly):
   BaseIRBuilder(address, disassembly) {
 }
 
@@ -16,8 +16,8 @@ IncIRBuilder::IncIRBuilder(uint64_t address, const std::string &disassembly):
 void IncIRBuilder::reg(AnalysisProcessor &ap, Inst &inst) const {
   SymbolicElement   *se;
   std::stringstream expr, op1, op2;
-  uint64_t          reg       = this->operands[0].getValue();
-  uint32_t          regSize   = this->operands[0].getSize();
+  uint64            reg       = this->operands[0].getValue();
+  uint32            regSize   = this->operands[0].getSize();
 
   /* Create the SMT semantic */
   op1 << ap.buildSymbolicRegOperand(reg, regSize);
@@ -44,8 +44,8 @@ void IncIRBuilder::reg(AnalysisProcessor &ap, Inst &inst) const {
 void IncIRBuilder::mem(AnalysisProcessor &ap, Inst &inst) const {
   SymbolicElement   *se;
   std::stringstream expr, op1, op2;
-  uint64_t          mem       = this->operands[0].getValue();
-  uint32_t          memSize   = this->operands[0].getSize();
+  uint64            mem       = this->operands[0].getValue();
+  uint32            memSize   = this->operands[0].getSize();
 
   /* Create the SMT semantic */
   op1 << ap.buildSymbolicMemOperand(mem, memSize);
@@ -58,7 +58,7 @@ void IncIRBuilder::mem(AnalysisProcessor &ap, Inst &inst) const {
   se = ap.createMemSE(inst, expr, mem, memSize);
 
   /* Apply the taint */
-  ap.aluSpreadTaintMemMem(se, mem, mem);
+  ap.aluSpreadTaintMemMem(se, mem, mem, memSize);
 
   /* Add the symbolic flags element to the current inst */
   EflagsBuilder::af(inst, se, ap, memSize, op1, op2);

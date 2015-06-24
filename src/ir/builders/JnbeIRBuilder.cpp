@@ -2,13 +2,13 @@
 #include <sstream>
 #include <stdexcept>
 
-#include "JnbeIRBuilder.h"
-#include "Registers.h"
-#include "SMT2Lib.h"
-#include "SymbolicElement.h"
+#include <JnbeIRBuilder.h>
+#include <Registers.h>
+#include <SMT2Lib.h>
+#include <SymbolicElement.h>
 
 
-JnbeIRBuilder::JnbeIRBuilder(uint64_t address, const std::string &disassembly):
+JnbeIRBuilder::JnbeIRBuilder(uint64 address, const std::string &disassembly):
   BaseIRBuilder(address, disassembly) {
 }
 
@@ -16,7 +16,7 @@ JnbeIRBuilder::JnbeIRBuilder(uint64_t address, const std::string &disassembly):
 void JnbeIRBuilder::imm(AnalysisProcessor &ap, Inst &inst) const {
   SymbolicElement   *se;
   std::stringstream expr, cf, zf;
-  uint64_t          imm   = this->operands[0].getValue();
+  uint64            imm   = this->operands[0].getValue();
 
   /* Create the SMT semantic */
   cf << ap.buildSymbolicFlagOperand(ID_CF);

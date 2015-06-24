@@ -1,5 +1,5 @@
-#ifndef _JOIRBUILDER_H_
-#define _JOIRBUILDER_H_
+#ifndef JOIRBUILDER_H
+#define JOIRBUILDER_H
 
 #include "BaseIRBuilder.h"
 #include "EflagsBuilder.h"
@@ -10,7 +10,7 @@
 class JoIRBuilder: public BaseIRBuilder, public OneOperandTemplate {
 
   public:
-    JoIRBuilder(uint64_t address, const std::string &disassembly);
+    JoIRBuilder(uint64 address, const std::string &disassembly);
 
     // From BaseIRBuilder
     virtual Inst *process(AnalysisProcessor &ap) const;
@@ -25,4 +25,4 @@ class JoIRBuilder: public BaseIRBuilder, public OneOperandTemplate {
     virtual void mem(AnalysisProcessor &ap, Inst &inst) const;
 };
 
-#endif // _JOIRBUILDER_H_
+#endif // JOIRBUILDER_H

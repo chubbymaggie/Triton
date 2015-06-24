@@ -1,5 +1,5 @@
-#ifndef _SETZIRBUILDER_H_
-#define _SETZIRBUILDER_H_
+#ifndef SETZIRBUILDER_H
+#define SETZIRBUILDER_H
 
 #include "BaseIRBuilder.h"
 #include "EflagsBuilder.h"
@@ -10,7 +10,7 @@
 class SetzIRBuilder: public BaseIRBuilder, public OneOperandTemplate {
 
   public:
-    SetzIRBuilder(uint64_t address, const std::string &disassembly);
+    SetzIRBuilder(uint64 address, const std::string &disassembly);
 
     // From BaseIRBuilder
     virtual Inst *process(AnalysisProcessor &ap) const;
@@ -25,4 +25,4 @@ class SetzIRBuilder: public BaseIRBuilder, public OneOperandTemplate {
     virtual void mem(AnalysisProcessor &ap, Inst &inst) const;
 };
 
-#endif // _SETZIRBUILDER_H_
+#endif // SETZIRBUILDER_H

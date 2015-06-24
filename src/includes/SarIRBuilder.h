@@ -1,5 +1,5 @@
-#ifndef _SARIRBUILDER_H_
-#define _SARIRBUILDER_H_
+#ifndef SARIRBUILDER_H
+#define SARIRBUILDER_H
 
 #include "BaseIRBuilder.h"
 #include "EflagsBuilder.h"
@@ -10,7 +10,7 @@
 class SarIRBuilder: public BaseIRBuilder, public TwoOperandsTemplate {
 
   public:
-    SarIRBuilder(uint64_t address, const std::string &disassembly);
+    SarIRBuilder(uint64 address, const std::string &disassembly);
 
     // From BaseIRBuilder
     virtual Inst *process(AnalysisProcessor &ap) const;
@@ -27,4 +27,4 @@ class SarIRBuilder: public BaseIRBuilder, public TwoOperandsTemplate {
     virtual void memReg(AnalysisProcessor &ap, Inst &inst) const;
 };
 
-#endif // _SARIRBUILDER_H_
+#endif // SARIRBUILDER_H

@@ -1,11 +1,11 @@
 #include <stdexcept>
 
-#include "ControlFlow.h"
-#include "Registers.h"
+#include <ControlFlow.h>
+#include <Registers.h>
 
 
 
-SymbolicElement *ControlFlow::rip(Inst &inst, AnalysisProcessor &ap, uint64_t nextAddr)
+SymbolicElement *ControlFlow::rip(Inst &inst, AnalysisProcessor &ap, uint64 nextAddr)
 {
   SymbolicElement     *se;
   std::stringstream   expr;

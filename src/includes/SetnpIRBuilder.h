@@ -1,5 +1,5 @@
-#ifndef _SETNPIRBUILDER_H_
-#define _SETNPIRBUILDER_H_
+#ifndef SETNPIRBUILDER_H
+#define SETNPIRBUILDER_H
 
 #include "BaseIRBuilder.h"
 #include "EflagsBuilder.h"
@@ -10,7 +10,7 @@
 class SetnpIRBuilder: public BaseIRBuilder, public OneOperandTemplate {
 
   public:
-    SetnpIRBuilder(uint64_t address, const std::string &disassembly);
+    SetnpIRBuilder(uint64 address, const std::string &disassembly);
 
     // From BaseIRBuilder
     virtual Inst *process(AnalysisProcessor &ap) const;
@@ -25,4 +25,4 @@ class SetnpIRBuilder: public BaseIRBuilder, public OneOperandTemplate {
     virtual void mem(AnalysisProcessor &ap, Inst &inst) const;
 };
 
-#endif // _SETNPIRBUILDER_H_
+#endif // SETNPIRBUILDER_H

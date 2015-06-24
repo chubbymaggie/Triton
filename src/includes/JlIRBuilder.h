@@ -1,5 +1,5 @@
-#ifndef _JLIRBUILDER_H_
-#define _JLIRBUILDER_H_
+#ifndef JLIRBUILDER_H
+#define JLIRBUILDER_H
 
 #include "BaseIRBuilder.h"
 #include "EflagsBuilder.h"
@@ -10,7 +10,7 @@
 class JlIRBuilder: public BaseIRBuilder, public OneOperandTemplate {
 
   public:
-    JlIRBuilder(uint64_t address, const std::string &disassembly);
+    JlIRBuilder(uint64 address, const std::string &disassembly);
 
     // From BaseIRBuilder
     virtual Inst *process(AnalysisProcessor &ap) const;
@@ -25,4 +25,4 @@ class JlIRBuilder: public BaseIRBuilder, public OneOperandTemplate {
     virtual void mem(AnalysisProcessor &ap, Inst &inst) const;
 };
 
-#endif // _JLIRBUILDER_H_
+#endif // JLIRBUILDER_H

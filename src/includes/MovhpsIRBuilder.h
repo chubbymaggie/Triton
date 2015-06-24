@@ -1,5 +1,5 @@
-#ifndef _MOVHPSIRBUILDER_H_
-#define _MOVHPSIRBUILDER_H_
+#ifndef MOVHPSIRBUILDER_H
+#define MOVHPSIRBUILDER_H
 
 #include "BaseIRBuilder.h"
 #include "Inst.h"
@@ -8,7 +8,7 @@
 
 class MovhpsIRBuilder: public BaseIRBuilder, public TwoOperandsTemplate  {
   public:
-    MovhpsIRBuilder(uint64_t address, const std::string &disassembly);
+    MovhpsIRBuilder(uint64 address, const std::string &disassembly);
 
     // From BaseIRBuilder
     virtual Inst *process(AnalysisProcessor &ap) const;
@@ -25,4 +25,4 @@ class MovhpsIRBuilder: public BaseIRBuilder, public TwoOperandsTemplate  {
     virtual void memReg(AnalysisProcessor &ap, Inst &inst) const;
 };
 
-#endif // _MOVHPSIRBUILDER_H_
+#endif // MOVHPSIRBUILDER_H
