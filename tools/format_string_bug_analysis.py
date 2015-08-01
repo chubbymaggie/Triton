@@ -16,7 +16,7 @@
 ## Output:
 ## -------
 ##
-## $ ../../../pin -t ./triton.so -script ./tools/format_string_bug_analysis.py -- ./samples/vulns/formatString abcd titutatatoto
+## $ ./triton ./tools/format_string_bug_analysis.py ./samples/vulns/formatString abcd titutatatoto
 ## [+] 012 bytes tainted from the argv[2] (0x7fff367da0f9) pointer
 ## [+] 004 bytes tainted from the argv[1] (0x7fff367da0f4) pointer
 ## [+] 028 bytes tainted from the argv[0] (0x7fff367da0d7) pointer
@@ -89,14 +89,14 @@ def trace(instruction):
     global TRACE
 
     # Don't save instructions which are not in our target binary
-    if os.path.basename(instruction.imageName) != TARGET_BINARY:
+    if os.path.basename(instruction.getImageName()) != TARGET_BINARY:
         return
 
-    # Save 
+    # Save
     if len(TRACE) < TRACE_SIZE:
-        TRACE.append(tuple((instruction.address, instruction.assembly)))
+        TRACE.append(tuple((instruction.getAddress(), instruction.getDisassembly())))
     else:
-        TRACE[COUNT % TRACE_SIZE] = tuple((instruction.address, instruction.assembly))
+        TRACE[COUNT % TRACE_SIZE] = tuple((instruction.getAddress(), instruction.getDiassembly()))
 
     COUNT += 1
     return

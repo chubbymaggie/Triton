@@ -3,7 +3,7 @@ from triton import *
 
 # Output
 #
-# $ ../../../pin -t ./triton.so -script ./examples/get_expressions.py -- ./samples/crackmes/crackme_xor a
+# $ ./triton ./examples/get_expressions.py ./samples/crackmes/crackme_xor a
 # TID (0) 0x40056d push rbp
 # TID (0) 0x40056e mov rbp, rsp
 # TID (0) 0x400571 mov qword ptr [rbp-0x18], rdi
@@ -22,7 +22,7 @@ from triton import *
 # TID (0) 0x400597 mov ecx, eax
 # TID (0) 0x400599 mov rdx, qword ptr [rip+0x200aa0]
 # TID (0) 0x4005a0 mov eax, dword ptr [rbp-0x4]
-# TID (0) 0x4005a3 cdqe 
+# TID (0) 0x4005a3 cdqe
 # TID (0) 0x4005a5 add rax, rdx
 # TID (0) 0x4005a8 movzx eax, byte ptr [rax]
 # TID (0) 0x4005ab movsx eax, al
@@ -35,7 +35,7 @@ from triton import *
 
 # A callback must be a function with one argument. This argument is always a dict and contains all information
 def my_callback_before(instruction):
-    print 'TID (%d) %#x %s' %(instruction.threadId, instruction.address, instruction.assembly)
+    print 'TID (%d) %#x %s' %(instruction.getThreadId(), instruction.getAddress(), instruction.getDisassembly())
 
 
 if __name__ == '__main__':

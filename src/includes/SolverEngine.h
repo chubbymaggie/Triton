@@ -1,15 +1,25 @@
+/*
+**  Copyright (C) - Triton
+**
+**  This program is under the terms of the LGPLv3 License.
+*/
+
 
 #ifndef   SOLVERENGINE_H
 #define   SOLVERENGINE_H
 
 #include <cstdlib>
-#include "TritonTypes.h"
+#include <list>
 #include <string>
+#include <vector>
 
 #include <z3++.h>
 
 #include "Registers.h"
+#include "SMT2Lib.h"
+#include "Smodel.h"
 #include "SymbolicEngine.h"
+#include "TritonTypes.h"
 
 
 class SolverEngine
@@ -18,7 +28,8 @@ class SolverEngine
     SymbolicEngine *symEngine;
 
   public:
-    std::list< std::pair<std::string, unsigned long long> > getModel(std::string expr);
+    std::list<Smodel>               getModel(smt2lib::smtAstAbstractNode *node);
+    std::vector<std::list<Smodel>>  getModels(smt2lib::smtAstAbstractNode *node, uint64 limit);
 
     SolverEngine(SymbolicEngine *sym);
     ~SolverEngine();

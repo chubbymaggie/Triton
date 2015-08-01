@@ -1,3 +1,9 @@
+/*
+**  Copyright (C) - Triton
+**
+**  This program is under the terms of the LGPLv3 License.
+*/
+
 #ifndef   CPUSIZE_H
 #define   CPUSIZE_H
 
@@ -18,6 +24,8 @@
 
 #define REG_SIZE          QWORD_SIZE      // In byte
 #define REG_SIZE_BIT      QWORD_SIZE_BIT  // In bits
+
+#define FLAG_SIZE_BIT     1               // In bits
 
 #define SSE_REG_SIZE      DQWORD_SIZE     // In byte
 #define SSE_REG_SIZE_BIT  DQWORD_SIZE_BIT // In bits

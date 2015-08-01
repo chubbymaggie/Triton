@@ -1,3 +1,9 @@
+/*
+**  Copyright (C) - Triton
+**
+**  This program is under the terms of the LGPLv3 License.
+*/
+
 
 #include <SymbolicEngine.h>
 #include <Registers.h>
@@ -41,22 +47,16 @@ void SymbolicEngine::operator=(const SymbolicEngine &other)
 
 SymbolicEngine::~SymbolicEngine()
 {
-  std::vector<SymbolicElement *>::iterator it1 = this->symbolicExpressions.begin();
+  std::vector<SymbolicExpression *>::iterator it1 = this->symbolicExpressions.begin();
   std::vector<SymbolicVariable *>::iterator it2 = this->symbolicVariables.begin();
 
   /* Delete all symbolic expressions */
-  for (; it1 != this->symbolicExpressions.end(); ++it1) {
-    SymbolicElement *tmp = *it1;
-    delete tmp;
-    tmp = nullptr;
-  }
+  for (; it1 != this->symbolicExpressions.end(); ++it1)
+    delete *it1;
 
   /* Delete all symbolic variables */
-  for (; it2 != this->symbolicVariables.end(); ++it2) {
-    SymbolicVariable *tmp = *it2;
-    delete tmp;
-    tmp = nullptr;
-  }
+  for (; it2 != this->symbolicVariables.end(); ++it2)
+    delete *it2;
 }
 
 
@@ -72,6 +72,13 @@ void SymbolicEngine::concretizeReg(uint64 regID) {
 }
 
 
+/* Same as concretizeReg but with all registers */
+void SymbolicEngine::concretizeAllReg(void) {
+  for (uint64 i = 0; i < ID_LAST_ITEM; i++)
+    this->symbolicReg[i] = UNSET;
+}
+
+
 /*
  * Concretize a memory. If the memory is not found into the map, the next
  * assignment will be over the concretization. This method must be called
@@ -80,6 +87,13 @@ void SymbolicEngine::concretizeReg(uint64 regID) {
 void SymbolicEngine::concretizeMem(uint64 mem)
 {
   this->memoryReference.erase(mem);
+}
+
+
+/* Same as concretizeMem but with all address memory */
+void SymbolicEngine::concretizeAllMem(void)
+{
+  this->memoryReference.clear();
 }
 
 
@@ -130,44 +144,36 @@ uint64 SymbolicEngine::getRegSymbolicID(uint64 regID) {
 }
 
 
-/* Create a new symbolic element */
+/* Create a new symbolic expression */
 /* Get an unique ID.
- * Mainly used when a new symbolic element is created */
+ * Mainly used when a new symbolic expression is created */
 uint64 SymbolicEngine::getUniqueID()
 {
   return this->uniqueID++;
 }
 
 
-SymbolicElement *SymbolicEngine::newSymbolicElement(std::stringstream &src)
+SymbolicExpression *SymbolicEngine::newSymbolicExpression(smt2lib::smtAstAbstractNode *node)
 {
-  std::stringstream dst;
-  uint64            id;
-
-  id = this->getUniqueID();
-  dst << "#" << std::dec << id;
-  SymbolicElement *elem = new SymbolicElement(dst, src, id);
-  this->symbolicExpressions.push_back(elem);
-  return elem;
+  uint64 id = this->getUniqueID();
+  SymbolicExpression *expr = new SymbolicExpression(node, id);
+  this->symbolicExpressions.push_back(expr);
+  return expr;
 }
 
 
-/* Create a new symbolic element with comment */
-SymbolicElement *SymbolicEngine::newSymbolicElement(std::stringstream &src, std::string comment)
+/* Create a new symbolic expression with comment */
+SymbolicExpression *SymbolicEngine::newSymbolicExpression(smt2lib::smtAstAbstractNode *node, std::string comment)
 {
-  std::stringstream dst;
-  uint64            id;
-
-  id = this->getUniqueID();
-  dst << "#" << std::dec << id;
-  SymbolicElement *elem = new SymbolicElement(dst, src, id, comment);
-  this->symbolicExpressions.push_back(elem);
-  return elem;
+  uint64 id = this->getUniqueID();
+  SymbolicExpression *expr = new SymbolicExpression(node, id, comment);
+  this->symbolicExpressions.push_back(expr);
+  return expr;
 }
 
 
-/* Get the symbolic element pointer from a symbolic ID */
-SymbolicElement *SymbolicEngine::getElementFromId(uint64 id)
+/* Get the symbolic expression pointer from a symbolic ID */
+SymbolicExpression *SymbolicEngine::getExpressionFromId(uint64 id)
 {
   if (id >= this->symbolicExpressions.size())
     return nullptr;
@@ -175,51 +181,43 @@ SymbolicElement *SymbolicEngine::getElementFromId(uint64 id)
 }
 
 
-/* Replace a symbolic element ID by its source expression */
-std::string SymbolicEngine::replaceEq(std::string str, const std::string from, const std::string to)
+/* Returns all symbolic expressions */
+std::vector<SymbolicExpression *> SymbolicEngine::getExpressions(void)
 {
-  size_t start_pos = str.find(from);
-  if(start_pos == std::string::npos)
-      return nullptr;
-  str.replace(start_pos, from.length(), to);
-  return str;
+  return this->symbolicExpressions;
 }
 
 
-std::string SymbolicEngine::deepReplace(std::stringstream &formula)
+/* Returns the full symbolic expression backtracked. */
+smt2lib::smtAstAbstractNode *SymbolicEngine::getFullExpression(smt2lib::smtAstAbstractNode *node)
 {
-  int               value;
-  size_t            found;
-  std::stringstream from;
-  std::stringstream to;
+  uint64 index = 0;
+  std::vector<smt2lib::smtAstAbstractNode *> &childs = node->getChilds();
 
-  found = formula.str().find("#") + 1;
-  std::string subs = formula.str().substr(found, std::string::npos);
-  value = atoi(subs.c_str());
-  from << "#" << value;
+  for ( ; index < childs.size(); index++) {
+    if (childs[index]->getKind() == smt2lib::REFERENCE_NODE) {
+      uint64 id = reinterpret_cast<smt2lib::smtAstReferenceNode*>(childs[index])->getValue();
+      smt2lib::smtAstAbstractNode *ref = this->getExpressionFromId(id)->getExpression();
+      childs[index] = smt2lib::newInstance(ref);
+    }
+    this->getFullExpression(childs[index]);
+  }
 
-  to.str(this->getElementFromId(value)->getSource()->str());
-
-  formula.str(this->replaceEq(formula.str(), from.str(), to.str()));
-  return formula.str();
+  return node;
 }
 
 
-/* Returns the symbolic expression backtracked from an ID. */
-std::string SymbolicEngine::getBacktrackedExpressionFromId(uint64 id)
+/* Returns a list which contains all tainted expressions */
+std::list<SymbolicExpression *> SymbolicEngine::getTaintedExpressions(void)
 {
-  SymbolicElement   *element;
-  std::stringstream formula;
+  uint64 index = 0;
+  std::list<SymbolicExpression *> taintedExprs;
 
-  element = this->getElementFromId(id);
-  if (element == nullptr)
-    return "";
-
-  formula.str(element->getSource()->str());
-  while (formula.str().find("#") != std::string::npos)
-    formula.str(this->deepReplace(formula));
-
-  return formula.str();
+  for ( ; index < this->symbolicExpressions.size(); index++) {
+    if (symbolicExpressions[index]->isTainted == true)
+      taintedExprs.push_back(symbolicExpressions[index]);
+  }
+  return taintedExprs;
 }
 
 
@@ -243,60 +241,49 @@ std::string SymbolicEngine::getVariablesDeclaration(void)
  * convertExprToSymVar(43, 8)
  * #43 = SymVar_4
  */
-uint64 SymbolicEngine::convertExprToSymVar(uint64 exprId, uint64 symVarSize, std::string symVarComment)
+SymbolicVariable *SymbolicEngine::convertExprToSymVar(uint64 exprId, uint64 symVarSize, std::string symVarComment)
 {
-  SymbolicVariable   *symVar  = nullptr;
-  SymbolicElement    *element = this->getElementFromId(exprId);
-  std::stringstream  newExpr;
+  SymbolicVariable    *symVar = nullptr;
+  SymbolicExpression  *expression = this->getExpressionFromId(exprId);
 
-  if (element == nullptr)
-    return UNSET;
-
-  if (symVarSize != BYTE_SIZE && symVarSize != WORD_SIZE && symVarSize != DWORD_SIZE && symVarSize != QWORD_SIZE && symVarSize != DQWORD_SIZE)
-    throw std::runtime_error("SymbolicEngine::convertExprToSymVar() - Invalid symVarSize");
+  if (expression == nullptr)
+    return nullptr;
 
   symVar = this->addSymbolicVariable(SymVar::kind::UNDEF, 0, symVarSize, symVarComment);
 
-  newExpr << symVar->getSymVarName();
-  element->setSrcExpr(newExpr);
+  expression->setExpression(smt2lib::variable(symVar->getSymVarName()));
 
-  return symVar->getSymVarId();
+  return symVar;
 }
 
 
-uint64 SymbolicEngine::convertMemToSymVar(uint64 memAddr, uint64 symVarSize, std::string symVarComment)
+SymbolicVariable *SymbolicEngine::convertMemToSymVar(uint64 memAddr, uint64 symVarSize, std::string symVarComment)
 {
-  SymbolicVariable   *symVar  = nullptr;
-  SymbolicElement    *element = nullptr;
-  std::stringstream  newExpr;
+  SymbolicVariable   *symVar = nullptr;
+  SymbolicExpression *expression = nullptr;
   uint64             memSymId = UNSET;
 
   memSymId = this->getMemSymbolicID(memAddr);
   if (memSymId == UNSET)
     throw std::runtime_error("SymbolicEngine::convertMemToSymVar() - This memory address is UNSET");
 
-  element = this->getElementFromId(memSymId);
+  expression = this->getExpressionFromId(memSymId);
 
-  if (element == nullptr)
-    return UNSET;
-
-  if (symVarSize != BYTE_SIZE && symVarSize != WORD_SIZE && symVarSize != DWORD_SIZE && symVarSize != QWORD_SIZE && symVarSize != DQWORD_SIZE)
-    throw std::runtime_error("SymbolicEngine::convertMemToSymVar() - Invalid symVarSize");
+  if (expression == nullptr)
+    return nullptr;
 
   symVar = this->addSymbolicVariable(SymVar::kind::MEM, memAddr, symVarSize, symVarComment);
 
-  newExpr << symVar->getSymVarName();
-  element->setSrcExpr(newExpr);
+  expression->setExpression(smt2lib::variable(symVar->getSymVarName()));
 
-  return symVar->getSymVarId();
+  return symVar;
 }
 
 
-uint64 SymbolicEngine::convertRegToSymVar(uint64 regId, uint64 symVarSize, std::string symVarComment)
+SymbolicVariable *SymbolicEngine::convertRegToSymVar(uint64 regId, uint64 symVarSize, std::string symVarComment)
 {
-  SymbolicVariable   *symVar  = nullptr;
-  SymbolicElement    *element = nullptr;
-  std::stringstream  newExpr;
+  SymbolicVariable   *symVar = nullptr;
+  SymbolicExpression *expression = nullptr;
   uint64             regSymId = UNSET;
 
   if (regId >= ID_LAST_ITEM)
@@ -306,20 +293,16 @@ uint64 SymbolicEngine::convertRegToSymVar(uint64 regId, uint64 symVarSize, std::
   if (regSymId == UNSET)
     throw std::runtime_error("SymbolicEngine::convertRegToSymVar() - This register ID is UNSET");
 
-  element = this->getElementFromId(regSymId);
+  expression = this->getExpressionFromId(regSymId);
 
-  if (element == nullptr)
-    return UNSET;
-
-  if (symVarSize != BYTE_SIZE && symVarSize != WORD_SIZE && symVarSize != DWORD_SIZE && symVarSize != QWORD_SIZE && symVarSize != DQWORD_SIZE)
-    throw std::runtime_error("SymbolicEngine::convertRegToSymVar() - Invalid symVarSize");
+  if (expression == nullptr)
+    return nullptr;
 
   symVar = this->addSymbolicVariable(SymVar::kind::REG, regId, symVarSize, symVarComment);
 
-  newExpr << symVar->getSymVarName();
-  element->setSrcExpr(newExpr);
+  expression->setExpression(smt2lib::variable(symVar->getSymVarName()));
 
-  return symVar->getSymVarId();
+  return symVar;
 }
 
 
@@ -356,5 +339,4 @@ std::list<uint64> SymbolicEngine::getPathConstraints(void)
 {
   return this->pathConstaints;
 }
-
 

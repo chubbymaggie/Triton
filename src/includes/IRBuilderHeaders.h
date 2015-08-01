@@ -1,3 +1,9 @@
+/*
+**  Copyright (C) - Triton
+**
+**  This program is under the terms of the LGPLv3 License.
+*/
+
 #ifndef   IRBUILDERHEADERS_H
 #define   IRBUILDERHEADERS_H
 
@@ -82,7 +88,9 @@
 #include "PopIRBuilder.h"
 #include "PushIRBuilder.h"
 #include "RetIRBuilder.h"
+#include "RclIRBuilder.h"
 #include "RolIRBuilder.h"
+#include "RcrIRBuilder.h"
 #include "RorIRBuilder.h"
 #include "SarIRBuilder.h"
 #include "SbbIRBuilder.h"

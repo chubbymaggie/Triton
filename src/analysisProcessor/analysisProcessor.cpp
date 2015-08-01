@@ -1,3 +1,9 @@
+/*
+**  Copyright (C) - Triton
+**
+**  This program is under the terms of the LGPLv3 License.
+*/
+
 #include <AnalysisProcessor.h>
 #include <PINContextHandler.h>
 
@@ -27,6 +33,18 @@ ContextHandler *AnalysisProcessor::getCurrentCtxH(void)
 }
 
 
+void AnalysisProcessor::lock(void)
+{
+  PIN_LockClient();
+}
+
+
+void AnalysisProcessor::unlock(void)
+{
+  PIN_UnlockClient();
+}
+
+
 // Symbolic Engine Facade
 // ----------------------
 
@@ -36,166 +54,164 @@ SymbolicEngine &AnalysisProcessor::getSymbolicEngine(void)
 }
 
 
-SymbolicElement *AnalysisProcessor::createRegSE(Inst &inst, std::stringstream &expr, uint64 regID)
+SymbolicExpression *AnalysisProcessor::createRegSE(Inst &inst, smt2lib::smtAstAbstractNode *expr, uint64 regID)
 {
-  SymbolicElement *se = this->symEngine.newSymbolicElement(expr);
+  SymbolicExpression *se = this->symEngine.newSymbolicExpression(expr);
   this->symEngine.symbolicReg[regID] = se->getID();
-  inst.addElement(se);
+  inst.addExpression(se);
   return se;
 }
 
 
-SymbolicElement *AnalysisProcessor::createRegSE(Inst &inst, std::stringstream &expr, uint64 regID, std::string comment)
+SymbolicExpression *AnalysisProcessor::createRegSE(Inst &inst, smt2lib::smtAstAbstractNode *expr, uint64 regID, std::string comment)
 {
-  SymbolicElement *se = this->symEngine.newSymbolicElement(expr, comment);
+  SymbolicExpression *se = this->symEngine.newSymbolicExpression(expr, comment);
   this->symEngine.symbolicReg[regID] = se->getID();
-  inst.addElement(se);
+  inst.addExpression(se);
   return se;
 }
 
 
-SymbolicElement *AnalysisProcessor::createRegSE(Inst &inst, std::stringstream &expr, uint64 regID, uint64 regSize)
+SymbolicExpression *AnalysisProcessor::createRegSE(Inst &inst, smt2lib::smtAstAbstractNode *expr, uint64 regID, uint64 regSize)
 {
-  std::stringstream finalExpr, origReg;
+  smt2lib::smtAstAbstractNode *finalExpr = nullptr, *origReg = nullptr;
 
-  origReg << this->buildSymbolicRegOperand(regID, REG_SIZE);
+  origReg = this->buildSymbolicRegOperand(regID, REG_SIZE);
 
   switch (regSize) {
     case BYTE_SIZE:
-      finalExpr << smt2lib::concat(smt2lib::extract(63, 8, origReg.str()), expr.str());
+      finalExpr = smt2lib::concat(smt2lib::extract(63, 8, origReg), expr);
       break;
+
     case WORD_SIZE:
-      finalExpr << smt2lib::concat(smt2lib::extract(63, 16, origReg.str()), expr.str());
+      finalExpr = smt2lib::concat(smt2lib::extract(63, 16, origReg), expr);
       break;
+
     case DWORD_SIZE:
       /* In AMD64, if a reg32 is written, it clears the 32-bit MSB of the corresponding register (Thx Wisk!) */
-      finalExpr << smt2lib::zx(expr.str(), DWORD_SIZE_BIT);
+      finalExpr = smt2lib::zx(DWORD_SIZE_BIT, expr);
       break;
+
     case QWORD_SIZE:
-      finalExpr << expr.str();
-      break;
     case DQWORD_SIZE:
-      finalExpr << expr.str();
+      finalExpr = expr;
       break;
   }
 
-  SymbolicElement *se = this->symEngine.newSymbolicElement(finalExpr);
+  SymbolicExpression *se = this->symEngine.newSymbolicExpression(finalExpr);
   this->symEngine.symbolicReg[regID] = se->getID();
-  inst.addElement(se);
+  inst.addExpression(se);
 
   return se;
 }
 
 
-SymbolicElement *AnalysisProcessor::createRegSE(Inst &inst, std::stringstream &expr, uint64 regID, uint64 regSize, std::string comment)
+SymbolicExpression *AnalysisProcessor::createRegSE(Inst &inst, smt2lib::smtAstAbstractNode *expr, uint64 regID, uint64 regSize, std::string comment)
 {
-  std::stringstream finalExpr, origReg;
+  smt2lib::smtAstAbstractNode *finalExpr = nullptr, *origReg = nullptr;
 
-  origReg << this->buildSymbolicRegOperand(regID, REG_SIZE);
+  origReg = this->buildSymbolicRegOperand(regID, REG_SIZE);
 
   switch (regSize) {
     case BYTE_SIZE:
-      finalExpr << smt2lib::concat(smt2lib::extract(63, 8, origReg.str()), expr.str());
+      finalExpr = smt2lib::concat(smt2lib::extract(63, 8, origReg), expr);
       break;
+
     case WORD_SIZE:
-      finalExpr << smt2lib::concat(smt2lib::extract(63, 16, origReg.str()), expr.str());
+      finalExpr = smt2lib::concat(smt2lib::extract(63, 16, origReg), expr);
       break;
+
     case DWORD_SIZE:
       /* In AMD64, if a reg32 is written, it clears the 32-bit MSB of the corresponding register (Thx Wisk!) */
-      finalExpr << smt2lib::zx(expr.str(), DWORD_SIZE_BIT);
+      finalExpr = smt2lib::zx(DWORD_SIZE_BIT, expr);
       break;
+
     case QWORD_SIZE:
-      finalExpr << expr.str();
-      break;
     case DQWORD_SIZE:
-      finalExpr << expr.str();
+      finalExpr = expr;
       break;
   }
 
-  SymbolicElement *se = this->symEngine.newSymbolicElement(finalExpr, comment);
+  SymbolicExpression *se = this->symEngine.newSymbolicExpression(finalExpr, comment);
   this->symEngine.symbolicReg[regID] = se->getID();
-  inst.addElement(se);
+  inst.addExpression(se);
 
   return se;
 }
 
 
-SymbolicElement *AnalysisProcessor::createMemSE(Inst &inst, std::stringstream &expr, uint64 address, uint64 writeSize)
+SymbolicExpression *AnalysisProcessor::createMemSE(Inst &inst, smt2lib::smtAstAbstractNode *expr, uint64 address, uint64 writeSize)
 {
-  SymbolicElement   *ret = nullptr;
-  std::stringstream tmp;
+  SymbolicExpression *se;
+  smt2lib::smtAstAbstractNode *tmp;
+  std::list<smt2lib::smtAstAbstractNode *> ret;
 
   /*
    * As the x86's memory can be accessed without alignment, each byte of the
    * memory must be assigned to an unique reference.
    */
-  while (writeSize){
-    /* Extract each byte if the size > 1 byte (8 bits) */
-    if (writeSize > BYTE_SIZE){
-      tmp.str(smt2lib::extract(((writeSize * REG_SIZE) - 1), ((writeSize * REG_SIZE) - REG_SIZE), expr.str()));
-      SymbolicElement *se = symEngine.newSymbolicElement(tmp, "byte reference");
-      inst.addElement(se);
-      /* Assign memory with little endian */
-      this->symEngine.addMemoryReference((address + writeSize) - 1, se->getID());
-    }
-    /* Otherwise keep the full formula */
-    else {
-      SymbolicElement *se = symEngine.newSymbolicElement(expr);
-      inst.addElement(se);
-      this->symEngine.addMemoryReference(address, se->getID());
-      ret = se;
-    }
+  while (writeSize) {
+    /* Extract each byte of the memory */
+    tmp = smt2lib::extract(((writeSize * REG_SIZE) - 1), ((writeSize * REG_SIZE) - REG_SIZE), expr);
+    se = symEngine.newSymbolicExpression(tmp, "byte reference");
+    ret.push_back(tmp);
+    inst.addExpression(se);
+    /* Assign memory with little endian */
+    this->symEngine.addMemoryReference((address + writeSize) - 1, se->getID());
     writeSize--;
   }
 
-  return ret;
+  /* If there is only one reference, we return the symbolic expression */
+  if (ret.size() == 1)
+    return se;
+
+  /* Otherwise, we return the concatenation of all expressions */
+  return symEngine.newSymbolicExpression(smt2lib::concat(ret), "concat reference");
 }
 
 
-SymbolicElement *AnalysisProcessor::createMemSE(Inst &inst, std::stringstream &expr, uint64 address, uint64 writeSize, std::string comment)
+SymbolicExpression *AnalysisProcessor::createMemSE(Inst &inst, smt2lib::smtAstAbstractNode *expr, uint64 address, uint64 writeSize, std::string comment)
 {
-  SymbolicElement   *ret = nullptr;
-  std::stringstream tmp;
+  SymbolicExpression *se;
+  smt2lib::smtAstAbstractNode *tmp;
+  std::list<smt2lib::smtAstAbstractNode *> ret;
 
   /*
    * As the x86's memory can be accessed without alignment, each byte of the
    * memory must be assigned to an unique reference.
    */
-  while (writeSize){
-    /* Extract each byte if the size > 1 byte (8 bits) */
-    if (writeSize > BYTE_SIZE){
-      tmp.str(smt2lib::extract(((writeSize * REG_SIZE) - 1), ((writeSize * REG_SIZE) - REG_SIZE), expr.str()));
-      SymbolicElement *se = symEngine.newSymbolicElement(tmp, "byte reference");
-      inst.addElement(se);
-      /* Assign memory with little endian */
-      this->symEngine.addMemoryReference((address + writeSize) - 1, se->getID());
-    }
-    /* Otherwise keep the full formula */
-    else {
-      SymbolicElement *se = symEngine.newSymbolicElement(expr, comment);
-      inst.addElement(se);
-      this->symEngine.addMemoryReference(address, se->getID());
-      ret = se;
-    }
+  while (writeSize) {
+    /* Extract each byte of the memory */
+    tmp = smt2lib::extract(((writeSize * REG_SIZE) - 1), ((writeSize * REG_SIZE) - REG_SIZE), expr);
+    se  = symEngine.newSymbolicExpression(tmp, "byte reference");
+    ret.push_back(tmp);
+    inst.addExpression(se);
+    /* Assign memory with little endian */
+    this->symEngine.addMemoryReference((address + writeSize) - 1, se->getID());
     writeSize--;
   }
 
-  return ret;
+  /* If there is only one reference, we return the symbolic expression */
+  if (ret.size() == 1)
+    return se;
+
+  /* Otherwise, we return the concatenation of all symbolic expressions */
+  return symEngine.newSymbolicExpression(smt2lib::concat(ret), "concat reference");
 }
 
 
-SymbolicElement *AnalysisProcessor::createSE(Inst &inst, std::stringstream &expr)
+SymbolicExpression *AnalysisProcessor::createSE(Inst &inst, smt2lib::smtAstAbstractNode *expr)
 {
-  SymbolicElement *se = this->symEngine.newSymbolicElement(expr);
-  inst.addElement(se);
+  SymbolicExpression *se = this->symEngine.newSymbolicExpression(expr);
+  inst.addExpression(se);
   return se;
 }
 
 
-SymbolicElement *AnalysisProcessor::createSE(Inst &inst, std::stringstream &expr, std::string comment)
+SymbolicExpression *AnalysisProcessor::createSE(Inst &inst, smt2lib::smtAstAbstractNode *expr, std::string comment)
 {
-  SymbolicElement *se = this->symEngine.newSymbolicElement(expr, comment);
-  inst.addElement(se);
+  SymbolicExpression *se = this->symEngine.newSymbolicExpression(expr, comment);
+  inst.addExpression(se);
   return se;
 }
 
@@ -230,33 +246,54 @@ std::vector<SymbolicVariable *> AnalysisProcessor::getSymVars(void)
 }
 
 
-SymbolicElement *AnalysisProcessor::getElementFromId(uint64 id)
+SymbolicExpression *AnalysisProcessor::getExpressionFromId(uint64 id)
 {
-  return this->symEngine.getElementFromId(id);
+  return this->symEngine.getExpressionFromId(id);
 }
 
 
-std::string AnalysisProcessor::getBacktrackedExpressionFromId(uint64 id)
+std::vector<SymbolicExpression *> AnalysisProcessor::getExpressions(void)
 {
-  return this->symEngine.getBacktrackedExpressionFromId(id);
+  return this->symEngine.getExpressions();
 }
 
 
-uint64 AnalysisProcessor::convertExprToSymVar(uint64 exprId, uint64 symVarSize, std::string symVarComment)
+std::list<SymbolicExpression *> AnalysisProcessor::getTaintedExpressions(void)
 {
-  return this->symEngine.convertExprToSymVar(exprId, symVarSize, symVarComment);
+  return this->symEngine.getTaintedExpressions();
 }
 
 
-uint64 AnalysisProcessor::convertMemToSymVar(uint64 memAddr, uint64 symVarSize, std::string symVarComment)
+smt2lib::smtAstAbstractNode *AnalysisProcessor::getFullExpression(smt2lib::smtAstAbstractNode *node)
 {
-  return this->symEngine.convertMemToSymVar(memAddr, symVarSize, symVarComment);
+  return this->symEngine.getFullExpression(smt2lib::newInstance(node));
 }
 
 
-uint64 AnalysisProcessor::convertRegToSymVar(uint64 regId, uint64 symVarSize, std::string symVarComment)
+SymbolicVariable *AnalysisProcessor::convertExprToSymVar(uint64 exprId, uint64 symVarSize, std::string symVarComment)
 {
-  return this->symEngine.convertRegToSymVar(regId, symVarSize, symVarComment);
+  SymbolicVariable *symVar = this->symEngine.convertExprToSymVar(exprId, symVarSize, symVarComment);
+  return symVar;
+}
+
+
+SymbolicVariable *AnalysisProcessor::convertMemToSymVar(uint64 memAddr, uint64 symVarSize, std::string symVarComment)
+{
+  SymbolicVariable *symVar = this->symEngine.convertMemToSymVar(memAddr, symVarSize, symVarComment);
+  symVar->setSymVarConcreteValue(this->getMemValue(memAddr,symVarSize));
+  return symVar;
+}
+
+
+SymbolicVariable *AnalysisProcessor::convertRegToSymVar(uint64 regId, uint64 symVarSize, std::string symVarComment)
+{
+  uint128 mask     = 1;
+  mask             = (mask << symVarSize) - 1;
+  uint128 regValue = this->getRegisterValue(regId) & mask;
+  
+  SymbolicVariable *symVar = this->symEngine.convertRegToSymVar(regId, symVarSize, symVarComment);
+  symVar->setSymVarConcreteValue(regValue);
+  return symVar;
 }
 
 
@@ -272,105 +309,117 @@ std::list<uint64> AnalysisProcessor::getPathConstraints(void)
 }
 
 
-std::string AnalysisProcessor::buildSymbolicRegOperand(uint64 regID, uint64 regSize)
+smt2lib::smtAstAbstractNode *AnalysisProcessor::buildSymbolicRegOperand(uint64 regID, uint64 regSize)
 {
-  std::stringstream   op;
-  uint64              symReg = this->getRegSymbolicID(regID);
+  smt2lib::smtAstAbstractNode *op = nullptr;
+  uint64 symReg = this->getRegSymbolicID(regID);
+  uint64 low    = 0;
+  uint64 high   = (regSize * REG_SIZE) - 1;
 
   if (symReg != UNSET)
-    op << smt2lib::extract(regSize, "#" + std::to_string(symReg));
+    op = smt2lib::extract(high, low, smt2lib::reference(symReg));
   else {
     if (regID >= ID_XMM0 && regID <= ID_XMM15)
-      op << smt2lib::extract(regSize, smt2lib::bv(this->getSSERegisterValue(regID), SSE_REG_SIZE_BIT));
+      op = smt2lib::extract(high, low, smt2lib::bv(this->getSSERegisterValue(regID), SSE_REG_SIZE_BIT));
     else
-      op << smt2lib::extract(regSize, smt2lib::bv(this->getRegisterValue(regID), REG_SIZE_BIT));
+      op = smt2lib::extract(high, low, smt2lib::bv(this->getRegisterValue(regID), REG_SIZE_BIT));
   }
 
-  return op.str();
+  return op;
 }
 
 
-std::string AnalysisProcessor::buildSymbolicRegOperand(uint64 regID, uint64 regSize, uint64 highExtract, uint64 lowExtract)
+smt2lib::smtAstAbstractNode *AnalysisProcessor::buildSymbolicRegOperand(uint64 regID, uint64 regSize, uint64 highExtract, uint64 lowExtract)
 {
-  std::stringstream   op;
-  uint64              symReg = this->getRegSymbolicID(regID);
+  smt2lib::smtAstAbstractNode *op = nullptr;
+  uint64 symReg = this->getRegSymbolicID(regID);
 
   if (symReg != UNSET)
-    op << smt2lib::extract(highExtract, lowExtract, "#" + std::to_string(symReg));
+    op = smt2lib::extract(highExtract, lowExtract, smt2lib::reference(symReg));
   else {
     if (regID >= ID_XMM0 && regID <= ID_XMM15)
-      op << smt2lib::extract(highExtract, lowExtract, smt2lib::bv(this->getSSERegisterValue(regID), SSE_REG_SIZE_BIT));
+      op = smt2lib::extract(highExtract, lowExtract, smt2lib::bv(this->getSSERegisterValue(regID), SSE_REG_SIZE_BIT));
     else
-      op << smt2lib::extract(highExtract, lowExtract, smt2lib::bv(this->getRegisterValue(regID), REG_SIZE_BIT));
+      op = smt2lib::extract(highExtract, lowExtract, smt2lib::bv(this->getRegisterValue(regID), REG_SIZE_BIT));
   }
 
-  return op.str();
+  return op;
 }
 
 
-std::string AnalysisProcessor::buildSymbolicMemOperand(uint64 mem, uint64 memSize)
+smt2lib::smtAstAbstractNode *AnalysisProcessor::buildSymbolicMemOperand(uint64 mem, uint64 memSize)
 {
-  std::vector<std::string>  opVec;
-  std::stringstream         tmp;
-  uint64                    symMem, offset;
+  std::list<smt2lib::smtAstAbstractNode *> opVec;
+  smt2lib::smtAstAbstractNode *tmp = nullptr;
+  uint64 symMem;
 
-  offset = 0;
   while (memSize) {
     symMem = this->getMemSymbolicID(mem + memSize - 1);
-    tmp.str("");
-    if (symMem != UNSET)
-      tmp << "#" << std::dec << symMem;
-    else
-      tmp << smt2lib::bv(this->getMemValue(mem + offset, 1), REG_SIZE);
-    opVec.push_back(smt2lib::extract(7, 0, tmp.str()));
-    offset++;
+    if (symMem != UNSET) {
+      tmp = smt2lib::reference(symMem);
+      opVec.push_back(smt2lib::extract(7, 0, tmp));
+    }
+    else {
+      tmp = smt2lib::bv(this->getMemValue(mem + memSize - 1, 1), REG_SIZE);
+      opVec.push_back(smt2lib::extract(7, 0, tmp));
+    }
     memSize--;
   }
 
-  tmp.str("");
   switch (opVec.size()) {
     case DQWORD_SIZE:
     case QWORD_SIZE:
     case DWORD_SIZE:
     case WORD_SIZE:
-      tmp.str(smt2lib::concat(opVec));
+      tmp = smt2lib::concat(opVec);
       break;
     case BYTE_SIZE:
-      tmp.str(opVec[0]);
+      tmp = opVec.front();
       break;
   }
 
-  return tmp.str();
+  return tmp;
 }
 
 
-std::string AnalysisProcessor::buildSymbolicFlagOperand(uint64 flagID, uint64 size)
+smt2lib::smtAstAbstractNode *AnalysisProcessor::buildSymbolicFlagOperand(uint64 flagID, uint64 size)
 {
-  std::stringstream   op;
-  uint64              symFlag = this->getRegSymbolicID(flagID);
+  smt2lib::smtAstAbstractNode *op = nullptr;
+  uint64 symFlag = this->getRegSymbolicID(flagID);
 
   if (symFlag != UNSET)
-    op << smt2lib::zx("#" + std::to_string(symFlag), (size * REG_SIZE) - 1);
+    op = smt2lib::zx((size * REG_SIZE) - 1, smt2lib::reference(symFlag));
   else
-    op << smt2lib::bv(this->getFlagValue(flagID), size * REG_SIZE);
+    op = smt2lib::bv(this->getFlagValue(flagID), size * REG_SIZE);
 
-  return op.str();
+  return op;
 }
 
 
-std::string AnalysisProcessor::buildSymbolicFlagOperand(uint64 flagID)
+smt2lib::smtAstAbstractNode *AnalysisProcessor::buildSymbolicFlagOperand(uint64 flagID)
 {
-  std::stringstream   op;
-  uint64              symFlag = this->getRegSymbolicID(flagID);
+  smt2lib::smtAstAbstractNode *op = nullptr;
+  uint64 symFlag = this->getRegSymbolicID(flagID);
 
   if (symFlag != UNSET)
-    op << "#" + std::to_string(symFlag);
+    op = smt2lib::reference(symFlag);
   else
-    op << smt2lib::bv(this->getFlagValue(flagID), 1);
+    op = smt2lib::bv(this->getFlagValue(flagID), 1);
 
-  return op.str();
+  return op;
 }
 
+
+void AnalysisProcessor::concretizeAllReg(void)
+{
+  this->symEngine.concretizeAllReg();
+}
+
+
+void AnalysisProcessor::concretizeAllMem(void)
+{
+  this->symEngine.concretizeAllMem();
+}
 
 
 void AnalysisProcessor::concretizeReg(uint64 regID)
@@ -394,61 +443,61 @@ TaintEngine &AnalysisProcessor::getTaintEngine(void)
 }
 
 
-void AnalysisProcessor::assignmentSpreadTaintExprMem(SymbolicElement *se, uint64 memSrc, uint32 readSize)
+void AnalysisProcessor::assignmentSpreadTaintExprMem(SymbolicExpression *se, uint64 memSrc, uint32 readSize)
 {
   se->isTainted = this->taintEngine.assignmentSpreadTaintExprMem(memSrc, readSize);
 }
 
 
-void AnalysisProcessor::assignmentSpreadTaintExprReg(SymbolicElement *se, uint64 regSrc)
+void AnalysisProcessor::assignmentSpreadTaintExprReg(SymbolicExpression *se, uint64 regSrc)
 {
   se->isTainted = this->taintEngine.assignmentSpreadTaintExprReg(regSrc);
 }
 
 
-void AnalysisProcessor::assignmentSpreadTaintExprRegMem(SymbolicElement *se, uint64 regSrc, uint64 memSrc, uint32 readSize)
+void AnalysisProcessor::assignmentSpreadTaintExprRegMem(SymbolicExpression *se, uint64 regSrc, uint64 memSrc, uint32 readSize)
 {
   se->isTainted = this->taintEngine.assignmentSpreadTaintExprRegMem(regSrc, memSrc, readSize);
 }
 
 
-void AnalysisProcessor::assignmentSpreadTaintExprRegReg(SymbolicElement *se, uint64 regSrc1, uint64 regSrc2)
+void AnalysisProcessor::assignmentSpreadTaintExprRegReg(SymbolicExpression *se, uint64 regSrc1, uint64 regSrc2)
 {
   se->isTainted = this->taintEngine.assignmentSpreadTaintExprRegReg(regSrc1, regSrc2);
 }
 
 
-void AnalysisProcessor::assignmentSpreadTaintRegReg(SymbolicElement *se, uint64 regDst, uint64 regSrc)
+void AnalysisProcessor::assignmentSpreadTaintRegReg(SymbolicExpression *se, uint64 regDst, uint64 regSrc)
 {
   se->isTainted = this->taintEngine.assignmentSpreadTaintRegReg(regDst, regSrc);
 }
 
 
-void AnalysisProcessor::assignmentSpreadTaintRegImm(SymbolicElement *se, uint64 regDst)
+void AnalysisProcessor::assignmentSpreadTaintRegImm(SymbolicExpression *se, uint64 regDst)
 {
   se->isTainted = this->taintEngine.assignmentSpreadTaintRegImm(regDst);
 }
 
 
-void AnalysisProcessor::assignmentSpreadTaintRegMem(SymbolicElement *se, uint64 regDst, uint64 memSrc, uint32 readSize)
+void AnalysisProcessor::assignmentSpreadTaintRegMem(SymbolicExpression *se, uint64 regDst, uint64 memSrc, uint32 readSize)
 {
   se->isTainted = this->taintEngine.assignmentSpreadTaintRegMem(regDst, memSrc, readSize);
 }
 
 
-void AnalysisProcessor::assignmentSpreadTaintMemMem(SymbolicElement *se, uint64 memDst, uint64 memSrc, uint32 readSize)
+void AnalysisProcessor::assignmentSpreadTaintMemMem(SymbolicExpression *se, uint64 memDst, uint64 memSrc, uint32 readSize)
 {
   se->isTainted = this->taintEngine.assignmentSpreadTaintMemMem(memDst, memSrc, readSize);
 }
 
 
-void AnalysisProcessor::assignmentSpreadTaintMemImm(SymbolicElement *se, uint64 memDst, uint64 writeSize)
+void AnalysisProcessor::assignmentSpreadTaintMemImm(SymbolicExpression *se, uint64 memDst, uint64 writeSize)
 {
   se->isTainted = this->taintEngine.assignmentSpreadTaintMemImm(memDst, writeSize);
 }
 
 
-void AnalysisProcessor::assignmentSpreadTaintMemReg(SymbolicElement *se, uint64 memDst, uint64 regSrc, uint64 writeSize)
+void AnalysisProcessor::assignmentSpreadTaintMemReg(SymbolicExpression *se, uint64 memDst, uint64 regSrc, uint64 writeSize)
 {
   se->isTainted = this->taintEngine.assignmentSpreadTaintMemReg(memDst, regSrc, writeSize);
 }
@@ -472,14 +521,14 @@ void AnalysisProcessor::taintReg(uint64 reg)
 }
 
 
-void AnalysisProcessor::setTaintMem(SymbolicElement *se, uint64 mem, uint64 flag)
+void AnalysisProcessor::setTaintMem(SymbolicExpression *se, uint64 mem, uint64 flag)
 {
   this->taintEngine.setTaintMem(mem, flag);
   se->isTainted = flag;
 }
 
 
-void AnalysisProcessor::setTaintReg(SymbolicElement *se, uint64 reg, uint64 flag)
+void AnalysisProcessor::setTaintReg(SymbolicExpression *se, uint64 reg, uint64 flag)
 {
   this->taintEngine.setTaintReg(reg, flag);
   se->isTainted = flag;
@@ -504,37 +553,37 @@ void AnalysisProcessor::untaintMem(uint64 addr)
 }
 
 
-void AnalysisProcessor::aluSpreadTaintRegImm(SymbolicElement *se, uint64 regDst)
+void AnalysisProcessor::aluSpreadTaintRegImm(SymbolicExpression *se, uint64 regDst)
 {
   se->isTainted = this->taintEngine.aluSpreadTaintRegImm(regDst);
 }
 
 
-void AnalysisProcessor::aluSpreadTaintRegReg(SymbolicElement *se, uint64 regDst, uint64 regSrc)
+void AnalysisProcessor::aluSpreadTaintRegReg(SymbolicExpression *se, uint64 regDst, uint64 regSrc)
 {
   se->isTainted = this->taintEngine.aluSpreadTaintRegReg(regDst, regSrc);
 }
 
 
-void AnalysisProcessor::aluSpreadTaintMemMem(SymbolicElement *se, uint64 memDst, uint64 memSrc, uint32 writeSize)
+void AnalysisProcessor::aluSpreadTaintMemMem(SymbolicExpression *se, uint64 memDst, uint64 memSrc, uint32 writeSize)
 {
   se->isTainted = this->taintEngine.aluSpreadTaintMemMem(memDst, memSrc, writeSize);
 }
 
 
-void AnalysisProcessor::aluSpreadTaintRegMem(SymbolicElement *se, uint64 regDst, uint64 memSrc, uint32 readSize)
+void AnalysisProcessor::aluSpreadTaintRegMem(SymbolicExpression *se, uint64 regDst, uint64 memSrc, uint32 readSize)
 {
   se->isTainted = this->taintEngine.aluSpreadTaintRegMem(regDst, memSrc, readSize);
 }
 
 
-void AnalysisProcessor::aluSpreadTaintMemImm(SymbolicElement *se, uint64 memDst, uint32 writeSize)
+void AnalysisProcessor::aluSpreadTaintMemImm(SymbolicExpression *se, uint64 memDst, uint32 writeSize)
 {
   se->isTainted = this->taintEngine.aluSpreadTaintMemImm(memDst, writeSize);
 }
 
 
-void AnalysisProcessor::aluSpreadTaintMemReg(SymbolicElement *se, uint64 memDst, uint64 regSrc, uint32 writeSize)
+void AnalysisProcessor::aluSpreadTaintMemReg(SymbolicExpression *se, uint64 memDst, uint64 regSrc, uint32 writeSize)
 {
   se->isTainted = this->taintEngine.aluSpreadTaintMemReg(memDst, regSrc, writeSize);
 }
@@ -548,9 +597,15 @@ SolverEngine &AnalysisProcessor::getSolverEngine(void)
 }
 
 
-std::list< std::pair<std::string, unsigned long long> > AnalysisProcessor::getModel(std::string expr)
+std::list<Smodel> AnalysisProcessor::getModel(smt2lib::smtAstAbstractNode *node)
 {
-  return this->solverEngine.getModel(expr);
+  return this->solverEngine.getModel(node);
+}
+
+
+std::vector<std::list<Smodel>> AnalysisProcessor::getModels(smt2lib::smtAstAbstractNode *node, uint64 limit)
+{
+  return this->solverEngine.getModels(node, limit);
 }
 
 
@@ -702,13 +757,6 @@ Inst *AnalysisProcessor::getLastInstruction(void)
 }
 
 
-void AnalysisProcessor::saveTrace(std::stringstream &file)
-{
-  if (file.str().empty() == false)
-    this->trace.save(file);
-}
-
-
 // Snapshot Engine Facade
 // -------------------
 
@@ -751,11 +799,23 @@ void AnalysisProcessor::disableSnapshot(void)
 }
 
 
-bool AnalysisProcessor::isSnapshotEnable(void)
+bool AnalysisProcessor::isSnapshotEnabled(void)
 {
   if (this->snapshotEngine.isLocked())
     return false;
   return true;
+}
+
+
+// Evaluator
+// ---------
+
+uint512 AnalysisProcessor::evaluateAST(smt2lib::smtAstAbstractNode *node)
+{
+  Z3ast z3ast{};
+  Z3Result result = z3ast.eval(*node);
+  uint512 nbResult{result.getStringValue()};
+  return nbResult;
 }
 
 

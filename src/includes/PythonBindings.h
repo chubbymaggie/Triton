@@ -1,3 +1,9 @@
+/*
+**  Copyright (C) - Triton
+**
+**  This program is under the terms of the LGPLv3 License.
+*/
+
 #ifndef   PYTHONBINDINGS_H
 #define   PYTHONBINDINGS_H
 
@@ -23,13 +29,16 @@ namespace PyTritonOptions {
   /* Execution configurations */
   extern char *startAnalysisFromSymbol;
   extern std::set<uint64> startAnalysisFromAddr;
+  extern std::set<uint64> startAnalysisFromOffset;
   extern std::set<uint64> stopAnalysisFromAddr;
+  extern std::set<uint64> stopAnalysisFromOffset;
 
   /* Callback configurations */
+  extern PyObject *callbackAfter;                                 // After the instruction processing
   extern PyObject *callbackBefore;                                // Before the instruction processing
   extern PyObject *callbackBeforeIRProc;                          // Before the IR processing
-  extern PyObject *callbackAfter;                                 // After the instruction processing
   extern PyObject *callbackFini;                                  // At the end of the execution
+  extern PyObject *callbackSignals;                               // When a signal occurs
   extern PyObject *callbackSyscallEntry;                          // Before syscall processing
   extern PyObject *callbackSyscallExit;                           // After syscall processing
   extern std::map<const char *, PyObject *> callbackRoutineEntry; // Before routine processing

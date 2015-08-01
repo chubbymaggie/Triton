@@ -10,18 +10,18 @@ ENDC  = "\033[0m"
 # we taint the memory that RAX holds.
 def cbeforeSymProc(instruction):
 
-    if instruction.address == 0x40058b:
+    if instruction.getAddress() == 0x40058b:
         rax = getRegValue(IDREF.REG.RAX)
         taintMem(rax)
 
 
 def cafter(instruction):
-    print '%#x: %s' %(instruction.address, instruction.assembly)
-    for se in instruction.symbolicElements:
-        if se.isTainted == True:
-            print '\t -> %s%s%s' %(GREEN, se.expression, ENDC)
+    print '%#x: %s' %(instruction.getAddress(), instruction.getDisassembly())
+    for se in instruction.getSymbolicExpressions():
+        if se.isTainted() == True:
+            print '\t -> %s%s%s' %(GREEN, se.getAst(), ENDC)
         else:
-            print '\t -> %s' %(se.expression)
+            print '\t -> %s' %(se.getAst())
     print
 
 

@@ -1,3 +1,9 @@
+/*
+**  Copyright (C) - Triton
+**
+**  This program is under the terms of the LGPLv3 License.
+*/
+
 
 #include <iostream>
 #include <stdexcept>
@@ -93,6 +99,7 @@ void PINContextHandler::setRegisterValue(uint64 TritRegID, uint64 value) const
     throw std::runtime_error("Error: setRegisterValue() - Invalid PIN register id.");
 
   PIN_SetContextReg(this->_ctx, reg, value);
+  PIN_UnlockClient();
   PIN_ExecuteAt(this->_ctx);
 }
 
@@ -112,6 +119,7 @@ void PINContextHandler::setSSERegisterValue(uint64 TritRegID, uint128 value) con
   *(uint128 *)tmp = value;
 
   PIN_SetContextRegval(this->_ctx, reg, tmp);
+  PIN_UnlockClient();
   PIN_ExecuteAt(this->_ctx);
   free(tmp);
 }
@@ -149,16 +157,16 @@ void PINContextHandler::setMemValue(uint64 mem, uint32 writeSize, uint128 value)
 
   switch(writeSize){
     case BYTE_SIZE:
-      *((char *)mem) = value;
+      *((char *)mem) = boost::numeric_cast<char>(value);
       break;
     case WORD_SIZE:
-      *((short *)mem) = value;
+      *((short *)mem) = boost::numeric_cast<short>(value);
       break;
     case DWORD_SIZE:
-      *((uint32 *)mem) = value;
+      *((uint32 *)mem) = boost::numeric_cast<uint32>(value);
       break;
     case QWORD_SIZE:
-      *((uint64 *)mem) = value;
+      *((uint64 *)mem) = boost::numeric_cast<uint64>(value);
       break;
     case DQWORD_SIZE:
       *((uint128 *)mem) = value;

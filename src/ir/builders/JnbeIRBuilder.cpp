@@ -1,3 +1,9 @@
+/*
+**  Copyright (C) - Triton
+**
+**  This program is under the terms of the LGPLv3 License.
+*/
+
 #include <iostream>
 #include <sstream>
 #include <stdexcept>
@@ -5,7 +11,7 @@
 #include <JnbeIRBuilder.h>
 #include <Registers.h>
 #include <SMT2Lib.h>
-#include <SymbolicElement.h>
+#include <SymbolicExpression.h>
 
 
 JnbeIRBuilder::JnbeIRBuilder(uint64 address, const std::string &disassembly):
@@ -14,31 +20,31 @@ JnbeIRBuilder::JnbeIRBuilder(uint64 address, const std::string &disassembly):
 
 
 void JnbeIRBuilder::imm(AnalysisProcessor &ap, Inst &inst) const {
-  SymbolicElement   *se;
-  std::stringstream expr, cf, zf;
-  uint64            imm   = this->operands[0].getValue();
+  SymbolicExpression *se;
+  smt2lib::smtAstAbstractNode *expr, *cf, *zf;
+  uint64 imm   = this->operands[0].getValue();
 
   /* Create the SMT semantic */
-  cf << ap.buildSymbolicFlagOperand(ID_CF);
-  zf << ap.buildSymbolicFlagOperand(ID_ZF);
+  cf = ap.buildSymbolicFlagOperand(ID_CF);
+  zf = ap.buildSymbolicFlagOperand(ID_ZF);
 
   /* 
    * Finale expr
    * JNBE: Jump if not below or equal (CF=0 and ZF=0).
    * SMT: (= (bvand (bvnot zf) (bvnot cf)) (_ bv1 1))
    */
-  expr << smt2lib::ite(
+  expr = smt2lib::ite(
             smt2lib::equal(
               smt2lib::bvand(
-                smt2lib::bvnot(cf.str()),
-                smt2lib::bvnot(zf.str())
+                smt2lib::bvnot(cf),
+                smt2lib::bvnot(zf)
               ),
               smt2lib::bvtrue()
             ),
             smt2lib::bv(imm, REG_SIZE_BIT),
             smt2lib::bv(this->nextAddress, REG_SIZE_BIT));
 
-  /* Create the symbolic element */
+  /* Create the symbolic expression */
   se = ap.createRegSE(inst, expr, ID_RIP, REG_SIZE, "RIP");
 
   /* Add the constraint in the PathConstraints list */
@@ -68,7 +74,7 @@ Inst *JnbeIRBuilder::process(AnalysisProcessor &ap) const {
 
   try {
     this->templateMethod(ap, *inst, this->operands, "JNBE");
-    ap.incNumberOfExpressions(inst->numberOfElements()); /* Used for statistics */
+    ap.incNumberOfExpressions(inst->numberOfExpressions()); /* Used for statistics */
   }
   catch (std::exception &e) {
     delete inst;

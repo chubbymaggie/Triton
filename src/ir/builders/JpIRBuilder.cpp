@@ -1,3 +1,9 @@
+/*
+**  Copyright (C) - Triton
+**
+**  This program is under the terms of the LGPLv3 License.
+*/
+
 #include <iostream>
 #include <sstream>
 #include <stdexcept>
@@ -5,7 +11,7 @@
 #include <JpIRBuilder.h>
 #include <Registers.h>
 #include <SMT2Lib.h>
-#include <SymbolicElement.h>
+#include <SymbolicExpression.h>
 
 
 JpIRBuilder::JpIRBuilder(uint64 address, const std::string &disassembly):
@@ -14,22 +20,22 @@ JpIRBuilder::JpIRBuilder(uint64 address, const std::string &disassembly):
 
 
 void JpIRBuilder::imm(AnalysisProcessor &ap, Inst &inst) const {
-  SymbolicElement   *se;
-  std::stringstream expr, pf;
-  uint64            imm   = this->operands[0].getValue();
+  SymbolicExpression *se;
+  smt2lib::smtAstAbstractNode *expr, *pf;
+  uint64 imm   = this->operands[0].getValue();
 
   /* Create the SMT semantic */
-  pf << ap.buildSymbolicFlagOperand(ID_PF);
+  pf = ap.buildSymbolicFlagOperand(ID_PF);
 
   /* Finale expr */
-  expr << smt2lib::ite(
+  expr = smt2lib::ite(
             smt2lib::equal(
-              pf.str(),
+              pf,
               smt2lib::bvtrue()),
             smt2lib::bv(imm, REG_SIZE_BIT),
             smt2lib::bv(this->nextAddress, REG_SIZE_BIT));
 
-  /* Create the symbolic element */
+  /* Create the symbolic expression */
   se = ap.createRegSE(inst, expr, ID_RIP, REG_SIZE, "RIP");
 
   /* Add the constraint in the PathConstraints list */
@@ -59,7 +65,7 @@ Inst *JpIRBuilder::process(AnalysisProcessor &ap) const {
 
   try {
     this->templateMethod(ap, *inst, this->operands, "JP");
-    ap.incNumberOfExpressions(inst->numberOfElements()); /* Used for statistics */
+    ap.incNumberOfExpressions(inst->numberOfExpressions()); /* Used for statistics */
   }
   catch (std::exception &e) {
     delete inst;

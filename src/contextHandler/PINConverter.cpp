@@ -1,3 +1,9 @@
+/*
+**  Copyright (C) - Triton
+**
+**  This program is under the terms of the LGPLv3 License.
+*/
+
 #include <PINConverter.h>
 
 
@@ -248,6 +254,15 @@ std::string PINConverter::getRegisterName(uint64 regID) {
     case ID_XMM13:  return "xmm13";
     case ID_XMM14:  return "xmm14";
     case ID_XMM15:  return "xmm15";
+    case ID_AF:     return "af";
+    case ID_CF:     return "cf";
+    case ID_DF:     return "df";
+    case ID_IF:     return "if";
+    case ID_OF:     return "of";
+    case ID_PF:     return "pd";
+    case ID_SF:     return "sf";
+    case ID_TF:     return "tf";
+    case ID_ZF:     return "zf";
     default:
       return "invalid";
   }

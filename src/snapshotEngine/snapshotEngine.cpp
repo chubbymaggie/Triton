@@ -1,3 +1,9 @@
+/*
+**  Copyright (C) - Triton
+**
+**  This program is under the terms of the LGPLv3 License.
+*/
+
 
 #include <iostream>
 
@@ -62,6 +68,7 @@ void SnapshotEngine::restoreSnapshot(SymbolicEngine *currentSymEngine, TaintEngi
   /* 4 - Restore Pin registers context */
   PIN_SaveContext(&this->pinCtx, ctx);
 
+  PIN_UnlockClient();
   PIN_ExecuteAt(ctx);
 }
 

@@ -1,50 +1,43 @@
+/*
+**  Copyright (C) - Triton
+**
+**  This program is under the terms of the LGPLv3 License.
+*/
 
 #include <cstdint>
 #include <stdexcept>
+#include <Registers.h>
 #include <TritonOperand.h>
 
 
 
-TritonOperand::TritonOperand(IRBuilderOperand::operand_t type,
-              uint64 value,
-              uint64 size)
+TritonOperand::TritonOperand()
 {
-  this->type          = type;
-  this->value         = value;
-  this->size          = size;
+  this->baseReg       = ID_INVALID;
   this->displacement  = 0;
-  this->baseReg       = 0;
-  this->indexReg      = 0;
+  this->indexReg      = ID_INVALID;
   this->memoryScale   = 0;
-}
-
-
-TritonOperand::TritonOperand(IRBuilderOperand::operand_t type,
-              uint64 value,
-              uint64 size,
-              uint64 displacement,
-              uint64 baseReg,
-              uint64 indexReg,
-              uint64 memoryScale)
-{
-  this->type          = type;
+  this->readAndWrite  = false;
+  this->readOnly      = false;
+  this->size          = 0;
+  this->type          = IRBuilderOperand::UNDEF;
   this->value         = value;
-  this->size          = size;
-  this->displacement  = displacement;
-  this->baseReg       = baseReg;
-  this->indexReg      = indexReg;
-  this->memoryScale   = memoryScale;
+  this->writeOnly     = false;
 }
+
 
 TritonOperand::TritonOperand(const TritonOperand &copy)
 {
-  this->type          = copy.type;
-  this->value         = copy.value;
-  this->size          = copy.size;
-  this->displacement  = copy.displacement;
   this->baseReg       = copy.baseReg;
+  this->displacement  = copy.displacement;
   this->indexReg      = copy.indexReg;
   this->memoryScale   = copy.memoryScale;
+  this->readAndWrite  = copy.readAndWrite;
+  this->readOnly      = copy.readOnly;
+  this->size          = copy.size;
+  this->type          = copy.type;
+  this->value         = copy.value;
+  this->writeOnly     = copy.writeOnly;
 }
 
 
@@ -57,13 +50,23 @@ IRBuilderOperand::operand_t TritonOperand::getType(void) const {
 }
 
 
-uint64 TritonOperand::getValue(void) const {
-  return this->value;
+bool TritonOperand::isReadAndWrite(void) const {
+  return this->readAndWrite;
 }
 
 
-void TritonOperand::setValue(uint64 value) {
-  this->value = value;
+bool TritonOperand::isReadOnly(void) const {
+  return this->readOnly;
+}
+
+
+bool TritonOperand::isWriteOnly(void) const {
+  return this->writeOnly;
+}
+
+
+uint64 TritonOperand::getValue(void) const {
+  return this->value;
 }
 
 
@@ -92,31 +95,67 @@ uint64 TritonOperand::getMemoryScale(void) const {
 }
 
 
-uint64 TritonOperand::operator[](const int index){
-  switch (index){
-    case 0: return this->type;
-    case 1: return this->value;
-    case 2: return this->size;
-    case 3: return this->displacement;
-    case 4: return this->baseReg;
-    case 5: return this->indexReg;
-    case 6: return this->memoryScale;
-    default:
-      throw std::out_of_range("Error: TritonOperand - Index out of range");
-  }
-  return 0;
+void TritonOperand::setReadAndWrite(bool flag) {
+  this->readAndWrite = flag;
+}
+
+
+void TritonOperand::setReadOnly(bool flag) {
+  this->readOnly = flag;
+}
+
+
+void TritonOperand::setValue(uint64 value) {
+  this->value = value;
+}
+
+
+void TritonOperand::setWriteOnly(bool flag) {
+  this->writeOnly = flag;
+}
+
+
+void TritonOperand::setBaseReg(uint64 reg) {
+  this->baseReg = reg;
+}
+
+
+void TritonOperand::setDisplacement(uint64 displacement) {
+  this->displacement = displacement;
+}
+
+
+void TritonOperand::setIndexReg(uint64 reg) {
+  this->indexReg = reg;
+}
+
+
+void TritonOperand::setMemoryScale(uint64 memoryScale) {
+  this->memoryScale = memoryScale;
+}
+
+
+void TritonOperand::setSize(uint64 size) {
+  this->size = size;
+}
+
+
+void TritonOperand::setType(IRBuilderOperand::operand_t type) {
+  this->type = type;
 }
 
 
 void TritonOperand::operator=(const TritonOperand &other)
 {
-  this->type          = other.type;
-  this->value         = other.value;
-  this->size          = other.size; 
-  this->displacement  = other.displacement;
   this->baseReg       = other.baseReg;
+  this->displacement  = other.displacement;
   this->indexReg      = other.indexReg;
   this->memoryScale   = other.memoryScale;
+  this->readAndWrite  = other.readAndWrite;
+  this->readOnly      = other.readOnly;
+  this->size          = other.size;
+  this->type          = other.type;
+  this->value         = other.value;
+  this->writeOnly     = other.writeOnly;
 }
-
 

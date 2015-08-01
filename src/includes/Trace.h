@@ -1,3 +1,9 @@
+/*
+**  Copyright (C) - Triton
+**
+**  This program is under the terms of the LGPLv3 License.
+*/
+
 #ifndef TRITON_TRACE_H
 #define TRITON_TRACE_H
 
@@ -29,9 +35,6 @@ class Trace {
 
     /* Get all instructions from the Trace */
     std::list<Inst *> &getInstructions();
-
-    // Display the trace: all the instructions and their expressions.
-    void save(std::stringstream &file);
 };
 
 #endif /* !_TRACE_H_ */

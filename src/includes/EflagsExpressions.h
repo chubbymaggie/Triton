@@ -1,51 +1,58 @@
+/*
+**  Copyright (C) - Triton
+**
+**  This program is under the terms of the LGPLv3 License.
+*/
+
 #ifndef   EFLAGSEXPRESSIONS_H
 #define   EFLAGSEXPRESSIONS_H
 
 #include "AnalysisProcessor.h"
 #include "SMT2Lib.h"
-#include "SymbolicElement.h"
+#include "SymbolicExpression.h"
 
 
 /* Retunrs the flag expression */
 namespace EflagsExpressions {
 
-  std::string af(SymbolicElement *parent, uint32 bvSize, std::stringstream &op1, std::stringstream &op2);
-  std::string afNeg(SymbolicElement *parent, uint32 bvSize, std::stringstream &op1);
+  smt2lib::smtAstAbstractNode *af(SymbolicExpression *parent, uint32 bvSize, smt2lib::smtAstAbstractNode *op1, smt2lib::smtAstAbstractNode *op2);
+  smt2lib::smtAstAbstractNode *afNeg(SymbolicExpression *parent, uint32 bvSize, smt2lib::smtAstAbstractNode *op1);
 
-  std::string cfAdd(SymbolicElement *parent, std::stringstream &op1);
-  std::string cfImul(SymbolicElement *parent, std::stringstream &op1);
-  std::string cfMul(uint32 bvSize, std::stringstream &up);
-  std::string cfNeg(uint32 bvSize, std::stringstream &op1);
-  std::string cfRol(SymbolicElement *parent, AnalysisProcessor &ap, uint32 bvSize, std::stringstream &op2);
-  std::string cfRor(SymbolicElement *parent, AnalysisProcessor &ap, uint32 bvSize, std::stringstream &op2);
-  std::string cfSar(SymbolicElement *parent, AnalysisProcessor &ap, uint32 bvSize, std::stringstream &op1, std::stringstream &op2);
-  std::string cfShl(SymbolicElement *parent, AnalysisProcessor &ap, uint32 bvSize, std::stringstream &op1, std::stringstream &op2);
-  std::string cfShr(SymbolicElement *parent, AnalysisProcessor &ap, uint32 bvSize, std::stringstream &op1, std::stringstream &op2);
-  std::string cfSub(std::stringstream &op1, std::stringstream &op2);
+  smt2lib::smtAstAbstractNode *cfAdd(SymbolicExpression *parent, uint32 bvSize, smt2lib::smtAstAbstractNode *op1);
+  smt2lib::smtAstAbstractNode *cfImul(SymbolicExpression *parent, uint32 bvSize, smt2lib::smtAstAbstractNode *mulRes);
+  smt2lib::smtAstAbstractNode *cfMul(uint32 bvSize, smt2lib::smtAstAbstractNode *up);
+  smt2lib::smtAstAbstractNode *cfNeg(uint32 bvSize, smt2lib::smtAstAbstractNode *op1);
+  smt2lib::smtAstAbstractNode *cfRcl(SymbolicExpression *parent, AnalysisProcessor &ap, uint32 bvSize, smt2lib::smtAstAbstractNode *op2);
+  smt2lib::smtAstAbstractNode *cfRol(SymbolicExpression *parent, AnalysisProcessor &ap, smt2lib::smtAstAbstractNode *op2);
+  smt2lib::smtAstAbstractNode *cfRor(SymbolicExpression *parent, AnalysisProcessor &ap, uint32 bvSize, smt2lib::smtAstAbstractNode *op2);
+  smt2lib::smtAstAbstractNode *cfSar(SymbolicExpression *parent, AnalysisProcessor &ap, uint32 bvSize, smt2lib::smtAstAbstractNode *op1, smt2lib::smtAstAbstractNode *op2);
+  smt2lib::smtAstAbstractNode *cfShl(SymbolicExpression *parent, AnalysisProcessor &ap, uint32 bvSize, smt2lib::smtAstAbstractNode *op1, smt2lib::smtAstAbstractNode *op2);
+  smt2lib::smtAstAbstractNode *cfShr(SymbolicExpression *parent, AnalysisProcessor &ap, uint32 bvSize, smt2lib::smtAstAbstractNode *op1, smt2lib::smtAstAbstractNode *op2);
+  smt2lib::smtAstAbstractNode *cfSub(SymbolicExpression *parent, uint32 bvSize, smt2lib::smtAstAbstractNode *op1, smt2lib::smtAstAbstractNode *op2);
 
-  std::string clearFlag(void);
+  smt2lib::smtAstAbstractNode *clearFlag(void);
 
-  std::string ofAdd(SymbolicElement *parent, uint32 extractSize, std::stringstream &op1, std::stringstream &op2);
-  std::string ofImul(SymbolicElement *parent, std::stringstream &op1);
-  std::string ofMul(uint32 bvSize, std::stringstream &up);
-  std::string ofNeg(SymbolicElement *parent, uint32 bvSize, std::stringstream &op1);
-  std::string ofRol(SymbolicElement *parent, AnalysisProcessor &ap, uint32 bvSize, std::stringstream &op2);
-  std::string ofRor(SymbolicElement *parent, AnalysisProcessor &ap, uint32 bvSize, std::stringstream &op2);
-  std::string ofSar(SymbolicElement *parent, AnalysisProcessor &ap, uint32 bvSize, std::stringstream &op2);
-  std::string ofShl(SymbolicElement *parent, AnalysisProcessor &ap, uint32 bvSize, std::stringstream &op1, std::stringstream &op2);
-  std::string ofShr(SymbolicElement *parent, AnalysisProcessor &ap, uint32 bvSize, std::stringstream &op1, std::stringstream &op2);
-  std::string ofSub(SymbolicElement *parent, uint32 extractSize, std::stringstream &op1, std::stringstream &op2);
+  smt2lib::smtAstAbstractNode *ofAdd(SymbolicExpression *parent, uint32 extractSize, smt2lib::smtAstAbstractNode *op1, smt2lib::smtAstAbstractNode *op2);
+  smt2lib::smtAstAbstractNode *ofImul(SymbolicExpression *parent, uint32 bvSize, smt2lib::smtAstAbstractNode *mulRes);
+  smt2lib::smtAstAbstractNode *ofMul(uint32 bvSize, smt2lib::smtAstAbstractNode *up);
+  smt2lib::smtAstAbstractNode *ofNeg(SymbolicExpression *parent, uint32 bvSize, smt2lib::smtAstAbstractNode *op1);
+  smt2lib::smtAstAbstractNode *ofRol(SymbolicExpression *parent, AnalysisProcessor &ap, uint32 bvSize, smt2lib::smtAstAbstractNode *op2);
+  smt2lib::smtAstAbstractNode *ofRor(SymbolicExpression *parent, AnalysisProcessor &ap, uint32 bvSize, smt2lib::smtAstAbstractNode *op2);
+  smt2lib::smtAstAbstractNode *ofSar(SymbolicExpression *parent, AnalysisProcessor &ap, uint32 bvSize, smt2lib::smtAstAbstractNode *op2);
+  smt2lib::smtAstAbstractNode *ofShl(SymbolicExpression *parent, AnalysisProcessor &ap, uint32 bvSize, smt2lib::smtAstAbstractNode *op1, smt2lib::smtAstAbstractNode *op2);
+  smt2lib::smtAstAbstractNode *ofShr(SymbolicExpression *parent, AnalysisProcessor &ap, uint32 bvSize, smt2lib::smtAstAbstractNode *op1, smt2lib::smtAstAbstractNode *op2);
+  smt2lib::smtAstAbstractNode *ofSub(SymbolicExpression *parent, uint32 extractSize, smt2lib::smtAstAbstractNode *op1, smt2lib::smtAstAbstractNode *op2);
 
-  std::string pf(SymbolicElement *parent);
-  std::string pfShl(SymbolicElement *parent, AnalysisProcessor &ap, uint32 bvSize, std::stringstream &op2);
+  smt2lib::smtAstAbstractNode *pf(SymbolicExpression *parent, uint32 bvSizes);
+  smt2lib::smtAstAbstractNode *pfShl(SymbolicExpression *parent, AnalysisProcessor &ap, uint32 bvSize, smt2lib::smtAstAbstractNode *op2);
 
-  std::string setFlag(void);
+  smt2lib::smtAstAbstractNode *setFlag(void);
 
-  std::string sf(SymbolicElement *parent, uint32 extractSize);
-  std::string sfShl(SymbolicElement *parent, AnalysisProcessor &ap, uint32 bvSize, uint32 extractSize, std::stringstream &op2);
+  smt2lib::smtAstAbstractNode *sf(SymbolicExpression *parent, uint32 extractSize);
+  smt2lib::smtAstAbstractNode *sfShl(SymbolicExpression *parent, AnalysisProcessor &ap, uint32 bvSize, uint32 extractSize, smt2lib::smtAstAbstractNode *op2);
 
-  std::string zf(SymbolicElement *parent, uint32 bvSize);
-  std::string zfShl(SymbolicElement *parent, AnalysisProcessor &ap, uint32 bvSize, std::stringstream &op2);
+  smt2lib::smtAstAbstractNode *zf(SymbolicExpression *parent, uint32 bvSize);
+  smt2lib::smtAstAbstractNode *zfShl(SymbolicExpression *parent, AnalysisProcessor &ap, uint32 bvSize, smt2lib::smtAstAbstractNode *op2);
 }
 
 
