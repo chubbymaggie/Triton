@@ -4,6 +4,8 @@
 **  This program is under the terms of the LGPLv3 License.
 */
 
+#ifndef LIGHT_VERSION
+
 #include <iostream>
 #include <sstream>
 #include <stdexcept>
@@ -19,22 +21,22 @@ LeaveIRBuilder::LeaveIRBuilder(uint64 address, const std::string &disassembly):
 }
 
 
-static SymbolicExpression *alignStack(Inst &inst, AnalysisProcessor &ap, uint32 readSize)
+static SymbolicExpression *alignStack(Inst &inst, AnalysisProcessor &ap, uint32 memSize)
 {
   SymbolicExpression *se;
   smt2lib::smtAstAbstractNode *expr, *op1, *op2;
 
   /* Create the SMT semantic */
-  op1 = ap.buildSymbolicRegOperand(ID_RSP, REG_SIZE);
-  op2 = smt2lib::bv(readSize, readSize * REG_SIZE);
+  op1 = ap.buildSymbolicRegOperand(ID_TMP_RSP, REG_SIZE);
+  op2 = smt2lib::bv(memSize, memSize * REG_SIZE);
 
   expr = smt2lib::bvadd(op1, op2);
 
   /* Create the symbolic expression */
-  se = ap.createRegSE(inst, expr, ID_RSP, REG_SIZE, "Aligns stack");
+  se = ap.createRegSE(inst, expr, ID_TMP_RSP, REG_SIZE, "Aligns stack");
 
   /* Apply the taint */
-  se->isTainted = ap.isRegTainted(ID_RSP);
+  se->isTainted = ap.isRegTainted(ID_TMP_RSP);
 
   return se;
 }
@@ -42,31 +44,31 @@ static SymbolicExpression *alignStack(Inst &inst, AnalysisProcessor &ap, uint32 
 void LeaveIRBuilder::none(AnalysisProcessor &ap, Inst &inst) const {
   SymbolicExpression *se1, *se2;
   smt2lib::smtAstAbstractNode *expr1, *expr2;
-  uint64   readMem   = this->operands[0].getValue(); // The src memory read
-  uint32   readSize  = this->operands[0].getSize();
+  auto mem = this->operands[0].getMem(); // The src memory read
+  auto memSize = this->operands[0].getMem().getSize();
 
   // RSP = RBP; -----------------------------
-  expr1 = ap.buildSymbolicRegOperand(ID_RBP, REG_SIZE);
+  expr1 = ap.buildSymbolicRegOperand(ID_TMP_RBP, REG_SIZE);
 
   /* Create the symbolic expression */
-  se1 = ap.createRegSE(inst, expr1, ID_RSP, REG_SIZE);
+  se1 = ap.createRegSE(inst, expr1, ID_TMP_RSP, REG_SIZE);
 
   /* Apply the taint */
-  ap.assignmentSpreadTaintRegReg(se1, ID_RSP, ID_RBP);
+  ap.assignmentSpreadTaintRegReg(se1, ID_TMP_RSP, ID_TMP_RBP);
   // RSP = RBP; -----------------------------
 
   // RBP = Pop(); ---------------------------
-  expr2 = ap.buildSymbolicMemOperand(readMem, readSize);
+  expr2 = ap.buildSymbolicMemOperand(mem, memSize);
 
   /* Create the symbolic expression */
-  se2 = ap.createRegSE(inst, expr2, ID_RBP, REG_SIZE);
+  se2 = ap.createRegSE(inst, expr2, ID_TMP_RBP, REG_SIZE);
 
   /* Apply the taint */
-  ap.assignmentSpreadTaintRegMem(se2, ID_RBP, readMem, readSize);
+  ap.assignmentSpreadTaintRegMem(se2, ID_TMP_RBP, mem, memSize);
   // RBP = Pop(); ---------------------------
 
   /* Add the symbolic expression to the current inst */
-  alignStack(inst, ap, readSize);
+  alignStack(inst, ap, memSize);
 }
 
 
@@ -87,4 +89,6 @@ Inst *LeaveIRBuilder::process(AnalysisProcessor &ap) const {
 
   return inst;
 }
+
+#endif /* LIGHT_VERSION */
 

@@ -4,6 +4,8 @@
 **  This program is under the terms of the LGPLv3 License.
 */
 
+#ifndef LIGHT_VERSION
+
 #include <iostream>
 #include <sstream>
 #include <stdexcept>
@@ -22,16 +24,16 @@ JnbeIRBuilder::JnbeIRBuilder(uint64 address, const std::string &disassembly):
 void JnbeIRBuilder::imm(AnalysisProcessor &ap, Inst &inst) const {
   SymbolicExpression *se;
   smt2lib::smtAstAbstractNode *expr, *cf, *zf;
-  uint64 imm   = this->operands[0].getValue();
+  auto imm = this->operands[0].getImm().getValue();
 
   /* Create the SMT semantic */
-  cf = ap.buildSymbolicFlagOperand(ID_CF);
-  zf = ap.buildSymbolicFlagOperand(ID_ZF);
+  cf = ap.buildSymbolicFlagOperand(ID_TMP_CF);
+  zf = ap.buildSymbolicFlagOperand(ID_TMP_ZF);
 
   /* 
    * Finale expr
-   * JNBE: Jump if not below or equal (CF=0 and ZF=0).
-   * SMT: (= (bvand (bvnot zf) (bvnot cf)) (_ bv1 1))
+   * JNBE: Jump if not below or equal (CF =0 and ZF =0).
+   * SMT: ( = (bvand (bvnot zf) (bvnot cf)) (_ bv1 1))
    */
   expr = smt2lib::ite(
             smt2lib::equal(
@@ -45,7 +47,7 @@ void JnbeIRBuilder::imm(AnalysisProcessor &ap, Inst &inst) const {
             smt2lib::bv(this->nextAddress, REG_SIZE_BIT));
 
   /* Create the symbolic expression */
-  se = ap.createRegSE(inst, expr, ID_RIP, REG_SIZE, "RIP");
+  se = ap.createRegSE(inst, expr, ID_TMP_RIP, REG_SIZE, "RIP");
 
   /* Add the constraint in the PathConstraints list */
   ap.addPathConstraint(se->getID());
@@ -83,4 +85,6 @@ Inst *JnbeIRBuilder::process(AnalysisProcessor &ap) const {
 
   return inst;
 }
+
+#endif /* LIGHT_VERSION */
 

@@ -4,6 +4,8 @@
 **  This program is under the terms of the LGPLv3 License.
 */
 
+#ifndef LIGHT_VERSION
+
 #include <iostream>
 #include <sstream>
 #include <stdexcept>
@@ -22,10 +24,10 @@ JoIRBuilder::JoIRBuilder(uint64 address, const std::string &disassembly):
 void JoIRBuilder::imm(AnalysisProcessor &ap, Inst &inst) const {
   SymbolicExpression *se;
   smt2lib::smtAstAbstractNode *expr, *of;
-  uint64 imm   = this->operands[0].getValue();
+  auto imm = this->operands[0].getImm().getValue();
 
   /* Create the SMT semantic */
-  of = ap.buildSymbolicFlagOperand(ID_OF);
+  of = ap.buildSymbolicFlagOperand(ID_TMP_OF);
 
   /* Finale expr */
   expr = smt2lib::ite(
@@ -36,7 +38,7 @@ void JoIRBuilder::imm(AnalysisProcessor &ap, Inst &inst) const {
             smt2lib::bv(this->nextAddress, REG_SIZE_BIT));
 
   /* Create the symbolic expression */
-  se = ap.createRegSE(inst, expr, ID_RIP, REG_SIZE, "RIP");
+  se = ap.createRegSE(inst, expr, ID_TMP_RIP, REG_SIZE, "RIP");
 
   /* Add the constraint in the PathConstraints list */
   ap.addPathConstraint(se->getID());
@@ -75,4 +77,6 @@ Inst *JoIRBuilder::process(AnalysisProcessor &ap) const {
 
   return inst;
 }
+
+#endif /* LIGHT_VERSION */
 

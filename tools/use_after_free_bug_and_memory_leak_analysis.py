@@ -8,8 +8,8 @@
 ## ------------
 ## 
 ## This tool maintains a free table (TF) and an allocation table (TA) which
-## represents the states of pointers allocated/freed during the execution.
-## When a LOAD and STORE instruction occurs, the tool checks if the memory
+## represent the states of pointers allocated/freed during the execution.
+## When a LOAD or STORE instruction occurs, the tool checks if the memory
 ## access is referenced into TA or TF. 
 ##
 ## If the memory access is in TF -> use-after-free.
@@ -121,11 +121,11 @@ def trace(instruction):
     global TF
     for operand in instruction.getOperands():
         if operand.getType() == IDREF.OPERAND.MEM_W or operand.getType() == IDREF.OPERAND.MEM_R:
-            memoryAccess     = operand.getValue()
-            memoryAccessSize = operand.getSize()
+            memoryAccess     = operand.getMem().getAddress()
+            memoryAccessSize = operand.getMem().getSize()
             for (delta, size) in TF:
                 if memoryAccess > delta and memoryAccess < delta+size:
-                    print '[!] Use-after-free (%#x) at %#x: %s' %(memoryAccess, instruction.getAddress(), instruction.getDiassembly())
+                    print '[!] Use-after-free (%#x) at %#x: %s' %(memoryAccess, instruction.getAddress(), instruction.getDisassembly())
                     return
     return
 

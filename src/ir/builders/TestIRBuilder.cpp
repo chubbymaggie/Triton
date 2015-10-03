@@ -4,6 +4,8 @@
 **  This program is under the terms of the LGPLv3 License.
 */
 
+#ifndef LIGHT_VERSION
+
 #include <iostream>
 #include <sstream>
 #include <stdexcept>
@@ -22,9 +24,9 @@ TestIRBuilder::TestIRBuilder(uint64 address, const std::string &disassembly):
 void TestIRBuilder::regImm(AnalysisProcessor &ap, Inst &inst) const {
   SymbolicExpression *se;
   smt2lib::smtAstAbstractNode *expr, *op1, *op2;
-  uint64 reg     = this->operands[0].getValue();
-  uint64 imm     = this->operands[1].getValue();
-  uint32 regSize = this->operands[0].getSize();
+  auto reg = this->operands[0].getReg();
+  auto imm = this->operands[1].getImm().getValue();
+  auto regSize = this->operands[0].getReg().getSize();
 
   /* Create the SMT semantic */
   op1 = ap.buildSymbolicRegOperand(reg, regSize);
@@ -40,8 +42,8 @@ void TestIRBuilder::regImm(AnalysisProcessor &ap, Inst &inst) const {
   ap.assignmentSpreadTaintExprReg(se, reg);
 
   /* Add the symbolic flags expression to the current inst */
-  EflagsBuilder::clearFlag(inst, ap, ID_CF, "Clears carry flag");
-  EflagsBuilder::clearFlag(inst, ap, ID_OF, "Clears overflow flag");
+  EflagsBuilder::clearFlag(inst, ap, ID_TMP_CF, "Clears carry flag");
+  EflagsBuilder::clearFlag(inst, ap, ID_TMP_OF, "Clears overflow flag");
   EflagsBuilder::pf(inst, se, ap, regSize);
   EflagsBuilder::sf(inst, se, ap, regSize);
   EflagsBuilder::zf(inst, se, ap, regSize);
@@ -51,10 +53,10 @@ void TestIRBuilder::regImm(AnalysisProcessor &ap, Inst &inst) const {
 void TestIRBuilder::regReg(AnalysisProcessor &ap, Inst &inst) const {
   SymbolicExpression *se;
   smt2lib::smtAstAbstractNode *expr, *op1, *op2;
-  uint64 reg1     = this->operands[0].getValue();
-  uint64 reg2     = this->operands[1].getValue();
-  uint32 regSize1 = this->operands[0].getSize();
-  uint32 regSize2 = this->operands[1].getSize();
+  auto reg1 = this->operands[0].getReg();
+  auto reg2 = this->operands[1].getReg();
+  auto regSize1 = this->operands[0].getReg().getSize();
+  auto regSize2 = this->operands[1].getReg().getSize();
 
   /* Create the SMT semantic */
   op1 = ap.buildSymbolicRegOperand(reg1, regSize1);
@@ -70,8 +72,8 @@ void TestIRBuilder::regReg(AnalysisProcessor &ap, Inst &inst) const {
   ap.assignmentSpreadTaintExprRegReg(se, reg1, reg2);
 
   /* Add the symbolic flags expression to the current inst */
-  EflagsBuilder::clearFlag(inst, ap, ID_CF, "Clears carry flag");
-  EflagsBuilder::clearFlag(inst, ap, ID_OF, "Clears overflow flag");
+  EflagsBuilder::clearFlag(inst, ap, ID_TMP_CF, "Clears carry flag");
+  EflagsBuilder::clearFlag(inst, ap, ID_TMP_OF, "Clears overflow flag");
   EflagsBuilder::pf(inst, se, ap, regSize1);
   EflagsBuilder::sf(inst, se, ap, regSize1);
   EflagsBuilder::zf(inst, se, ap, regSize1);
@@ -87,13 +89,13 @@ void TestIRBuilder::regMem(AnalysisProcessor &ap, Inst &inst) const {
 void TestIRBuilder::memImm(AnalysisProcessor &ap, Inst &inst) const {
   SymbolicExpression *se;
   smt2lib::smtAstAbstractNode *expr, *op1, *op2;
-  uint32 readSize  = this->operands[0].getSize();
-  uint64 mem       = this->operands[0].getValue();
-  uint64 imm       = this->operands[1].getValue();
+  auto memSize = this->operands[0].getMem().getSize();
+  auto mem = this->operands[0].getMem();
+  auto imm = this->operands[1].getImm().getValue();
 
   /* Create the SMT semantic */
-  op1 = ap.buildSymbolicMemOperand(mem, readSize);
-  op2 = smt2lib::bv(imm, readSize * REG_SIZE);
+  op1 = ap.buildSymbolicMemOperand(mem, memSize);
+  op2 = smt2lib::bv(imm, memSize * REG_SIZE);
 
   /* Final expr */
   expr = smt2lib::bvand(op1, op2);
@@ -102,27 +104,27 @@ void TestIRBuilder::memImm(AnalysisProcessor &ap, Inst &inst) const {
   se = ap.createSE(inst, expr);
 
   /* Apply the taint */
-  ap.assignmentSpreadTaintExprMem(se, mem, readSize);
+  ap.assignmentSpreadTaintExprMem(se, mem, memSize);
 
   /* Add the symbolic flags expression to the current inst */
-  EflagsBuilder::clearFlag(inst, ap, ID_CF, "Clears carry flag");
-  EflagsBuilder::clearFlag(inst, ap, ID_OF, "Clears overflow flag");
-  EflagsBuilder::pf(inst, se, ap, readSize);
-  EflagsBuilder::sf(inst, se, ap, readSize);
-  EflagsBuilder::zf(inst, se, ap, readSize);
+  EflagsBuilder::clearFlag(inst, ap, ID_TMP_CF, "Clears carry flag");
+  EflagsBuilder::clearFlag(inst, ap, ID_TMP_OF, "Clears overflow flag");
+  EflagsBuilder::pf(inst, se, ap, memSize);
+  EflagsBuilder::sf(inst, se, ap, memSize);
+  EflagsBuilder::zf(inst, se, ap, memSize);
 }
 
 
 void TestIRBuilder::memReg(AnalysisProcessor &ap, Inst &inst) const {
   SymbolicExpression *se;
   smt2lib::smtAstAbstractNode *expr, *op1, *op2;
-  uint32 readSize  = this->operands[0].getSize();
-  uint64 mem       = this->operands[0].getValue();
-  uint64 reg       = this->operands[1].getValue();
-  uint32 regSize   = this->operands[1].getSize();
+  auto memSize = this->operands[0].getMem().getSize();
+  auto mem = this->operands[0].getMem();
+  auto reg = this->operands[1].getReg();
+  auto regSize = this->operands[1].getReg().getSize();
 
   /* Create the SMT semantic */
-  op1 = ap.buildSymbolicMemOperand(mem, readSize);
+  op1 = ap.buildSymbolicMemOperand(mem, memSize);
   op2 = ap.buildSymbolicRegOperand(reg, regSize);
 
   // Final expr
@@ -132,14 +134,14 @@ void TestIRBuilder::memReg(AnalysisProcessor &ap, Inst &inst) const {
   se = ap.createSE(inst, expr);
 
   /* Apply the taint */
-  ap.assignmentSpreadTaintExprRegMem(se, reg, mem, readSize);
+  ap.assignmentSpreadTaintExprRegMem(se, reg, mem, memSize);
 
   /* Add the symbolic flags expression to the current inst */
-  EflagsBuilder::clearFlag(inst, ap, ID_CF, "Clears carry flag");
-  EflagsBuilder::clearFlag(inst, ap, ID_OF, "Clears overflow flag");
-  EflagsBuilder::pf(inst, se, ap, readSize);
-  EflagsBuilder::sf(inst, se, ap, readSize);
-  EflagsBuilder::zf(inst, se, ap, readSize);
+  EflagsBuilder::clearFlag(inst, ap, ID_TMP_CF, "Clears carry flag");
+  EflagsBuilder::clearFlag(inst, ap, ID_TMP_OF, "Clears overflow flag");
+  EflagsBuilder::pf(inst, se, ap, memSize);
+  EflagsBuilder::sf(inst, se, ap, memSize);
+  EflagsBuilder::zf(inst, se, ap, memSize);
 }
 
 
@@ -160,4 +162,6 @@ Inst *TestIRBuilder::process(AnalysisProcessor &ap) const {
 
   return inst;
 }
+
+#endif /* LIGHT_VERSION */
 

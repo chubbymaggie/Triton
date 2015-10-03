@@ -4,6 +4,8 @@
 **  This program is under the terms of the LGPLv3 License.
 */
 
+#ifndef LIGHT_VERSION
+
 #include <algorithm>
 #include <sstream>
 #include <stdexcept>
@@ -23,15 +25,15 @@ MovIRBuilder::MovIRBuilder(uint64 address, const std::string &disassembly):
 void MovIRBuilder::regImm(AnalysisProcessor &ap, Inst &inst) const {
   SymbolicExpression *se;
   smt2lib::smtAstAbstractNode *expr;
-  uint64 reg  = this->operands[0].getValue();
-  uint64 imm  = this->operands[1].getValue();
-  uint64 size = this->operands[0].getSize();
+  auto reg = this->operands[0].getReg();
+  auto regSize = this->operands[0].getReg().getSize();
+  auto imm = this->operands[1].getImm().getValue();
 
   /* Create the SMT semantic */
-  expr = smt2lib::bv(imm, size * REG_SIZE);
+  expr = smt2lib::bv(imm, regSize * REG_SIZE);
 
   /* Create the symbolic expression */
-  se = ap.createRegSE(inst, expr, reg, size);
+  se = ap.createRegSE(inst, expr, reg, regSize);
 
   /* Apply the taint */
   ap.assignmentSpreadTaintRegImm(se, reg);
@@ -41,16 +43,16 @@ void MovIRBuilder::regImm(AnalysisProcessor &ap, Inst &inst) const {
 void MovIRBuilder::regReg(AnalysisProcessor &ap, Inst &inst) const {
   SymbolicExpression *se;
   smt2lib::smtAstAbstractNode *expr;
-  uint64 reg1  = this->operands[0].getValue();
-  uint64 reg2  = this->operands[1].getValue();
-  uint64 size1 = this->operands[0].getSize();
-  uint64 size2 = this->operands[1].getSize();
+  auto reg1 = this->operands[0].getReg();
+  auto reg2 = this->operands[1].getReg();
+  auto regSize1 = this->operands[0].getReg().getSize();
+  auto regSize2 = this->operands[1].getReg().getSize();
 
   /* Create the SMT semantic */
-  expr = ap.buildSymbolicRegOperand(reg2, size2);
+  expr = ap.buildSymbolicRegOperand(reg2, regSize2);
 
   /* Create the symbolic expression */
-  se = ap.createRegSE(inst, expr, reg1, size1);
+  se = ap.createRegSE(inst, expr, reg1, regSize1);
 
   /* Apply the taint */
   ap.assignmentSpreadTaintRegReg(se, reg1, reg2);
@@ -60,56 +62,56 @@ void MovIRBuilder::regReg(AnalysisProcessor &ap, Inst &inst) const {
 void MovIRBuilder::regMem(AnalysisProcessor &ap, Inst &inst) const {
   SymbolicExpression *se;
   smt2lib::smtAstAbstractNode *expr;
-  uint32 readSize = this->operands[1].getSize();
-  uint64 mem      = this->operands[1].getValue();
-  uint64 reg      = this->operands[0].getValue();
-  uint64 regSize  = this->operands[0].getSize();
+  auto mem = this->operands[1].getMem();
+  auto memSize = this->operands[1].getMem().getSize();
+  auto reg = this->operands[0].getReg();
+  auto regSize = this->operands[0].getReg().getSize();
 
   /* Create the SMT semantic */
-  expr = ap.buildSymbolicMemOperand(mem, readSize);
+  expr = ap.buildSymbolicMemOperand(mem, memSize);
 
   /* Create the symbolic expression */
   se = ap.createRegSE(inst, expr, reg, regSize);
 
   /* Apply the taint */
-  ap.assignmentSpreadTaintRegMem(se, reg, mem, readSize);
+  ap.assignmentSpreadTaintRegMem(se, reg, mem, memSize);
 }
 
 
 void MovIRBuilder::memImm(AnalysisProcessor &ap, Inst &inst) const {
   SymbolicExpression *se;
   smt2lib::smtAstAbstractNode *expr;
-  uint32 writeSize = this->operands[0].getSize();
-  uint64 mem       = this->operands[0].getValue();
-  uint64 imm       = this->operands[1].getValue();
+  auto memSize = this->operands[0].getMem().getSize();
+  auto mem = this->operands[0].getMem();
+  auto imm = this->operands[1].getImm().getValue();
 
   /* Create the SMT semantic */
-  expr = smt2lib::bv(imm, writeSize * REG_SIZE);
+  expr = smt2lib::bv(imm, memSize * REG_SIZE);
 
   /* Create the symbolic expression */
-  se = ap.createMemSE(inst, expr, mem, writeSize);
+  se = ap.createMemSE(inst, expr, mem, memSize);
 
   /* Apply the taint */
-  ap.assignmentSpreadTaintMemImm(se, mem, writeSize);
+  ap.assignmentSpreadTaintMemImm(se, mem, memSize);
 }
 
 
 void MovIRBuilder::memReg(AnalysisProcessor &ap, Inst &inst) const {
   SymbolicExpression *se;
   smt2lib::smtAstAbstractNode *expr;
-  uint32 writeSize = this->operands[0].getSize();
-  uint64 mem       = this->operands[0].getValue();
-  uint64 reg       = this->operands[1].getValue();
-  uint64 regSize   = this->operands[1].getSize();
+  auto memSize = this->operands[0].getMem().getSize();
+  auto mem = this->operands[0].getMem();
+  auto reg = this->operands[1].getReg();
+  auto regSize = this->operands[1].getReg().getSize();
 
   /* Create the SMT semantic */
   expr = ap.buildSymbolicRegOperand(reg, regSize);
 
   /* Create the symbolic expression */
-  se = ap.createMemSE(inst, expr, mem, writeSize);
+  se = ap.createMemSE(inst, expr, mem, memSize);
 
   /* Apply the taint */
-  ap.assignmentSpreadTaintMemReg(se, mem, reg, writeSize);
+  ap.assignmentSpreadTaintMemReg(se, mem, reg, memSize);
 }
 
 
@@ -130,4 +132,6 @@ Inst *MovIRBuilder::process(AnalysisProcessor &ap) const {
 
   return inst;
 }
+
+#endif /* LIGHT_VERSION */
 

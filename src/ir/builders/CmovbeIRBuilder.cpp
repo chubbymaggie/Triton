@@ -4,6 +4,8 @@
 **  This program is under the terms of the LGPLv3 License.
 */
 
+#ifndef LIGHT_VERSION
+
 #include <algorithm>
 #include <sstream>
 #include <stdexcept>
@@ -27,16 +29,16 @@ void CmovbeIRBuilder::regImm(AnalysisProcessor &ap, Inst &inst) const {
 void CmovbeIRBuilder::regReg(AnalysisProcessor &ap, Inst &inst) const {
   SymbolicExpression *se;
   smt2lib::smtAstAbstractNode *expr, *reg1e, *reg2e, *cf, *zf;
-  uint64 reg1    = this->operands[0].getValue();
-  uint64 reg2    = this->operands[1].getValue();
-  uint64 size1   = this->operands[0].getSize();
-  uint64 size2   = this->operands[1].getSize();
+  auto reg1 = this->operands[0].getReg();
+  auto reg2 = this->operands[1].getReg();
+  auto regSize1 = this->operands[0].getReg().getSize();
+  auto regSize2 = this->operands[1].getReg().getSize();
 
   /* Create the SMT semantic */
-  cf = ap.buildSymbolicFlagOperand(ID_CF);
-  zf = ap.buildSymbolicFlagOperand(ID_ZF);
-  reg1e = ap.buildSymbolicRegOperand(reg1, size1);
-  reg2e = ap.buildSymbolicRegOperand(reg2, size2);
+  cf = ap.buildSymbolicFlagOperand(ID_TMP_CF);
+  zf = ap.buildSymbolicFlagOperand(ID_TMP_ZF);
+  reg1e = ap.buildSymbolicRegOperand(reg1, regSize1);
+  reg2e = ap.buildSymbolicRegOperand(reg2, regSize2);
 
   expr = smt2lib::ite(
             smt2lib::equal(
@@ -50,10 +52,10 @@ void CmovbeIRBuilder::regReg(AnalysisProcessor &ap, Inst &inst) const {
             reg1e);
 
   /* Create the symbolic expression */
-  se = ap.createRegSE(inst, expr, reg1, size1);
+  se = ap.createRegSE(inst, expr, reg1, regSize1);
 
   /* Apply the taint via the concretization */
-  if (ap.getFlagValue(ID_CF) | ap.getFlagValue(ID_ZF))
+  if (ap.getFlagValue(ID_TMP_CF) | ap.getFlagValue(ID_TMP_ZF))
     ap.assignmentSpreadTaintRegReg(se, reg1, reg2);
 
 }
@@ -62,16 +64,16 @@ void CmovbeIRBuilder::regReg(AnalysisProcessor &ap, Inst &inst) const {
 void CmovbeIRBuilder::regMem(AnalysisProcessor &ap, Inst &inst) const {
   SymbolicExpression *se;
   smt2lib::smtAstAbstractNode *expr, *reg1e, *mem1e, *cf, *zf;
-  uint32 readSize = this->operands[1].getSize();
-  uint64 mem      = this->operands[1].getValue();
-  uint64 reg      = this->operands[0].getValue();
-  uint64 regSize  = this->operands[0].getSize();
+  auto memSize = this->operands[1].getMem().getSize();
+  auto mem = this->operands[1].getMem();
+  auto reg = this->operands[0].getReg();
+  auto regSize = this->operands[0].getReg().getSize();
 
   /* Create the SMT semantic */
-  cf = ap.buildSymbolicFlagOperand(ID_CF);
-  zf = ap.buildSymbolicFlagOperand(ID_ZF);
+  cf = ap.buildSymbolicFlagOperand(ID_TMP_CF);
+  zf = ap.buildSymbolicFlagOperand(ID_TMP_ZF);
   reg1e = ap.buildSymbolicRegOperand(reg, regSize);
-  mem1e = ap.buildSymbolicMemOperand(mem, readSize);
+  mem1e = ap.buildSymbolicMemOperand(mem, memSize);
 
   expr = smt2lib::ite(
             smt2lib::equal(
@@ -88,8 +90,8 @@ void CmovbeIRBuilder::regMem(AnalysisProcessor &ap, Inst &inst) const {
   se = ap.createRegSE(inst, expr, reg, regSize);
 
   /* Apply the taint via the concretization */
-  if (ap.getFlagValue(ID_CF) | ap.getFlagValue(ID_ZF))
-    ap.assignmentSpreadTaintRegMem(se, reg, mem, readSize);
+  if (ap.getFlagValue(ID_TMP_CF) | ap.getFlagValue(ID_TMP_ZF))
+    ap.assignmentSpreadTaintRegMem(se, reg, mem, memSize);
 
 }
 
@@ -121,4 +123,6 @@ Inst *CmovbeIRBuilder::process(AnalysisProcessor &ap) const {
 
   return inst;
 }
+
+#endif /* LIGHT_VERSION */
 

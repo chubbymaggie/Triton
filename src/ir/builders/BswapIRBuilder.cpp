@@ -4,6 +4,8 @@
 **  This program is under the terms of the LGPLv3 License.
 */
 
+#ifndef LIGHT_VERSION
+
 #include <iostream>
 #include <sstream>
 #include <stdexcept>
@@ -23,8 +25,8 @@ BswapIRBuilder::BswapIRBuilder(uint64 address, const std::string &disassembly):
 void BswapIRBuilder::reg(AnalysisProcessor &ap, Inst &inst) const {
   SymbolicExpression *se;
   smt2lib::smtAstAbstractNode *expr, *op1;
-  uint64 reg       = this->operands[0].getValue();
-  uint32 regSize   = this->operands[0].getSize();
+  auto reg = this->operands[0].getReg();
+  auto regSize = this->operands[0].getReg().getSize();
 
   /* Create the SMT semantic */
   op1 = ap.buildSymbolicRegOperand(reg, regSize);
@@ -89,4 +91,6 @@ Inst *BswapIRBuilder::process(AnalysisProcessor &ap) const {
 
   return inst;
 }
+
+#endif /* LIGHT_VERSION */
 

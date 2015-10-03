@@ -4,6 +4,8 @@
 **  This program is under the terms of the LGPLv3 License.
 */
 
+#ifndef LIGHT_VERSION
+
 #include <iostream>
 #include <sstream>
 #include <stdexcept>
@@ -22,16 +24,16 @@ JnlIRBuilder::JnlIRBuilder(uint64 address, const std::string &disassembly):
 void JnlIRBuilder::imm(AnalysisProcessor &ap, Inst &inst) const {
   SymbolicExpression *se;
   smt2lib::smtAstAbstractNode *expr, *sf, *of;
-  uint64 imm   = this->operands[0].getValue();
+  auto imm = this->operands[0].getImm().getValue();
 
   /* Create the SMT semantic */
-  sf = ap.buildSymbolicFlagOperand(ID_SF);
-  of = ap.buildSymbolicFlagOperand(ID_OF);
+  sf = ap.buildSymbolicFlagOperand(ID_TMP_SF);
+  of = ap.buildSymbolicFlagOperand(ID_TMP_OF);
 
   /* 
    * Finale expr
-   * JNL: Jump if not less (SF=OF).
-   * SMT: (= sf of)
+   * JNL: Jump if not less (SF =OF).
+   * SMT: ( = sf of)
    */
   expr = smt2lib::ite(
             smt2lib::equal(
@@ -42,7 +44,7 @@ void JnlIRBuilder::imm(AnalysisProcessor &ap, Inst &inst) const {
             smt2lib::bv(this->nextAddress, REG_SIZE_BIT));
 
   /* Create the symbolic expression */
-  se = ap.createRegSE(inst, expr, ID_RIP, REG_SIZE, "RIP");
+  se = ap.createRegSE(inst, expr, ID_TMP_RIP, REG_SIZE, "RIP");
 
   /* Add the constraint in the PathConstraints list */
   ap.addPathConstraint(se->getID());
@@ -81,4 +83,6 @@ Inst *JnlIRBuilder::process(AnalysisProcessor &ap) const {
 
   return inst;
 }
+
+#endif /* LIGHT_VERSION */
 

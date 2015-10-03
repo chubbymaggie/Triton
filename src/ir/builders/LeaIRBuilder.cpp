@@ -4,6 +4,8 @@
 **  This program is under the terms of the LGPLv3 License.
 */
 
+#ifndef LIGHT_VERSION
+
 #include <iostream>
 #include <sstream>
 #include <stdexcept>
@@ -32,17 +34,17 @@ void LeaIRBuilder::regReg(AnalysisProcessor &ap, Inst &inst) const {
 void LeaIRBuilder::regMem(AnalysisProcessor &ap, Inst &inst) const {
   SymbolicExpression *se;
   smt2lib::smtAstAbstractNode *expr, *dis2e, *base2e, *index2e, *scale2e;
-  uint64 reg           = this->operands[0].getValue();
-  uint64 regSize       = this->operands[0].getSize();
-  uint64 displacement  = this->operands[1].getDisplacement();
-  uint64 baseReg       = this->operands[1].getBaseReg();
-  uint64 indexReg      = this->operands[1].getIndexReg();
-  uint64 memoryScale   = this->operands[1].getMemoryScale();
+  auto reg = this->operands[0].getReg();
+  auto regSize = this->operands[0].getReg().getSize();
+  auto displacement = this->operands[1].getDisplacement().getValue();
+  auto baseReg = this->operands[1].getBaseReg();
+  auto indexReg = this->operands[1].getIndexReg();
+  auto memoryScale = this->operands[1].getMemoryScale().getValue();
 
   /* Base register */
-  if (baseReg) {
+  if (baseReg.getTritonRegId()) {
     /* If the base register is RIP, we must use nextAddress */
-    if (baseReg == ID_RIP)
+    if (baseReg.getTritonRegId() == ID_RIP)
       base2e = smt2lib::bv(this->nextAddress, regSize * REG_SIZE);
     else
       base2e = ap.buildSymbolicRegOperand(baseReg, regSize);
@@ -51,7 +53,7 @@ void LeaIRBuilder::regMem(AnalysisProcessor &ap, Inst &inst) const {
     base2e = smt2lib::bv(0, regSize * REG_SIZE);
 
   /* Index register if it exists */
-  if (indexReg)
+  if (indexReg.getTritonRegId())
     index2e = ap.buildSymbolicRegOperand(indexReg, regSize);
   else
     index2e = smt2lib::bv(0, regSize * REG_SIZE);
@@ -105,4 +107,6 @@ Inst *LeaIRBuilder::process(AnalysisProcessor &ap) const {
 
   return inst;
 }
+
+#endif /* LIGHT_VERSION */
 

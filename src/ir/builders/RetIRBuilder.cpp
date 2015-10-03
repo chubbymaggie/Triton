@@ -4,6 +4,8 @@
 **  This program is under the terms of the LGPLv3 License.
 */
 
+#ifndef LIGHT_VERSION
+
 #include <iostream>
 #include <sstream>
 #include <stdexcept>
@@ -25,16 +27,16 @@ static SymbolicExpression *alignStack(Inst &inst, AnalysisProcessor &ap)
   smt2lib::smtAstAbstractNode *expr, *op1, *op2;
 
   /* Create the SMT semantic */
-  op1 = ap.buildSymbolicRegOperand(ID_RSP, REG_SIZE);
+  op1 = ap.buildSymbolicRegOperand(ID_TMP_RSP, REG_SIZE);
   op2 = smt2lib::bv(REG_SIZE, REG_SIZE_BIT);
 
   expr = smt2lib::bvadd(op1, op2);
 
   /* Create the symbolic expression */
-  se = ap.createRegSE(inst, expr, ID_RSP, REG_SIZE, "Aligns stack");
+  se = ap.createRegSE(inst, expr, ID_TMP_RSP, REG_SIZE, "Aligns stack");
 
   /* Apply the taint */
-  se->isTainted = ap.isRegTainted(ID_RSP);
+  se->isTainted = ap.isRegTainted(ID_TMP_RSP);
 
   return se;
 }
@@ -46,16 +48,16 @@ static SymbolicExpression *alignStack(Inst &inst, AnalysisProcessor &ap, uint64 
   smt2lib::smtAstAbstractNode *expr, *op1, *op2;
 
   /* Create the SMT semantic */
-  op1 = ap.buildSymbolicRegOperand(ID_RSP, REG_SIZE);
+  op1 = ap.buildSymbolicRegOperand(ID_TMP_RSP, REG_SIZE);
   op2 = smt2lib::bv(imm, REG_SIZE_BIT);
 
   expr = smt2lib::bvadd(op1, op2);
 
   /* Create the symbolic expression */
-  se = ap.createRegSE(inst, expr, ID_RSP, REG_SIZE, "Aligns stack");
+  se = ap.createRegSE(inst, expr, ID_TMP_RSP, REG_SIZE, "Aligns stack");
 
   /* Apply the taint */
-  se->isTainted = ap.isRegTainted(ID_RSP);
+  se->isTainted = ap.isRegTainted(ID_TMP_RSP);
 
   return se;
 }
@@ -70,21 +72,21 @@ void RetIRBuilder::reg(AnalysisProcessor &ap, Inst &inst) const {
 void RetIRBuilder::imm(AnalysisProcessor &ap, Inst &inst) const {
   SymbolicExpression *se;
   smt2lib::smtAstAbstractNode *expr, *op1;
-  uint64 imm       = this->operands[0].getValue();
-  uint64 memSrc    = this->operands[1].getValue(); // The dst memory read
-  uint32 readSize  = this->operands[1].getSize();
+  auto imm = this->operands[0].getImm().getValue();
+  auto mem = this->operands[1].getMem(); // The dst memory read
+  auto memSize = this->operands[1].getMem().getSize();
 
   /* Create the SMT semantic */
-  op1 = ap.buildSymbolicMemOperand(memSrc, readSize);
+  op1 = ap.buildSymbolicMemOperand(mem, memSize);
 
   /* Finale expr */
   expr = op1;
 
   /* Create the symbolic expression */
-  se = ap.createRegSE(inst, expr, ID_RIP, REG_SIZE, "RIP");
+  se = ap.createRegSE(inst, expr, ID_TMP_RIP, REG_SIZE, "RIP");
 
   /* Apply the taint */
-  ap.assignmentSpreadTaintRegMem(se, ID_RIP, memSrc, readSize);
+  ap.assignmentSpreadTaintRegMem(se, ID_TMP_RIP, mem, memSize);
 
   /* Create the SMT semantic side effect */
   alignStack(inst, ap);
@@ -95,20 +97,20 @@ void RetIRBuilder::imm(AnalysisProcessor &ap, Inst &inst) const {
 void RetIRBuilder::mem(AnalysisProcessor &ap, Inst &inst) const {
   SymbolicExpression *se;
   smt2lib::smtAstAbstractNode *expr, *op1;
-  uint64 memSrc    = this->operands[0].getValue(); // The dst memory read
-  uint32 readSize  = this->operands[0].getSize();
+  auto mem = this->operands[0].getMem(); // The dst memory read
+  auto memSize = this->operands[0].getMem().getSize();
 
   /* Create the SMT semantic */
-  op1 = ap.buildSymbolicMemOperand(memSrc, readSize);
+  op1 = ap.buildSymbolicMemOperand(mem, memSize);
 
   /* Finale expr */
   expr = op1;
 
   /* Create the symbolic expression */
-  se = ap.createRegSE(inst, expr, ID_RIP, REG_SIZE, "RIP");
+  se = ap.createRegSE(inst, expr, ID_TMP_RIP, REG_SIZE, "RIP");
 
   /* Apply the taint */
-  ap.assignmentSpreadTaintRegMem(se, ID_RIP, memSrc, readSize);
+  ap.assignmentSpreadTaintRegMem(se, ID_TMP_RIP, mem, memSize);
 
   /* Create the SMT semantic side effect */
   alignStack(inst, ap);
@@ -138,4 +140,6 @@ Inst *RetIRBuilder::process(AnalysisProcessor &ap) const {
 
   return inst;
 }
+
+#endif /* LIGHT_VERSION */
 

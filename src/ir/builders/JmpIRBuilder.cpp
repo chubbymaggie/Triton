@@ -4,6 +4,8 @@
 **  This program is under the terms of the LGPLv3 License.
 */
 
+#ifndef LIGHT_VERSION
+
 #include <iostream>
 #include <sstream>
 #include <stdexcept>
@@ -21,20 +23,20 @@ JmpIRBuilder::JmpIRBuilder(uint64 address, const std::string &disassembly):
 
 void JmpIRBuilder::imm(AnalysisProcessor &ap, Inst &inst) const {
   smt2lib::smtAstAbstractNode *expr;
-  uint64 imm = this->operands[0].getValue();
+  auto imm = this->operands[0].getImm().getValue();
 
   /* Finale expr */
   expr = smt2lib::bv(imm, REG_SIZE_BIT);
 
   /* Create the symbolic expression */
-  ap.createRegSE(inst, expr, ID_RIP, REG_SIZE, "RIP");
+  ap.createRegSE(inst, expr, ID_TMP_RIP, REG_SIZE, "RIP");
 }
 
 
 void JmpIRBuilder::reg(AnalysisProcessor &ap, Inst &inst) const {
   smt2lib::smtAstAbstractNode *expr, *op1;
-  uint64 reg     = this->operands[0].getValue();
-  uint32 regSize = this->operands[0].getSize();
+  auto reg = this->operands[0].getReg();
+  auto regSize = this->operands[0].getReg().getSize();
 
   /* Create the SMT semantic */
   op1 = ap.buildSymbolicRegOperand(reg, regSize);
@@ -43,14 +45,14 @@ void JmpIRBuilder::reg(AnalysisProcessor &ap, Inst &inst) const {
   expr = op1;
 
   /* Create the symbolic expression */
-  ap.createRegSE(inst, expr, ID_RIP, REG_SIZE, "RIP");
+  ap.createRegSE(inst, expr, ID_TMP_RIP, REG_SIZE, "RIP");
 }
 
 
 void JmpIRBuilder::mem(AnalysisProcessor &ap, Inst &inst) const {
   smt2lib::smtAstAbstractNode *expr, *op1;
-  uint64 mem     = this->operands[0].getValue();
-  uint32 memSize = this->operands[0].getSize();
+  auto mem = this->operands[0].getMem();
+  auto memSize = this->operands[0].getMem().getSize();
 
   /* Create the SMT semantic */
   op1 = ap.buildSymbolicMemOperand(mem, memSize);
@@ -59,7 +61,7 @@ void JmpIRBuilder::mem(AnalysisProcessor &ap, Inst &inst) const {
   expr = op1;
 
   /* Create the symbolic expression */
-  ap.createRegSE(inst, expr, ID_RIP, REG_SIZE, "RIP");
+  ap.createRegSE(inst, expr, ID_TMP_RIP, REG_SIZE, "RIP");
 }
 
 
@@ -84,4 +86,6 @@ Inst *JmpIRBuilder::process(AnalysisProcessor &ap) const {
 
   return inst;
 }
+
+#endif /* LIGHT_VERSION */
 

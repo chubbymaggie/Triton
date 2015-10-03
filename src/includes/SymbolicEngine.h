@@ -4,9 +4,10 @@
 **  This program is under the terms of the LGPLv3 License.
 */
 
+#ifndef LIGHT_VERSION
 
-#ifndef   SYMBOLICENGINE_H
-#define   SYMBOLICENGINE_H
+#ifndef SYMBOLICENGINE_H
+#define SYMBOLICENGINE_H
 
 #include <map>
 #include <list>
@@ -63,8 +64,7 @@ class SymbolicEngine {
 
     /* public methods */
     SymbolicExpression                *getExpressionFromId(uint64 id);
-    SymbolicExpression                *newSymbolicExpression(smt2lib::smtAstAbstractNode *node);
-    SymbolicExpression                *newSymbolicExpression(smt2lib::smtAstAbstractNode *node, std::string comment);
+    SymbolicExpression                *newSymbolicExpression(smt2lib::smtAstAbstractNode *node, std::string comment="");
     SymbolicVariable                  *addSymbolicVariable(SymVar::kind kind, uint64 kindValue, uint64 size, std::string comment);
     SymbolicVariable                  *convertExprToSymVar(uint64 exprId, uint64 symVarSize, std::string symVarComment);
     SymbolicVariable                  *convertMemToSymVar(uint64 memAddr, uint64 symVarSize, std::string symVarComment);
@@ -95,5 +95,6 @@ class SymbolicEngine {
 
 };
 
-#endif     /* !__SYMBOLICENGINE_H__ */
+#endif /* !__SYMBOLICENGINE_H__ */
+#endif /* LIGHT_VERSION */
 

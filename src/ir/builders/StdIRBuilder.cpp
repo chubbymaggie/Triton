@@ -4,6 +4,8 @@
 **  This program is under the terms of the LGPLv3 License.
 */
 
+#ifndef LIGHT_VERSION
+
 #include <iostream>
 #include <sstream>
 #include <stdexcept>
@@ -20,7 +22,7 @@ StdIRBuilder::StdIRBuilder(uint64 address, const std::string &disassembly):
 
 
 void StdIRBuilder::none(AnalysisProcessor &ap, Inst &inst) const {
-  EflagsBuilder::setFlag(inst, ap, ID_DF);
+  EflagsBuilder::setFlag(inst, ap, ID_TMP_DF);
 }
 
 
@@ -41,4 +43,6 @@ Inst *StdIRBuilder::process(AnalysisProcessor &ap) const {
 
   return inst;
 }
+
+#endif /* LIGHT_VERSION */
 

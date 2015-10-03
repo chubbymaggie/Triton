@@ -4,6 +4,8 @@
 **  This program is under the terms of the LGPLv3 License.
 */
 
+#ifndef LIGHT_VERSION
+
 #include <iostream>
 #include <sstream>
 #include <stdexcept>
@@ -24,16 +26,16 @@ void CbwIRBuilder::none(AnalysisProcessor &ap, Inst &inst) const {
   smt2lib::smtAstAbstractNode *expr, *op1;
 
   /* Create the SMT semantic */
-  op1 = ap.buildSymbolicRegOperand(ID_RAX, REG_SIZE, 8, 0);
+  op1 = ap.buildSymbolicRegOperand(ID_TMP_RAX, REG_SIZE, 8, 0);
 
   /* Finale expr */
   expr = smt2lib::sx(8, op1);
 
   /* Create the symbolic expression */
-  se = ap.createRegSE(inst, expr, ID_RAX, WORD_SIZE);
+  se = ap.createRegSE(inst, expr, ID_TMP_RAX, WORD_SIZE);
 
   /* Apply the taint */
-  ap.aluSpreadTaintRegReg(se, ID_RAX, ID_RAX);
+  ap.aluSpreadTaintRegReg(se, ID_TMP_RAX, ID_TMP_RAX);
 
 }
 
@@ -55,4 +57,6 @@ Inst *CbwIRBuilder::process(AnalysisProcessor &ap) const {
 
   return inst;
 }
+
+#endif /* LIGHT_VERSION */
 

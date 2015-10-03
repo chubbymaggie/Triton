@@ -14,6 +14,9 @@ set(VERSION_BUILD ${BUILD_NUMBER})
 set(CMAKE_BUILD_TYPE Release)
 set(PROJECT_NAME "triton")
 
+# Custom cmake search
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/CMakeModules/")
+
 # Root directory of the Pin toolkit
 set(PIN_ROOT "${CMAKE_SOURCE_DIR}/../../..")
 
@@ -25,7 +28,7 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${FLAG_CXX}")
 # Specific Linux CXX Flags
 if(${CMAKE_SYSTEM_NAME} MATCHES "Linux")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DBIGARRAY_MULTIPLIER=1 -DUSING_XED -DTARGET_IA32E -DHOST_IA32E -DTARGET_LINUX")
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-stack-protector -fomit-frame-pointer -fno-strict-aliasing")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-stack-protector -fomit-frame-pointer -fno-strict-aliasing -fabi-version=2")
     set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -Wl,--hash-style=sysv -Wl,-Bsymbolic")
 endif(${CMAKE_SYSTEM_NAME} MATCHES "Linux")
 
@@ -33,12 +36,39 @@ endif(${CMAKE_SYSTEM_NAME} MATCHES "Linux")
 if(${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DBIGARRAY_MULTIPLIER=1 -DTARGET_IA32E -DHOST_IA32E -DTARGET_MAC")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fomit-frame-pointer -fno-strict-aliasing")
-    set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -Wl,-exported_symbols_list")
+    set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS}")
+    if(POLICY CMP0025)
+        cmake_policy(SET CMP0025 OLD) # report Apple's Clang as just Clang
+    endif()
+    if(POLICY CMP0042)
+        cmake_policy(SET CMP0042 NEW) # MACOSX_RPATH
+    endif()
 endif(${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
 
 # Conventions
 add_definitions(-fPIC)
 add_definitions(-std=c++11)
+
+# Find Python 2.7
+find_package(PythonLibs 2.7 REQUIRED)
+include_directories(${PYTHON_INCLUDE_DIRS})
+
+# Find boost
+find_package(Boost 1.53.0 COMPONENTS filesystem REQUIRED)
+include_directories(${Boost_INCLUDE_DIRS})
+
+# Check if the user want a light version of Triton
+if(${LIGHT_VERSION} MATCHES "yes")
+    # define LIGHT_VERSION
+    add_definitions(-DLIGHT_VERSION)
+else()
+    # Find Z3
+    find_package(Z3 REQUIRED)
+    include_directories(${Z3_INCLUDE_DIRS})
+    if (NOT Z3_FOUND)
+        message(FATAL_ERROR "Z3 not found")
+    endif()
+endif()
 
 # Includes directories (Pin and Triton)
 include_directories("${PIN_ROOT}/source/include/pin")
@@ -51,8 +81,11 @@ include_directories("./src/includes")
 # Libs directories (Pin)
 link_directories("${PIN_ROOT}/intel64/lib")
 link_directories("${PIN_ROOT}/intel64/lib-ext")
-link_directories("${PIN_ROOT}/intel64/runtime/glibc")
 link_directories("${PIN_ROOT}/extras/xed-intel64/lib")
+
+if(${CMAKE_SYSTEM_NAME} MATCHES "Linux")
+    link_directories("${PIN_ROOT}/intel64/runtime/glibc")
+endif(${CMAKE_SYSTEM_NAME} MATCHES "Linux")
 
 # Triton have to generate a syscalls table from the kernel source
 # This following code tries to find the unistd_64.h header.
@@ -113,14 +146,27 @@ target_link_libraries(
     xed
     pindwarf
     dl
-    z3
-    python2.7
-    boost_filesystem
+    ${PYTHON_LIBRARIES}
+    ${Boost_LIBRARIES}
 )
+
+# Link Triton's dependencies and Pin lib if it's not the light version
+if(NOT LIGHT_VERSION)
+    target_link_libraries(
+        ${PROJECT_NAME}
+        ${Z3_LIBRARIES}
+    )
+endif()
 
 # Generate the triton's shortcut script
 set(PIN_BIN_PATH ${PIN_ROOT}/pin.sh)
 set(TRITON_LIB_PATH ${CMAKE_BINARY_DIR}/${CMAKE_SHARED_LIBRARY_PREFIX}${PROJECT_NAME}${CMAKE_SHARED_LIBRARY_SUFFIX})
+set(FLAG_IFEELLUCKY "")
+
+if(${KERNEL4} MATCHES "yes")
+    set(FLAG_IFEELLUCKY "-ifeellucky")
+endif()
+
 configure_file(
     ${CMAKE_SOURCE_DIR}/scripts/triton.in
     ${CMAKE_SOURCE_DIR}/triton

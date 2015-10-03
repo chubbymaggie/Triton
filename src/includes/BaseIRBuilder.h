@@ -13,9 +13,13 @@
 #include <vector>
 
 #include "ContextHandler.h"
-#include "ControlFlow.h"
 #include "IRBuilder.h"
 #include "TritonOperand.h"
+
+#ifndef LIGHT_VERSION
+  #include "ControlFlow.h"
+#endif
+
 
 // Abstract class which is main purpose is too implement common methods
 // shared by its children classes.
@@ -25,6 +29,7 @@ class BaseIRBuilder: public IRBuilder {
     BaseIRBuilder(uint64 address, const std::string &disassembly);
 
     virtual bool                isBranch(void);
+    virtual bool                isBranchTaken(void);
     virtual const std::string   &getDisassembly(void) const;
     virtual const std::string   &getImageName(void) const;
     virtual const std::string   &getRoutineName(void) const;
@@ -32,9 +37,13 @@ class BaseIRBuilder: public IRBuilder {
     virtual sint32              getOpcodeCategory(void) const;
     virtual uint32              getOpcode(void) const;
     virtual uint64              getAddress(void) const;
-    virtual uint64              getThreadID(void) const;
     virtual uint64              getBaseAddress(void) const;
+    virtual uint64              getBranchTargetAddress(void) const;
+    virtual uint64              getNextAddress(void) const;
     virtual uint64              getOffset(void) const;
+    virtual uint64              getThreadID(void) const;
+    virtual void                setBranchTaken(bool flag);
+    virtual void                setBranchTargetAddress(uint64 addr);
     virtual void                setNextAddress(uint64 nextAddr);
     virtual void                setOpcode(uint32 op);
     virtual void                setOpcodeCategory(sint32 category);
@@ -56,6 +65,7 @@ class BaseIRBuilder: public IRBuilder {
     virtual void checkSetup() const;
 
   protected:
+    bool                        branchTaken;
     bool                        needSetup;
     sint32                      opcodeCategory;
     std::string                 disas;
@@ -66,9 +76,11 @@ class BaseIRBuilder: public IRBuilder {
     uint32                      opcode;
     uint64                      address;
     uint64                      baseAddress;
+    uint64                      branchTargetAddress;
     uint64                      nextAddress;
     uint64                      offset;
     uint64                      threadId;
 };
 
 #endif // BASEIRBUILDER_H
+

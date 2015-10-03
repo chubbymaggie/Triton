@@ -4,6 +4,8 @@
 **  This program is under the terms of the LGPLv3 License.
 */
 
+#ifndef LIGHT_VERSION
+
 #include <iostream>
 #include <sstream>
 #include <stdexcept>
@@ -27,11 +29,11 @@ void SetzIRBuilder::imm(AnalysisProcessor &ap, Inst &inst) const {
 void SetzIRBuilder::reg(AnalysisProcessor &ap, Inst &inst) const {
   SymbolicExpression *se;
   smt2lib::smtAstAbstractNode *expr, *zf;
-  uint64 reg     = this->operands[0].getValue();
-  uint64 regSize = this->operands[0].getSize();
+  auto reg = this->operands[0].getReg();
+  auto regSize = this->operands[0].getReg().getSize();
 
   /* Create the SMT semantic */
-  zf = ap.buildSymbolicFlagOperand(ID_ZF);
+  zf = ap.buildSymbolicFlagOperand(ID_TMP_ZF);
 
   /* Finale expr */
   expr = smt2lib::ite(
@@ -45,8 +47,8 @@ void SetzIRBuilder::reg(AnalysisProcessor &ap, Inst &inst) const {
   se = ap.createRegSE(inst, expr, reg, regSize);
 
   /* Apply the taint via the concretization */
-  if (ap.getFlagValue(ID_ZF) == 1)
-    ap.assignmentSpreadTaintRegReg(se, reg, ID_ZF);
+  if (ap.getFlagValue(ID_TMP_ZF) == 1)
+    ap.assignmentSpreadTaintRegReg(se, reg, ID_TMP_ZF);
 
 }
 
@@ -54,11 +56,11 @@ void SetzIRBuilder::reg(AnalysisProcessor &ap, Inst &inst) const {
 void SetzIRBuilder::mem(AnalysisProcessor &ap, Inst &inst) const {
   SymbolicExpression *se;
   smt2lib::smtAstAbstractNode *expr, *zf;
-  uint64 mem     = this->operands[0].getValue();
-  uint64 memSize = this->operands[0].getSize();
+  auto mem = this->operands[0].getMem();
+  auto memSize = this->operands[0].getMem().getSize();
 
   /* Create the SMT semantic */
-  zf = ap.buildSymbolicFlagOperand(ID_ZF);
+  zf = ap.buildSymbolicFlagOperand(ID_TMP_ZF);
 
   /* Finale expr */
   expr = smt2lib::ite(
@@ -72,8 +74,8 @@ void SetzIRBuilder::mem(AnalysisProcessor &ap, Inst &inst) const {
   se = ap.createMemSE(inst, expr, mem, memSize);
 
   /* Apply the taint via the concretization */
-  if (ap.getFlagValue(ID_ZF) == 1)
-    ap.assignmentSpreadTaintMemReg(se, mem, ID_ZF, memSize);
+  if (ap.getFlagValue(ID_TMP_ZF) == 1)
+    ap.assignmentSpreadTaintMemReg(se, mem, ID_TMP_ZF, memSize);
 
 }
 
@@ -100,4 +102,6 @@ Inst *SetzIRBuilder::process(AnalysisProcessor &ap) const {
 
   return inst;
 }
+
+#endif /* LIGHT_VERSION */
 

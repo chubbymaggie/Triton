@@ -4,6 +4,8 @@
 **  This program is under the terms of the LGPLv3 License.
 */
 
+#ifndef LIGHT_VERSION
+
 #ifndef Z3AST_H
 #define Z3AST_H
 
@@ -14,8 +16,10 @@
 #include "TritonTypes.h"
 #include "Z3Result.h"
 #include "AnalysisProcessor.h"
+
 class AnalysisProcessor;
 extern AnalysisProcessor ap;
+
 
 class Z3ast : public Visitor {
   public:
@@ -76,3 +80,5 @@ class Z3ast : public Visitor {
 };
 
 #endif /* EVALUATORSMT_H */
+#endif /* LIGHT_VERSION */
+

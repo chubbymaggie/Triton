@@ -4,6 +4,8 @@
 **  This program is under the terms of the LGPLv3 License.
 */
 
+#ifndef LIGHT_VERSION
+
 #include <iostream>
 #include <sstream>
 #include <stdexcept>
@@ -27,10 +29,10 @@ void XorpsIRBuilder::regImm(AnalysisProcessor &ap, Inst &inst) const {
 void XorpsIRBuilder::regReg(AnalysisProcessor &ap, Inst &inst) const {
   SymbolicExpression *se;
   smt2lib::smtAstAbstractNode *expr, *op1, *op2;
-  uint64 reg1     = this->operands[0].getValue();
-  uint64 reg2     = this->operands[1].getValue();
-  uint32 regSize1 = this->operands[0].getSize();
-  uint32 regSize2 = this->operands[1].getSize();
+  auto reg1 = this->operands[0].getReg();
+  auto reg2 = this->operands[1].getReg();
+  auto regSize1 = this->operands[0].getReg().getSize();
+  auto regSize2 = this->operands[1].getReg().getSize();
 
   /* Create the SMT semantic */
   op1 = ap.buildSymbolicRegOperand(reg1, regSize1);
@@ -51,14 +53,14 @@ void XorpsIRBuilder::regReg(AnalysisProcessor &ap, Inst &inst) const {
 void XorpsIRBuilder::regMem(AnalysisProcessor &ap, Inst &inst) const {
   SymbolicExpression *se;
   smt2lib::smtAstAbstractNode *expr, *op1, *op2;
-  uint32 readSize = this->operands[1].getSize();
-  uint64 mem      = this->operands[1].getValue();
-  uint64 reg      = this->operands[0].getValue();
-  uint32 regSize  = this->operands[1].getSize();
+  auto memSize = this->operands[1].getMem().getSize();
+  auto mem = this->operands[1].getMem();
+  auto reg = this->operands[0].getReg();
+  auto regSize = this->operands[1].getReg().getSize();
 
   /* Create the SMT semantic */
   op1 = ap.buildSymbolicRegOperand(reg, regSize);
-  op2 = ap.buildSymbolicMemOperand(mem, readSize);
+  op2 = ap.buildSymbolicMemOperand(mem, memSize);
 
   // Final expr
   expr = smt2lib::bvxor(op1, op2);
@@ -67,7 +69,7 @@ void XorpsIRBuilder::regMem(AnalysisProcessor &ap, Inst &inst) const {
   se = ap.createRegSE(inst, expr, reg, regSize);
 
   /* Apply the taint */
-  ap.aluSpreadTaintRegMem(se, reg, mem, readSize);
+  ap.aluSpreadTaintRegMem(se, reg, mem, memSize);
 }
 
 
@@ -98,4 +100,6 @@ Inst *XorpsIRBuilder::process(AnalysisProcessor &ap) const {
 
   return inst;
 }
+
+#endif /* LIGHT_VERSION */
 

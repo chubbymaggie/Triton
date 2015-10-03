@@ -4,6 +4,8 @@
 **  This program is under the terms of the LGPLv3 License.
 */
 
+#ifndef LIGHT_VERSION
+
 #include <iostream>
 #include <sstream>
 #include <stdexcept>
@@ -27,12 +29,12 @@ void XaddIRBuilder::regImm(AnalysisProcessor &ap, Inst &inst) const {
 void XaddIRBuilder::regReg(AnalysisProcessor &ap, Inst &inst) const {
   SymbolicExpression *se, *se1, *se2;
   smt2lib::smtAstAbstractNode *expr, *expr1, *expr2, *op1, *op2;
-  uint64 reg1          = this->operands[0].getValue();
-  uint64 reg2          = this->operands[1].getValue();
-  uint32 regSize1      = this->operands[0].getSize();
-  uint32 regSize2      = this->operands[1].getSize();
-  uint64 tmpReg1Taint  = ap.isRegTainted(reg1);
-  uint64 tmpReg2Taint  = ap.isRegTainted(reg2);
+  auto reg1 = this->operands[0].getReg();
+  auto reg2 = this->operands[1].getReg();
+  auto regSize1 = this->operands[0].getReg().getSize();
+  auto regSize2 = this->operands[1].getReg().getSize();
+  auto tmpReg1Taint = ap.isRegTainted(reg1);
+  auto tmpReg2Taint = ap.isRegTainted(reg2);
 
   /* Part 1 - xchg expr */
   op1 = ap.buildSymbolicRegOperand(reg1, regSize1);
@@ -49,7 +51,7 @@ void XaddIRBuilder::regReg(AnalysisProcessor &ap, Inst &inst) const {
   ap.setTaintReg(se1, reg1, tmpReg2Taint);
   ap.setTaintReg(se2, reg2, tmpReg1Taint);
 
-  /* ==== */
+  /* == == */
 
   /* Part 2 - add expr */
   op1 = ap.buildSymbolicRegOperand(reg1, regSize1);
@@ -86,12 +88,12 @@ void XaddIRBuilder::memImm(AnalysisProcessor &ap, Inst &inst) const {
 void XaddIRBuilder::memReg(AnalysisProcessor &ap, Inst &inst) const {
   SymbolicExpression *se, *se1, *se2;
   smt2lib::smtAstAbstractNode *expr, *expr1, *expr2, *op1, *op2;
-  uint64 mem1          = this->operands[0].getValue();
-  uint64 reg2          = this->operands[1].getValue();
-  uint32 memSize1      = this->operands[0].getSize();
-  uint32 regSize2      = this->operands[1].getSize();
-  uint64 tmpMem1Taint  = ap.isMemTainted(mem1);
-  uint64 tmpReg2Taint  = ap.isRegTainted(reg2);
+  auto mem1 = this->operands[0].getMem();
+  auto reg2 = this->operands[1].getReg();
+  auto memSize1 = this->operands[0].getMem().getSize();
+  auto regSize2 = this->operands[1].getReg().getSize();
+  auto tmpMem1Taint = ap.isMemTainted(mem1);
+  auto tmpReg2Taint = ap.isRegTainted(reg2);
 
   /* Part 1 - xchg expr */
   op1 = ap.buildSymbolicMemOperand(mem1, memSize1);
@@ -108,7 +110,7 @@ void XaddIRBuilder::memReg(AnalysisProcessor &ap, Inst &inst) const {
   ap.setTaintMem(se1, mem1, tmpReg2Taint);
   ap.setTaintReg(se2, reg2, tmpMem1Taint);
 
-  /* ==== */
+  /* == == */
 
   /* Part 2 - add expr */
   op1 = ap.buildSymbolicMemOperand(mem1, memSize1);
@@ -149,4 +151,6 @@ Inst *XaddIRBuilder::process(AnalysisProcessor &ap) const {
 
   return inst;
 }
+
+#endif /* LIGHT_VERSION */
 

@@ -4,6 +4,8 @@
 **  This program is under the terms of the LGPLv3 License.
 */
 
+#ifndef LIGHT_VERSION
+
 #include <iostream>
 #include <sstream>
 #include <stdexcept>
@@ -27,13 +29,13 @@ void SetnleIRBuilder::imm(AnalysisProcessor &ap, Inst &inst) const {
 void SetnleIRBuilder::reg(AnalysisProcessor &ap, Inst &inst) const {
   SymbolicExpression *se;
   smt2lib::smtAstAbstractNode *expr, *sf, *of, *zf;
-  uint64 reg     = this->operands[0].getValue();
-  uint64 regSize = this->operands[0].getSize();
+  auto reg = this->operands[0].getReg();
+  auto regSize = this->operands[0].getReg().getSize();
 
   /* Create the flag SMT semantic */
-  sf = ap.buildSymbolicFlagOperand(ID_SF);
-  of = ap.buildSymbolicFlagOperand(ID_OF);
-  zf = ap.buildSymbolicFlagOperand(ID_ZF);
+  sf = ap.buildSymbolicFlagOperand(ID_TMP_SF);
+  of = ap.buildSymbolicFlagOperand(ID_TMP_OF);
+  zf = ap.buildSymbolicFlagOperand(ID_TMP_ZF);
 
   /* Finale expr */
   expr = smt2lib::ite(
@@ -47,13 +49,13 @@ void SetnleIRBuilder::reg(AnalysisProcessor &ap, Inst &inst) const {
   se = ap.createRegSE(inst, expr, reg, regSize);
 
   /* Apply the taint via the concretization */
-  if (((ap.getFlagValue(ID_SF) ^ ap.getFlagValue(ID_OF)) | ap.getFlagValue(ID_ZF)) == 0) {
-    if (ap.isRegTainted(ID_SF) == TAINTED)
-      ap.assignmentSpreadTaintRegReg(se, reg, ID_SF);
-    else if (ap.isRegTainted(ID_OF) == TAINTED)
-      ap.assignmentSpreadTaintRegReg(se, reg, ID_OF);
+  if (((ap.getFlagValue(ID_TMP_SF) ^ ap.getFlagValue(ID_TMP_OF)) | ap.getFlagValue(ID_TMP_ZF)) == 0) {
+    if (ap.isRegTainted(ID_TMP_SF) == TAINTED)
+      ap.assignmentSpreadTaintRegReg(se, reg, ID_TMP_SF);
+    else if (ap.isRegTainted(ID_TMP_OF) == TAINTED)
+      ap.assignmentSpreadTaintRegReg(se, reg, ID_TMP_OF);
     else
-      ap.assignmentSpreadTaintRegReg(se, reg, ID_ZF);
+      ap.assignmentSpreadTaintRegReg(se, reg, ID_TMP_ZF);
   }
 
 }
@@ -62,13 +64,13 @@ void SetnleIRBuilder::reg(AnalysisProcessor &ap, Inst &inst) const {
 void SetnleIRBuilder::mem(AnalysisProcessor &ap, Inst &inst) const {
   SymbolicExpression *se;
   smt2lib::smtAstAbstractNode *expr, *sf, *of, *zf;
-  uint64 mem     = this->operands[0].getValue();
-  uint64 memSize = this->operands[0].getSize();
+  auto mem = this->operands[0].getMem();
+  auto memSize = this->operands[0].getMem().getSize();
 
   /* Create the flag SMT semantic */
-  sf = ap.buildSymbolicFlagOperand(ID_SF);
-  of = ap.buildSymbolicFlagOperand(ID_OF);
-  zf = ap.buildSymbolicFlagOperand(ID_ZF);
+  sf = ap.buildSymbolicFlagOperand(ID_TMP_SF);
+  of = ap.buildSymbolicFlagOperand(ID_TMP_OF);
+  zf = ap.buildSymbolicFlagOperand(ID_TMP_ZF);
 
   /* Finale expr */
   expr = smt2lib::ite(
@@ -82,13 +84,13 @@ void SetnleIRBuilder::mem(AnalysisProcessor &ap, Inst &inst) const {
   se = ap.createMemSE(inst, expr, mem, memSize);
 
   /* Apply the taint via the concretization */
-  if (((ap.getFlagValue(ID_SF) ^ ap.getFlagValue(ID_OF)) | ap.getFlagValue(ID_ZF)) == 0) {
-    if (ap.isRegTainted(ID_SF) == TAINTED)
-      ap.assignmentSpreadTaintMemReg(se, mem, ID_SF, memSize);
-    else if (ap.isRegTainted(ID_OF) == TAINTED)
-      ap.assignmentSpreadTaintMemReg(se, mem, ID_OF, memSize);
+  if (((ap.getFlagValue(ID_TMP_SF) ^ ap.getFlagValue(ID_TMP_OF)) | ap.getFlagValue(ID_TMP_ZF)) == 0) {
+    if (ap.isRegTainted(ID_TMP_SF) == TAINTED)
+      ap.assignmentSpreadTaintMemReg(se, mem, ID_TMP_SF, memSize);
+    else if (ap.isRegTainted(ID_TMP_OF) == TAINTED)
+      ap.assignmentSpreadTaintMemReg(se, mem, ID_TMP_OF, memSize);
     else
-      ap.assignmentSpreadTaintMemReg(se, mem, ID_ZF, memSize);
+      ap.assignmentSpreadTaintMemReg(se, mem, ID_TMP_ZF, memSize);
   }
 
 }
@@ -116,4 +118,6 @@ Inst *SetnleIRBuilder::process(AnalysisProcessor &ap) const {
 
   return inst;
 }
+
+#endif /* LIGHT_VERSION */
 

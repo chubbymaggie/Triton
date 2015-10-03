@@ -8,7 +8,6 @@
 #include <iostream>
 #include <python2.7/Python.h>
 
-#include <SymbolicEngine.h>
 #include <PythonBindings.h>
 #include <xPyFunc.h>
 
@@ -20,14 +19,15 @@ void initOpcodeCategoryEnv(PyObject *);
 void initOpcodeEnv(PyObject *);
 void initOperandEnv(PyObject *);
 void initRegEnv(PyObject *);
-void initSmtAstNodeEnv(PyObject *);
-void initSymVarEnv(PyObject *);
 void initSyscallEnv(PyObject *);
 void initVersionEnv(PyObject *);
+#ifndef LIGHT_VERSION
+void initSmtAstNodeEnv(PyObject *);
+void initSymVarEnv(PyObject *);
+#endif
 
 
-void initBindings(void)
-{
+void initBindings(void) {
   Py_Initialize();
 
   PyObject *tritonModule = Py_InitModule("triton", tritonCallbacks);
@@ -38,6 +38,7 @@ void initBindings(void)
     exit(1);
   }
 
+  #ifndef LIGHT_VERSION
   PyObject *smt2libModule = Py_InitModule("smt2lib", smt2libCallbacks);
 
   if (smt2libModule == nullptr) {
@@ -45,6 +46,7 @@ void initBindings(void)
     PyErr_Print();
     exit(1);
   }
+  #endif /* LIGHT_VERSION */
 
   /* Create the IDREF class */
   PyObject *idRefClassName = xPyString_FromString("IDREF");
@@ -171,6 +173,7 @@ void initBindings(void)
   // REG ---------------------
 
 
+  #ifndef LIGHT_VERSION
   // SmtAstNode ---------------------
 
   /* Create the IDREF.SMT_AST_NODE class */
@@ -199,6 +202,7 @@ void initBindings(void)
   PyObject *idSymVarClass = xPyClass_New(nullptr, idSymVarClassDict, idSymVarClassName);
 
   // SYMVAR ---------------------
+  #endif /* LIGHT_VERSION */
 
 
   // SYSCALL ---------------------
@@ -240,8 +244,10 @@ void initBindings(void)
   PyDict_SetItemString(idRefClassDict, "OPCODE_CATEGORY", idOpcodeCategoryClass);
   PyDict_SetItemString(idRefClassDict, "OPERAND", idOperandClass);
   PyDict_SetItemString(idRefClassDict, "REG", idRegClass);
+  #ifndef LIGHT_VERSION
   PyDict_SetItemString(idRefClassDict, "SMT_AST_NODE", idSmtAstNodeClass);
   PyDict_SetItemString(idRefClassDict, "SYMVAR", idSymVarClass);
+  #endif
   PyDict_SetItemString(idRefClassDict, "SYSCALL", idSyscallClass);
   PyDict_SetItemString(idRefClassDict, "VERSION", idVersionClass);
 
@@ -253,8 +259,7 @@ void initBindings(void)
 }
 
 
-bool execBindings(const char *fileName)
-{
+bool execBindings(const char *fileName) {
   FILE *fd = fopen(fileName, "r");
   if (fd == nullptr) {
     perror("fopen");

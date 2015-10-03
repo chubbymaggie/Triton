@@ -9,7 +9,7 @@
 ## 
 ## This tool taints all arguments (*argv[]) and checks when a printf occurs if
 ## there is some tainted bytes in its first argument (RDI). If RDI points on a
-## memory area which contains tainted bytes, that means there is a possible
+## memory area which contains tainted bytes, that means there is a potential
 ## vulnerability.
 ##
 ##
@@ -96,7 +96,7 @@ def trace(instruction):
     if len(TRACE) < TRACE_SIZE:
         TRACE.append(tuple((instruction.getAddress(), instruction.getDisassembly())))
     else:
-        TRACE[COUNT % TRACE_SIZE] = tuple((instruction.getAddress(), instruction.getDiassembly()))
+        TRACE[COUNT % TRACE_SIZE] = tuple((instruction.getAddress(), instruction.getDisassembly()))
 
     COUNT += 1
     return

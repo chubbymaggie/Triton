@@ -4,6 +4,8 @@
 **  This program is under the terms of the LGPLv3 License.
 */
 
+#ifndef LIGHT_VERSION
+
 #include <iostream>
 #include <sstream>
 #include <stdexcept>
@@ -20,7 +22,7 @@ ClcIRBuilder::ClcIRBuilder(uint64 address, const std::string &disassembly):
 
 
 void ClcIRBuilder::none(AnalysisProcessor &ap, Inst &inst) const {
-  EflagsBuilder::clearFlag(inst, ap, ID_CF, "Clears carry flag");
+  EflagsBuilder::clearFlag(inst, ap, ID_TMP_CF, "Clears carry flag");
 }
 
 
@@ -41,4 +43,6 @@ Inst *ClcIRBuilder::process(AnalysisProcessor &ap) const {
 
   return inst;
 }
+
+#endif /* LIGHT_VERSION */
 

@@ -4,6 +4,8 @@
 **  This program is under the terms of the LGPLv3 License.
 */
 
+#ifndef LIGHT_VERSION
+
 #include <algorithm>
 #include <sstream>
 #include <stdexcept>
@@ -27,10 +29,10 @@ void MovlhpsIRBuilder::regImm(AnalysisProcessor &ap, Inst &inst) const {
 void MovlhpsIRBuilder::regReg(AnalysisProcessor &ap, Inst &inst) const {
   SymbolicExpression *se;
   smt2lib::smtAstAbstractNode *expr, *op1, *op2;
-  uint64 reg1      = this->operands[0].getValue();
-  uint64 regSize1  = this->operands[0].getSize();
-  uint64 reg2      = this->operands[1].getValue();
-  uint64 regSize2  = this->operands[1].getSize();
+  auto reg1 = this->operands[0].getReg();
+  auto regSize1 = this->operands[0].getReg().getSize();
+  auto reg2 = this->operands[1].getReg();
+  auto regSize2 = this->operands[1].getReg().getSize();
 
   /* Create the SMT semantic */
   op1 = ap.buildSymbolicRegOperand(reg1, regSize1);
@@ -82,4 +84,6 @@ Inst *MovlhpsIRBuilder::process(AnalysisProcessor &ap) const {
 
   return inst;
 }
+
+#endif /* LIGHT_VERSION */
 

@@ -4,6 +4,8 @@
 **  This program is under the terms of the LGPLv3 License.
 */
 
+#ifndef LIGHT_VERSION
+
 #include <iostream>
 #include <sstream>
 #include <stdexcept>
@@ -23,13 +25,13 @@ void CmcIRBuilder::none(AnalysisProcessor &ap, Inst &inst) const {
   smt2lib::smtAstAbstractNode *expr, *op1;
 
   /* Create the SMT semantic */
-  op1 = ap.buildSymbolicFlagOperand(ID_CF);
+  op1 = ap.buildSymbolicFlagOperand(ID_TMP_CF);
 
   /* Finale expr */
   expr = smt2lib::bvnot(op1);
 
   /* Create the symbolic expression */
-  ap.createRegSE(inst, expr, ID_CF);
+  ap.createFlagSE(inst, expr, ID_TMP_CF);
 }
 
 
@@ -50,4 +52,6 @@ Inst *CmcIRBuilder::process(AnalysisProcessor &ap) const {
 
   return inst;
 }
+
+#endif /* LIGHT_VERSION */
 

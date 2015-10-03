@@ -4,6 +4,8 @@
 **  This program is under the terms of the LGPLv3 License.
 */
 
+#ifndef LIGHT_VERSION
+
 #include <iostream>
 #include <sstream>
 #include <stdexcept>
@@ -27,11 +29,11 @@ void SetnbIRBuilder::imm(AnalysisProcessor &ap, Inst &inst) const {
 void SetnbIRBuilder::reg(AnalysisProcessor &ap, Inst &inst) const {
   SymbolicExpression *se;
   smt2lib::smtAstAbstractNode *expr, *cf;
-  uint64 reg     = this->operands[0].getValue();
-  uint64 regSize = this->operands[0].getSize();
+  auto reg = this->operands[0].getReg();
+  auto regSize = this->operands[0].getReg().getSize();
 
   /* Create the SMT semantic */
-  cf = ap.buildSymbolicFlagOperand(ID_CF);
+  cf = ap.buildSymbolicFlagOperand(ID_TMP_CF);
 
   /* Finale expr */
   expr = smt2lib::ite(
@@ -45,8 +47,8 @@ void SetnbIRBuilder::reg(AnalysisProcessor &ap, Inst &inst) const {
   se = ap.createRegSE(inst, expr, reg, regSize);
 
   /* Apply the taint via the concretization */
-  if (ap.getFlagValue(ID_CF) == 0)
-    ap.assignmentSpreadTaintRegReg(se, reg, ID_CF);
+  if (ap.getFlagValue(ID_TMP_CF) == 0)
+    ap.assignmentSpreadTaintRegReg(se, reg, ID_TMP_CF);
 
 }
 
@@ -54,11 +56,11 @@ void SetnbIRBuilder::reg(AnalysisProcessor &ap, Inst &inst) const {
 void SetnbIRBuilder::mem(AnalysisProcessor &ap, Inst &inst) const {
   SymbolicExpression *se;
   smt2lib::smtAstAbstractNode *expr, *cf;
-  uint64 mem     = this->operands[0].getValue();
-  uint64 memSize = this->operands[0].getSize();
+  auto mem = this->operands[0].getMem();
+  auto memSize = this->operands[0].getMem().getSize();
 
   /* Create the SMT semantic */
-  cf = ap.buildSymbolicFlagOperand(ID_CF);
+  cf = ap.buildSymbolicFlagOperand(ID_TMP_CF);
 
   /* Finale expr */
   expr = smt2lib::ite(
@@ -72,8 +74,8 @@ void SetnbIRBuilder::mem(AnalysisProcessor &ap, Inst &inst) const {
   se = ap.createMemSE(inst, expr, mem, memSize);
 
   /* Apply the taint via the concretization */
-  if (ap.getFlagValue(ID_CF) == 0)
-    ap.assignmentSpreadTaintMemReg(se, mem, ID_CF, memSize);
+  if (ap.getFlagValue(ID_TMP_CF) == 0)
+    ap.assignmentSpreadTaintMemReg(se, mem, ID_TMP_CF, memSize);
 
 }
 
@@ -100,4 +102,6 @@ Inst *SetnbIRBuilder::process(AnalysisProcessor &ap) const {
 
   return inst;
 }
+
+#endif /* LIGHT_VERSION */
 
