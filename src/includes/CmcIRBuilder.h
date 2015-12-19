@@ -18,13 +18,13 @@
 class CmcIRBuilder: public BaseIRBuilder, public NoneOperandTemplate {
 
   public:
-    CmcIRBuilder(uint64 address, const std::string &disassembly);
+    CmcIRBuilder(__uint address, const std::string &disassembly);
 
     // From BaseIRBuilder
-    virtual Inst *process(AnalysisProcessor &ap) const;
+    virtual Inst *process(void) const;
 
     // From OneOperandTemplate
-    virtual void none(AnalysisProcessor &ap, Inst &inst) const;
+    virtual void none(Inst &inst) const;
 };
 
 #endif // CMCIRBUILDER_H

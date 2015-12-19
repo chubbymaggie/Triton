@@ -16,12 +16,12 @@
 #include <SymbolicExpression.h>
 
 
-AndIRBuilder::AndIRBuilder(uint64 address, const std::string &disassembly):
+AndIRBuilder::AndIRBuilder(__uint address, const std::string &disassembly):
   BaseIRBuilder(address, disassembly) {
 }
 
 
-void AndIRBuilder::regImm(AnalysisProcessor &ap, Inst &inst) const {
+void AndIRBuilder::regImm(Inst &inst) const {
   SymbolicExpression *se;
   smt2lib::smtAstAbstractNode *expr, *op1, *op2;
   auto reg = this->operands[0].getReg();
@@ -30,7 +30,7 @@ void AndIRBuilder::regImm(AnalysisProcessor &ap, Inst &inst) const {
 
   /* Create the SMT semantic */
   op1 = ap.buildSymbolicRegOperand(reg, regSize);
-  op2 = smt2lib::bv(imm, regSize * REG_SIZE);
+  op2 = smt2lib::bv(imm, regSize * BYTE_SIZE_BIT);
 
   /* Finale expr */
   expr = smt2lib::bvand(op1, op2);
@@ -42,15 +42,15 @@ void AndIRBuilder::regImm(AnalysisProcessor &ap, Inst &inst) const {
   ap.aluSpreadTaintRegImm(se, reg);
 
   /* Add the symbolic flags expression to the current inst */
-  EflagsBuilder::clearFlag(inst, ap, ID_TMP_CF, "Clears carry flag");
-  EflagsBuilder::clearFlag(inst, ap, ID_TMP_OF, "Clears overflow flag");
-  EflagsBuilder::pf(inst, se, ap, regSize);
-  EflagsBuilder::sf(inst, se, ap, regSize);
-  EflagsBuilder::zf(inst, se, ap, regSize);
+  EflagsBuilder::clearFlag(inst, ID_TMP_CF, "Clears carry flag");
+  EflagsBuilder::clearFlag(inst, ID_TMP_OF, "Clears overflow flag");
+  EflagsBuilder::pf(inst, se, reg);
+  EflagsBuilder::sf(inst, se, reg);
+  EflagsBuilder::zf(inst, se, reg);
 }
 
 
-void AndIRBuilder::regReg(AnalysisProcessor &ap, Inst &inst) const {
+void AndIRBuilder::regReg(Inst &inst) const {
   SymbolicExpression *se;
   smt2lib::smtAstAbstractNode *expr, *op1, *op2;
   auto reg1 = this->operands[0].getReg();
@@ -72,15 +72,15 @@ void AndIRBuilder::regReg(AnalysisProcessor &ap, Inst &inst) const {
   ap.aluSpreadTaintRegReg(se, reg1, reg2);
 
   /* Add the symbolic flags expression to the current inst */
-  EflagsBuilder::clearFlag(inst, ap, ID_TMP_CF, "Clears carry flag");
-  EflagsBuilder::clearFlag(inst, ap, ID_TMP_OF, "Clears overflow flag");
-  EflagsBuilder::pf(inst, se, ap, regSize1);
-  EflagsBuilder::sf(inst, se, ap, regSize1);
-  EflagsBuilder::zf(inst, se, ap, regSize1);
+  EflagsBuilder::clearFlag(inst, ID_TMP_CF, "Clears carry flag");
+  EflagsBuilder::clearFlag(inst, ID_TMP_OF, "Clears overflow flag");
+  EflagsBuilder::pf(inst, se, reg1);
+  EflagsBuilder::sf(inst, se, reg1);
+  EflagsBuilder::zf(inst, se, reg1);
 }
 
 
-void AndIRBuilder::regMem(AnalysisProcessor &ap, Inst &inst) const {
+void AndIRBuilder::regMem(Inst &inst) const {
   SymbolicExpression *se;
   smt2lib::smtAstAbstractNode *expr, *op1, *op2;
   auto memSize = this->operands[1].getMem().getSize();
@@ -102,15 +102,15 @@ void AndIRBuilder::regMem(AnalysisProcessor &ap, Inst &inst) const {
   ap.aluSpreadTaintRegMem(se, reg, mem, memSize);
 
   /* Add the symbolic flags expression to the current inst */
-  EflagsBuilder::clearFlag(inst, ap, ID_TMP_CF, "Clears carry flag");
-  EflagsBuilder::clearFlag(inst, ap, ID_TMP_OF, "Clears overflow flag");
-  EflagsBuilder::pf(inst, se, ap, regSize);
-  EflagsBuilder::sf(inst, se, ap, regSize);
-  EflagsBuilder::zf(inst, se, ap, regSize);
+  EflagsBuilder::clearFlag(inst, ID_TMP_CF, "Clears carry flag");
+  EflagsBuilder::clearFlag(inst, ID_TMP_OF, "Clears overflow flag");
+  EflagsBuilder::pf(inst, se, reg);
+  EflagsBuilder::sf(inst, se, reg);
+  EflagsBuilder::zf(inst, se, reg);
 }
 
 
-void AndIRBuilder::memImm(AnalysisProcessor &ap, Inst &inst) const {
+void AndIRBuilder::memImm(Inst &inst) const {
   SymbolicExpression *se;
   smt2lib::smtAstAbstractNode *expr, *op1, *op2;
   auto memSize = this->operands[0].getMem().getSize();
@@ -119,7 +119,7 @@ void AndIRBuilder::memImm(AnalysisProcessor &ap, Inst &inst) const {
 
   /* Create the SMT semantic */
   op1 = ap.buildSymbolicMemOperand(mem, memSize);
-  op2 = smt2lib::bv(imm, memSize * REG_SIZE);
+  op2 = smt2lib::bv(imm, memSize * BYTE_SIZE_BIT);
 
   /* Final expr */
   expr = smt2lib::bvand(op1, op2);
@@ -131,15 +131,15 @@ void AndIRBuilder::memImm(AnalysisProcessor &ap, Inst &inst) const {
   ap.aluSpreadTaintMemImm(se, mem, memSize);
 
   /* Add the symbolic flags expression to the current inst */
-  EflagsBuilder::clearFlag(inst, ap, ID_TMP_CF, "Clears carry flag");
-  EflagsBuilder::clearFlag(inst, ap, ID_TMP_OF, "Clears overflow flag");
-  EflagsBuilder::pf(inst, se, ap, memSize);
-  EflagsBuilder::sf(inst, se, ap, memSize);
-  EflagsBuilder::zf(inst, se, ap, memSize);
+  EflagsBuilder::clearFlag(inst, ID_TMP_CF, "Clears carry flag");
+  EflagsBuilder::clearFlag(inst, ID_TMP_OF, "Clears overflow flag");
+  EflagsBuilder::pf(inst, se, mem);
+  EflagsBuilder::sf(inst, se, mem);
+  EflagsBuilder::zf(inst, se, mem);
 }
 
 
-void AndIRBuilder::memReg(AnalysisProcessor &ap, Inst &inst) const {
+void AndIRBuilder::memReg(Inst &inst) const {
   SymbolicExpression *se;
   smt2lib::smtAstAbstractNode *expr, *op1, *op2;
   auto memSize = this->operands[0].getMem().getSize();
@@ -161,23 +161,23 @@ void AndIRBuilder::memReg(AnalysisProcessor &ap, Inst &inst) const {
   ap.aluSpreadTaintMemReg(se, mem, reg, memSize);
 
   /* Add the symbolic flags expression to the current inst */
-  EflagsBuilder::clearFlag(inst, ap, ID_TMP_CF, "Clears carry flag");
-  EflagsBuilder::clearFlag(inst, ap, ID_TMP_OF, "Clears overflow flag");
-  EflagsBuilder::pf(inst, se, ap, memSize);
-  EflagsBuilder::sf(inst, se, ap, memSize);
-  EflagsBuilder::zf(inst, se, ap, memSize);
+  EflagsBuilder::clearFlag(inst, ID_TMP_CF, "Clears carry flag");
+  EflagsBuilder::clearFlag(inst, ID_TMP_OF, "Clears overflow flag");
+  EflagsBuilder::pf(inst, se, mem);
+  EflagsBuilder::sf(inst, se, mem);
+  EflagsBuilder::zf(inst, se, mem);
 }
 
 
-Inst *AndIRBuilder::process(AnalysisProcessor &ap) const {
+Inst *AndIRBuilder::process(void) const {
   this->checkSetup();
 
   Inst *inst = new Inst(ap.getThreadID(), this->address, this->disas);
 
   try {
-    this->templateMethod(ap, *inst, this->operands, "AND");
+    this->templateMethod(*inst, this->operands, "AND");
+    ControlFlow::rip(*inst, this->nextAddress);
     ap.incNumberOfExpressions(inst->numberOfExpressions()); /* Used for statistics */
-    ControlFlow::rip(*inst, ap, this->nextAddress);
   }
   catch (std::exception &e) {
     delete inst;

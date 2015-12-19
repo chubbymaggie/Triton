@@ -16,12 +16,12 @@
 #include <SymbolicExpression.h>
 
 
-IncIRBuilder::IncIRBuilder(uint64 address, const std::string &disassembly):
+IncIRBuilder::IncIRBuilder(__uint address, const std::string &disassembly):
   BaseIRBuilder(address, disassembly) {
 }
 
 
-void IncIRBuilder::reg(AnalysisProcessor &ap, Inst &inst) const {
+void IncIRBuilder::reg(Inst &inst) const {
   SymbolicExpression *se;
   smt2lib::smtAstAbstractNode *expr, *op1, *op2;
   auto reg = this->operands[0].getReg();
@@ -29,7 +29,7 @@ void IncIRBuilder::reg(AnalysisProcessor &ap, Inst &inst) const {
 
   /* Create the SMT semantic */
   op1 = ap.buildSymbolicRegOperand(reg, regSize);
-  op2 = smt2lib::bv(1, regSize * REG_SIZE);
+  op2 = smt2lib::bv(1, regSize * BYTE_SIZE_BIT);
 
   /* Finale expr */
   expr = smt2lib::bvadd(op1, op2);
@@ -41,15 +41,15 @@ void IncIRBuilder::reg(AnalysisProcessor &ap, Inst &inst) const {
   ap.aluSpreadTaintRegReg(se, reg, reg);
 
   /* Add the symbolic flags expression to the current inst */
-  EflagsBuilder::af(inst, se, ap, regSize, op1, op2);
-  EflagsBuilder::ofAdd(inst, se, ap, regSize, op1, op2);
-  EflagsBuilder::pf(inst, se, ap, regSize);
-  EflagsBuilder::sf(inst, se, ap, regSize);
-  EflagsBuilder::zf(inst, se, ap, regSize);
+  EflagsBuilder::af(inst, se, reg, op1, op2);
+  EflagsBuilder::ofAdd(inst, se, reg, op1, op2);
+  EflagsBuilder::pf(inst, se, reg);
+  EflagsBuilder::sf(inst, se, reg);
+  EflagsBuilder::zf(inst, se, reg);
 }
 
 
-void IncIRBuilder::mem(AnalysisProcessor &ap, Inst &inst) const {
+void IncIRBuilder::mem(Inst &inst) const {
   SymbolicExpression *se;
   smt2lib::smtAstAbstractNode *expr, *op1, *op2;
   auto mem = this->operands[0].getMem();
@@ -57,7 +57,7 @@ void IncIRBuilder::mem(AnalysisProcessor &ap, Inst &inst) const {
 
   /* Create the SMT semantic */
   op1 = ap.buildSymbolicMemOperand(mem, memSize);
-  op2 = smt2lib::bv(1, memSize * REG_SIZE);
+  op2 = smt2lib::bv(1, memSize * BYTE_SIZE_BIT);
 
   /* Finale expr */
   expr = smt2lib::bvadd(op1, op2);
@@ -69,35 +69,35 @@ void IncIRBuilder::mem(AnalysisProcessor &ap, Inst &inst) const {
   ap.aluSpreadTaintMemMem(se, mem, mem, memSize);
 
   /* Add the symbolic flags expression to the current inst */
-  EflagsBuilder::af(inst, se, ap, memSize, op1, op2);
-  EflagsBuilder::ofAdd(inst, se, ap, memSize, op1, op2);
-  EflagsBuilder::pf(inst, se, ap, memSize);
-  EflagsBuilder::sf(inst, se, ap, memSize);
-  EflagsBuilder::zf(inst, se, ap, memSize);
+  EflagsBuilder::af(inst, se, mem, op1, op2);
+  EflagsBuilder::ofAdd(inst, se, mem, op1, op2);
+  EflagsBuilder::pf(inst, se, mem);
+  EflagsBuilder::sf(inst, se, mem);
+  EflagsBuilder::zf(inst, se, mem);
 }
 
 
-void IncIRBuilder::imm(AnalysisProcessor &ap, Inst &inst) const {
+void IncIRBuilder::imm(Inst &inst) const {
   /* There is no <inc imm> available in x86 */
   OneOperandTemplate::stop(this->disas);
 }
 
 
-void IncIRBuilder::none(AnalysisProcessor &ap, Inst &inst) const {
+void IncIRBuilder::none(Inst &inst) const {
   /* There is no <inc none> available in x86 */
   OneOperandTemplate::stop(this->disas);
 }
 
 
-Inst *IncIRBuilder::process(AnalysisProcessor &ap) const {
+Inst *IncIRBuilder::process(void) const {
   this->checkSetup();
 
   Inst *inst = new Inst(ap.getThreadID(), this->address, this->disas);
 
   try {
-    this->templateMethod(ap, *inst, this->operands, "INC");
+    this->templateMethod(*inst, this->operands, "INC");
+    ControlFlow::rip(*inst, this->nextAddress);
     ap.incNumberOfExpressions(inst->numberOfExpressions()); /* Used for statistics */
-    ControlFlow::rip(*inst, ap, this->nextAddress);
   }
   catch (std::exception &e) {
     delete inst;

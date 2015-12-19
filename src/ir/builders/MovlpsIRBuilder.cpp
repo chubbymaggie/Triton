@@ -16,22 +16,22 @@
 #include <SymbolicExpression.h>
 
 
-MovlpsIRBuilder::MovlpsIRBuilder(uint64 address, const std::string &disassembly):
+MovlpsIRBuilder::MovlpsIRBuilder(__uint address, const std::string &disassembly):
   BaseIRBuilder(address, disassembly) {
 }
 
 
-void MovlpsIRBuilder::regImm(AnalysisProcessor &ap, Inst &inst) const {
+void MovlpsIRBuilder::regImm(Inst &inst) const {
   TwoOperandsTemplate::stop(this->disas);
 }
 
 
-void MovlpsIRBuilder::regReg(AnalysisProcessor &ap, Inst &inst) const {
+void MovlpsIRBuilder::regReg(Inst &inst) const {
   TwoOperandsTemplate::stop(this->disas);
 }
 
 
-void MovlpsIRBuilder::regMem(AnalysisProcessor &ap, Inst &inst) const {
+void MovlpsIRBuilder::regMem(Inst &inst) const {
   SymbolicExpression *se;
   smt2lib::smtAstAbstractNode *expr, *op1, *op2;
   auto memSize = this->operands[1].getMem().getSize();
@@ -44,8 +44,8 @@ void MovlpsIRBuilder::regMem(AnalysisProcessor &ap, Inst &inst) const {
   op2 = ap.buildSymbolicMemOperand(mem, memSize);
 
   expr = smt2lib::concat(
-            smt2lib::extract(127, 64, op1), /* Destination[64..127] unchanged */
-            smt2lib::extract(63, 0, op2)    /* Destination[0..63] = Source */
+            smt2lib::extract((DQWORD_SIZE_BIT - 1), QWORD_SIZE_BIT, op1), /* Destination[127..64] unchanged */
+            smt2lib::extract((QWORD_SIZE_BIT - 1), 0, op2)                /* Destination[63..0] = Source */
           );
 
   /* Create the symbolic expression */
@@ -56,12 +56,12 @@ void MovlpsIRBuilder::regMem(AnalysisProcessor &ap, Inst &inst) const {
 }
 
 
-void MovlpsIRBuilder::memImm(AnalysisProcessor &ap, Inst &inst) const {
+void MovlpsIRBuilder::memImm(Inst &inst) const {
   TwoOperandsTemplate::stop(this->disas);
 }
 
 
-void MovlpsIRBuilder::memReg(AnalysisProcessor &ap, Inst &inst) const {
+void MovlpsIRBuilder::memReg(Inst &inst) const {
   SymbolicExpression *se;
   smt2lib::smtAstAbstractNode *expr, *op2;
   auto memSize = this->operands[0].getMem().getSize();
@@ -72,8 +72,8 @@ void MovlpsIRBuilder::memReg(AnalysisProcessor &ap, Inst &inst) const {
   /* Create the SMT semantic */
   op2 = ap.buildSymbolicRegOperand(reg, regSize);
 
-  /* Destination = Source[0..63] */
-  expr = smt2lib::extract(63, 0, op2);
+  /* Destination = Source[63..0] */
+  expr = smt2lib::extract((QWORD_SIZE_BIT - 1), 0, op2);
 
   /* Create the symbolic expression */
   se = ap.createMemSE(inst, expr, mem, memSize);
@@ -83,15 +83,15 @@ void MovlpsIRBuilder::memReg(AnalysisProcessor &ap, Inst &inst) const {
 }
 
 
-Inst *MovlpsIRBuilder::process(AnalysisProcessor &ap) const {
+Inst *MovlpsIRBuilder::process(void) const {
   checkSetup();
 
   Inst *inst = new Inst(ap.getThreadID(), this->address, this->disas);
 
   try {
-    this->templateMethod(ap, *inst, this->operands, "MOVLPS");
+    this->templateMethod(*inst, this->operands, "MOVLPS");
+    ControlFlow::rip(*inst, this->nextAddress);
     ap.incNumberOfExpressions(inst->numberOfExpressions()); /* Used for statistics */
-    ControlFlow::rip(*inst, ap, this->nextAddress);
   }
   catch (std::exception &e) {
     delete inst;

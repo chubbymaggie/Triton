@@ -16,12 +16,12 @@
 #include <SymbolicExpression.h>
 
 
-ShlIRBuilder::ShlIRBuilder(uint64 address, const std::string &disassembly):
+ShlIRBuilder::ShlIRBuilder(__uint address, const std::string &disassembly):
   BaseIRBuilder(address, disassembly) {
 }
 
 
-void ShlIRBuilder::regImm(AnalysisProcessor &ap, Inst &inst) const {
+void ShlIRBuilder::regImm(Inst &inst) const {
   SymbolicExpression *se;
   smt2lib::smtAstAbstractNode *expr, *op1, *op2;
   auto reg = this->operands[0].getReg();
@@ -30,7 +30,7 @@ void ShlIRBuilder::regImm(AnalysisProcessor &ap, Inst &inst) const {
 
   /* Create the SMT semantic */
   op1 = ap.buildSymbolicRegOperand(reg, regSize);
-  op2 = smt2lib::bv(imm, regSize * REG_SIZE);
+  op2 = smt2lib::bv(imm, regSize * BYTE_SIZE_BIT);
 
   /* Finale expr */
   expr = smt2lib::bvshl(op1, op2);
@@ -42,15 +42,15 @@ void ShlIRBuilder::regImm(AnalysisProcessor &ap, Inst &inst) const {
   ap.aluSpreadTaintRegReg(se, reg, reg);
 
   /* Add the symbolic flags expression to the current inst */
-  EflagsBuilder::cfShl(inst, se, ap, regSize, op1, op2);
-  EflagsBuilder::ofShl(inst, se, ap, regSize, op1, op2);
-  EflagsBuilder::pfShl(inst, se, ap, regSize, op2);
-  EflagsBuilder::sfShl(inst, se, ap, regSize, op2);
-  EflagsBuilder::zfShl(inst, se, ap, regSize, op2);
+  EflagsBuilder::cfShl(inst, se, reg, op1, op2);
+  EflagsBuilder::ofShl(inst, se, reg, op1, op2);
+  EflagsBuilder::pfShl(inst, se, reg, op2);
+  EflagsBuilder::sfShl(inst, se, reg, op2);
+  EflagsBuilder::zfShl(inst, se, reg, op2);
 }
 
 
-void ShlIRBuilder::regReg(AnalysisProcessor &ap, Inst &inst) const {
+void ShlIRBuilder::regReg(Inst &inst) const {
   SymbolicExpression *se;
   smt2lib::smtAstAbstractNode *expr, *op1, *op2;
   auto reg = this->operands[0].getReg();
@@ -59,7 +59,7 @@ void ShlIRBuilder::regReg(AnalysisProcessor &ap, Inst &inst) const {
   /* Create the SMT semantic */
   op1 = ap.buildSymbolicRegOperand(reg, regSize);
   /* op2 = 8 bits register (CL) */
-  op2 = smt2lib::zx((regSize - BYTE_SIZE) * REG_SIZE, ap.buildSymbolicRegOperand(ID_TMP_RCX, 1));
+  op2 = smt2lib::zx((regSize - BYTE_SIZE) * BYTE_SIZE_BIT, ap.buildSymbolicRegOperand(ID_TMP_RCX, 1));
 
   /* Finale expr */
   expr = smt2lib::bvshl(op1, op2);
@@ -71,20 +71,20 @@ void ShlIRBuilder::regReg(AnalysisProcessor &ap, Inst &inst) const {
   ap.aluSpreadTaintRegReg(se, reg, reg);
 
   /* Add the symbolic flags expression to the current inst */
-  EflagsBuilder::cfShl(inst, se, ap, regSize, op1, op2);
-  EflagsBuilder::ofShl(inst, se, ap, regSize, op1, op2);
-  EflagsBuilder::pfShl(inst, se, ap, regSize, op2);
-  EflagsBuilder::sfShl(inst, se, ap, regSize, op2);
-  EflagsBuilder::zfShl(inst, se, ap, regSize, op2);
+  EflagsBuilder::cfShl(inst, se, reg, op1, op2);
+  EflagsBuilder::ofShl(inst, se, reg, op1, op2);
+  EflagsBuilder::pfShl(inst, se, reg, op2);
+  EflagsBuilder::sfShl(inst, se, reg, op2);
+  EflagsBuilder::zfShl(inst, se, reg, op2);
 }
 
 
-void ShlIRBuilder::regMem(AnalysisProcessor &ap, Inst &inst) const {
+void ShlIRBuilder::regMem(Inst &inst) const {
   TwoOperandsTemplate::stop(this->disas);
 }
 
 
-void ShlIRBuilder::memImm(AnalysisProcessor &ap, Inst &inst) const {
+void ShlIRBuilder::memImm(Inst &inst) const {
   SymbolicExpression *se;
   smt2lib::smtAstAbstractNode *expr, *op1, *op2;
   auto memSize = this->operands[0].getMem().getSize();
@@ -93,7 +93,7 @@ void ShlIRBuilder::memImm(AnalysisProcessor &ap, Inst &inst) const {
 
   /* Create the SMT semantic */
   op1 = ap.buildSymbolicMemOperand(mem, memSize);
-  op2 = smt2lib::bv(imm, memSize * REG_SIZE);
+  op2 = smt2lib::bv(imm, memSize * BYTE_SIZE_BIT);
 
   /* Final expr */
   expr = smt2lib::bvshl(op1, op2);
@@ -105,28 +105,28 @@ void ShlIRBuilder::memImm(AnalysisProcessor &ap, Inst &inst) const {
   ap.aluSpreadTaintMemMem(se, mem, mem, memSize);
 
   /* Add the symbolic flags expression to the current inst */
-  EflagsBuilder::cfShl(inst, se, ap, memSize, op1, op2);
-  EflagsBuilder::ofShl(inst, se, ap, memSize, op1, op2);
-  EflagsBuilder::pfShl(inst, se, ap, memSize, op2);
-  EflagsBuilder::sfShl(inst, se, ap, memSize, op2);
-  EflagsBuilder::zfShl(inst, se, ap, memSize, op2);
+  EflagsBuilder::cfShl(inst, se, mem, op1, op2);
+  EflagsBuilder::ofShl(inst, se, mem, op1, op2);
+  EflagsBuilder::pfShl(inst, se, mem, op2);
+  EflagsBuilder::sfShl(inst, se, mem, op2);
+  EflagsBuilder::zfShl(inst, se, mem, op2);
 }
 
 
-void ShlIRBuilder::memReg(AnalysisProcessor &ap, Inst &inst) const {
+void ShlIRBuilder::memReg(Inst &inst) const {
   TwoOperandsTemplate::stop(this->disas);
 }
 
 
-Inst *ShlIRBuilder::process(AnalysisProcessor &ap) const {
+Inst *ShlIRBuilder::process(void) const {
   this->checkSetup();
 
   Inst *inst = new Inst(ap.getThreadID(), this->address, this->disas);
 
   try {
-    this->templateMethod(ap, *inst, this->operands, "SHL");
+    this->templateMethod(*inst, this->operands, "SHL");
+    ControlFlow::rip(*inst, this->nextAddress);
     ap.incNumberOfExpressions(inst->numberOfExpressions()); /* Used for statistics */
-    ControlFlow::rip(*inst, ap, this->nextAddress);
   }
   catch (std::exception &e) {
     delete inst;

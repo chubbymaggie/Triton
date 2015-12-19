@@ -11,18 +11,40 @@
 
 
 
-BaseIRBuilder::BaseIRBuilder(uint64 address, const std::string &dis) {
+BaseIRBuilder::BaseIRBuilder(__uint address, const std::string &dis) {
+  RTN rtn;
+  SEC sec;
+  IMG img;
+
+  this->address             = address;
   this->branchTaken         = false;
   this->branchTargetAddress = 0;
-  this->address             = address;
-  this->baseAddress         = IMG_LowAddress(SEC_Img(RTN_Sec(RTN_FindByAddress(address))));
-  this->nextAddress         = 0;
   this->disas               = dis;
-  this->imageName           = IMG_Name(SEC_Img(RTN_Sec(RTN_FindByAddress(address))));
   this->needSetup           = false;
-  this->offset              = this->address - this->baseAddress;
-  this->routineName         = RTN_FindNameByAddress(address);
-  this->sectionName         = SEC_Name(RTN_Sec(RTN_FindByAddress(address)));
+  this->nextAddress         = 0;
+  this->imageName           = "unknown";
+  this->sectionName         = "unknown";
+
+  rtn = RTN_FindByAddress(address);
+  if (RTN_Valid(rtn)) {
+
+    sec = RTN_Sec(rtn);
+    if (SEC_Valid(sec)) {
+
+      this->sectionName = SEC_Name(sec);
+
+      img = SEC_Img(sec);
+      if (IMG_Valid(img)) {
+        this->baseAddress = IMG_LowAddress(img);
+        this->imageName   = IMG_Name(img);
+      }
+    }
+  }
+
+  this->offset        = this->address - this->baseAddress;
+  this->routineName   = RTN_FindNameByAddress(address);
+  if (this->routineName.empty())
+    this->routineName = "unknown";
 }
 
 
@@ -31,7 +53,7 @@ uint32 BaseIRBuilder::getOpcode(void) const {
 }
 
 
-uint64 BaseIRBuilder::getThreadID(void) const {
+__uint BaseIRBuilder::getThreadID(void) const {
   return this->threadId;
 }
 
@@ -41,7 +63,7 @@ void BaseIRBuilder::setOpcode(uint32 op) {
 }
 
 
-void BaseIRBuilder::setNextAddress(uint64 nextAddress) {
+void BaseIRBuilder::setNextAddress(__uint nextAddress) {
   this->nextAddress = nextAddress;
 }
 
@@ -51,7 +73,7 @@ void BaseIRBuilder::setBranchTaken(bool flag) {
 }
 
 
-void BaseIRBuilder::setBranchTargetAddress(uint64 addr) {
+void BaseIRBuilder::setBranchTargetAddress(__uint addr) {
   this->branchTargetAddress = addr;
 }
 
@@ -61,7 +83,7 @@ void BaseIRBuilder::setOpcodeCategory(sint32 category) {
 }
 
 
-void BaseIRBuilder::setThreadID(uint64 threadId) {
+void BaseIRBuilder::setThreadID(__uint threadId) {
   this->threadId = threadId;
 }
 
@@ -81,27 +103,27 @@ bool BaseIRBuilder::isBranchTaken(void) {
 }
 
 
-uint64 BaseIRBuilder::getAddress(void) const {
+__uint BaseIRBuilder::getAddress(void) const {
   return this->address;
 }
 
 
-uint64 BaseIRBuilder::getBaseAddress(void) const {
+__uint BaseIRBuilder::getBaseAddress(void) const {
   return this->baseAddress;
 }
 
 
-uint64 BaseIRBuilder::getBranchTargetAddress(void) const {
+__uint BaseIRBuilder::getBranchTargetAddress(void) const {
   return this->branchTargetAddress;
 }
 
 
-uint64 BaseIRBuilder::getNextAddress(void) const {
+__uint BaseIRBuilder::getNextAddress(void) const {
   return this->nextAddress;
 }
 
 
-uint64 BaseIRBuilder::getOffset(void) const {
+__uint BaseIRBuilder::getOffset(void) const {
   return this->offset;
 }
 
@@ -139,17 +161,17 @@ void BaseIRBuilder::addOperand(const TritonOperand &operand) {
 }
 
 
-void BaseIRBuilder::setup(uint64 mem_value) {
-  for (auto it = this->operands.begin(); it != this->operands.end(); ++it)
+void BaseIRBuilder::setup(__uint mem_value) {
+  for (auto it = this->operands.begin(); it != this->operands.end(); ++it) {
     if (IRBuilder::isMemOperand(it->getType())) {
       it->setMemAddress(mem_value);
       this->needSetup = false;
-      break;
     }
+  }
 }
 
 
-void BaseIRBuilder::checkSetup() const {
+void BaseIRBuilder::checkSetup(void) const {
   if (this->needSetup)
     throw std::runtime_error("Error: IRBuilder.setup must be call before "
                              "IRBuilder.process, when there are MEM_* operands.");

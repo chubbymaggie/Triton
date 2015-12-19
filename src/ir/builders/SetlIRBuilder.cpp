@@ -16,17 +16,17 @@
 #include <SymbolicExpression.h>
 
 
-SetlIRBuilder::SetlIRBuilder(uint64 address, const std::string &disassembly):
+SetlIRBuilder::SetlIRBuilder(__uint address, const std::string &disassembly):
   BaseIRBuilder(address, disassembly) {
 }
 
 
-void SetlIRBuilder::imm(AnalysisProcessor &ap, Inst &inst) const {
+void SetlIRBuilder::imm(Inst &inst) const {
   OneOperandTemplate::stop(this->disas);
 }
 
 
-void SetlIRBuilder::reg(AnalysisProcessor &ap, Inst &inst) const {
+void SetlIRBuilder::reg(Inst &inst) const {
   SymbolicExpression *se;
   smt2lib::smtAstAbstractNode *expr, *sf, *of;
   auto reg = this->operands[0].getReg();
@@ -58,7 +58,7 @@ void SetlIRBuilder::reg(AnalysisProcessor &ap, Inst &inst) const {
 }
 
 
-void SetlIRBuilder::mem(AnalysisProcessor &ap, Inst &inst) const {
+void SetlIRBuilder::mem(Inst &inst) const {
   SymbolicExpression *se;
   smt2lib::smtAstAbstractNode *expr, *sf, *of;
   auto mem = this->operands[0].getMem();
@@ -90,20 +90,20 @@ void SetlIRBuilder::mem(AnalysisProcessor &ap, Inst &inst) const {
 }
 
 
-void SetlIRBuilder::none(AnalysisProcessor &ap, Inst &inst) const {
+void SetlIRBuilder::none(Inst &inst) const {
   OneOperandTemplate::stop(this->disas);
 }
 
 
-Inst *SetlIRBuilder::process(AnalysisProcessor &ap) const {
+Inst *SetlIRBuilder::process(void) const {
   this->checkSetup();
 
   Inst *inst = new Inst(ap.getThreadID(), this->address, this->disas);
 
   try {
-    this->templateMethod(ap, *inst, this->operands, "SETL");
+    this->templateMethod(*inst, this->operands, "SETL");
+    ControlFlow::rip(*inst, this->nextAddress);
     ap.incNumberOfExpressions(inst->numberOfExpressions()); /* Used for statistics */
-    ControlFlow::rip(*inst, ap, this->nextAddress);
   }
   catch (std::exception &e) {
     delete inst;

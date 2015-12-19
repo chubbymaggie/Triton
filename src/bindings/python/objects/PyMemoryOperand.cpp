@@ -12,6 +12,8 @@
  * Class MemoryOperand
  *
  * - address (integer)
+ * - bitSize (integer)
+ * - bitvector (PyBitVector)
  * - size (integer)
  */
 
@@ -22,22 +24,36 @@ void MemoryOperand_dealloc(PyObject *self) {
 }
 
 
+static char MemoryOperand_getBitvector_doc[] = "Returns the bitvector";
+static PyObject *MemoryOperand_getBitvector(PyObject *self, PyObject *noarg) {
+  return PyBitvector(PyMemoryOperand_AsMemoryOperand(self));
+}
+
+
+static char MemoryOperand_getBitSize_doc[] = "Returns the memory size in bits";
+static PyObject *MemoryOperand_getBitSize(PyObject *self, PyObject *noarg) {
+  return Py_BuildValue("k", PyMemoryOperand_AsMemoryOperand(self)->getBitSize());
+}
+
+
 static char MemoryOperand_getAddress_doc[] = "Returns the memory address";
 static PyObject *MemoryOperand_getAddress(PyObject *self, PyObject *noarg) {
   return Py_BuildValue("k", PyMemoryOperand_AsMemoryOperand(self)->getAddress());
 }
 
 
-static char MemoryOperand_getSize_doc[] = "Returns the memory size";
+static char MemoryOperand_getSize_doc[] = "Returns the memory size in bytes";
 static PyObject *MemoryOperand_getSize(PyObject *self, PyObject *noarg) {
   return Py_BuildValue("k", PyMemoryOperand_AsMemoryOperand(self)->getSize());
 }
 
 
 PyMethodDef MemoryOperand_callbacks[] = {
-  {"getAddress",    MemoryOperand_getAddress,   METH_NOARGS,     MemoryOperand_getAddress_doc},
-  {"getSize",       MemoryOperand_getSize,      METH_NOARGS,     MemoryOperand_getSize_doc},
-  {nullptr,         nullptr,                    0,               nullptr}
+  {"getAddress",    MemoryOperand_getAddress,     METH_NOARGS,     MemoryOperand_getAddress_doc},
+  {"getBitSize",    MemoryOperand_getBitSize,     METH_NOARGS,     MemoryOperand_getBitSize_doc},
+  {"getBitvector",  MemoryOperand_getBitvector,   METH_NOARGS,     MemoryOperand_getBitvector_doc},
+  {"getSize",       MemoryOperand_getSize,        METH_NOARGS,     MemoryOperand_getSize_doc},
+  {nullptr,         nullptr,                      0,               nullptr}
 };
 
 

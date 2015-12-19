@@ -16,12 +16,12 @@
 #include <SymbolicExpression.h>
 
 
-JleIRBuilder::JleIRBuilder(uint64 address, const std::string &disassembly):
+JleIRBuilder::JleIRBuilder(__uint address, const std::string &disassembly):
   BaseIRBuilder(address, disassembly) {
 }
 
 
-void JleIRBuilder::imm(AnalysisProcessor &ap, Inst &inst) const {
+void JleIRBuilder::imm(Inst &inst) const {
   SymbolicExpression *se;
   smt2lib::smtAstAbstractNode *expr, *sf, *of, *zf;
   auto imm = this->operands[0].getImm().getValue();
@@ -45,7 +45,12 @@ void JleIRBuilder::imm(AnalysisProcessor &ap, Inst &inst) const {
             smt2lib::bv(this->nextAddress, REG_SIZE_BIT));
 
   /* Create the symbolic expression */
-  se = ap.createRegSE(inst, expr, ID_TMP_RIP, REG_SIZE, "RIP");
+  se = ap.createRegSE(inst, expr, ID_TMP_RIP, REG_SIZE, "Program Counter");
+
+  /* Apply the taint */
+  ap.aluSpreadTaintRegReg(se, ID_TMP_RIP, ID_TMP_SF);
+  ap.aluSpreadTaintRegReg(se, ID_TMP_RIP, ID_TMP_OF);
+  ap.aluSpreadTaintRegReg(se, ID_TMP_RIP, ID_TMP_ZF);
 
   /* Add the constraint in the PathConstraints list */
   ap.addPathConstraint(se->getID());
@@ -53,28 +58,28 @@ void JleIRBuilder::imm(AnalysisProcessor &ap, Inst &inst) const {
 }
 
 
-void JleIRBuilder::reg(AnalysisProcessor &ap, Inst &inst) const {
+void JleIRBuilder::reg(Inst &inst) const {
   OneOperandTemplate::stop(this->disas);
 }
 
 
-void JleIRBuilder::mem(AnalysisProcessor &ap, Inst &inst) const {
+void JleIRBuilder::mem(Inst &inst) const {
   OneOperandTemplate::stop(this->disas);
 }
 
 
-void JleIRBuilder::none(AnalysisProcessor &ap, Inst &inst) const {
+void JleIRBuilder::none(Inst &inst) const {
   OneOperandTemplate::stop(this->disas);
 }
 
 
-Inst *JleIRBuilder::process(AnalysisProcessor &ap) const {
+Inst *JleIRBuilder::process(void) const {
   this->checkSetup();
 
   Inst *inst = new Inst(ap.getThreadID(), this->address, this->disas);
 
   try {
-    this->templateMethod(ap, *inst, this->operands, "JLE");
+    this->templateMethod(*inst, this->operands, "JLE");
     ap.incNumberOfExpressions(inst->numberOfExpressions()); /* Used for statistics */
   }
   catch (std::exception &e) {

@@ -17,22 +17,25 @@
 #include <PythonUtils.h>
 #include <Registers.h>
 #include <Smodel.h>
+#include <Trigger.h>
 #include <TritonPyObject.h>
 #include <Utils.h>
 #include <pin.H>
 #include <xPyFunc.h>
 
-extern AnalysisProcessor ap;
+extern AnalysisProcessor  ap;
+extern Trigger            analysisTrigger;
+
 
 
 /* NameSpace for all Python Bindings variables */
 namespace PyTritonOptions {
   /* Execution configurations */
   char              *startAnalysisFromSymbol = nullptr;
-  std::set<uint64>  startAnalysisFromAddr;
-  std::set<uint64>  startAnalysisFromOffset;
-  std::set<uint64>  stopAnalysisFromAddr;
-  std::set<uint64>  stopAnalysisFromOffset;
+  std::set<__uint>  startAnalysisFromAddr;
+  std::set<__uint>  startAnalysisFromOffset;
+  std::set<__uint>  stopAnalysisFromAddr;
+  std::set<__uint>  stopAnalysisFromOffset;
 
   /* Callback configurations */
   PyObject *callbackAfter         = nullptr;                // After the instruction processing
@@ -42,69 +45,75 @@ namespace PyTritonOptions {
   PyObject *callbackSignals       = nullptr;                // When a signal occurs
   PyObject *callbackSyscallEntry  = nullptr;                // Before syscall processing
   PyObject *callbackSyscallExit   = nullptr;                // After syscall processing
+  PyObject *callbackImageLoad     = nullptr;                // When an image is loaded
   std::map<const char *, PyObject *> callbackRoutineEntry;  // Before routine processing
   std::map<const char *, PyObject *> callbackRoutineExit;   // After routine processing
+  std::list<const char *>            imageWhitelist;        // An image white list
+  std::list<const char *>            imageBlacklist;        // An image black list
 
   /* Taint configurations */
-  std::map<uint64, std::list<uint64>> taintRegFromAddr;   // <addr, [reg1, reg2]>
-  std::map<uint64, std::list<uint64>> untaintRegFromAddr; // <addr, [reg1, reg2]>
-  std::map<uint64, std::list<uint64>> taintMemFromAddr;   // <addr, [mem1, mem2]>
-  std::map<uint64, std::list<uint64>> untaintMemFromAddr; // <addr, [mem1, mem2]>
+  std::map<__uint, std::list<__uint>> taintRegFromAddr;   // <addr, [reg1, reg2]>
+  std::map<__uint, std::list<__uint>> untaintRegFromAddr; // <addr, [reg1, reg2]>
+  std::map<__uint, std::list<__uint>> taintMemFromAddr;   // <addr, [mem1, mem2]>
+  std::map<__uint, std::list<__uint>> untaintMemFromAddr; // <addr, [mem1, mem2]>
 };
 
 
 static char Triton_addCallback_doc[] = "Adds a callback for each instruction instrumented";
 static PyObject *Triton_addCallback(PyObject *self, PyObject *args) {
-  PyObject *function;
-  PyObject *flag;
+  PyObject *function = nullptr;
+  PyObject *flag = nullptr;
   PyObject *routine = nullptr;
 
 
   /* Extract arguments */
-  PyArg_ParseTuple(args, "O|O|O", &function, &flag, &routine);
+  PyArg_ParseTuple(args, "|OOO", &function, &flag, &routine);
 
-  if (!PyCallable_Check(function))
+  if (function == nullptr || !PyCallable_Check(function))
     return PyErr_Format(PyExc_TypeError, "addCallback(): expected a function callback as first argument");
 
-  /* Check if the second arg is CB_BEFORE or CB_AFTER */
-  if (!PyLong_Check(flag) && !PyInt_Check(flag))
-    return PyErr_Format(PyExc_TypeError, "addCallback(): expected an integer as second argument");
+  /* Check if the second arg is an IDREF.CALLBACK*/
+  if (flag == nullptr || (!PyLong_Check(flag) && !PyInt_Check(flag)))
+    return PyErr_Format(PyExc_TypeError, "addCallback(): expected an IDREF.CALLBACK (integer) as second argument");
 
-  if (PyLong_AsLong(flag) == CB_BEFORE)
+  if (PyLong_AsUint(flag) == CB_BEFORE)
     PyTritonOptions::callbackBefore = function;
 
-  else if ((PyLong_AsLong(flag) == CB_BEFORE_SYMPROC))
+  else if ((PyLong_AsUint(flag) == CB_BEFORE_SYMPROC))
     PyTritonOptions::callbackBeforeIRProc = function;
 
-  else if ((PyLong_AsLong(flag) == CB_AFTER))
+  else if ((PyLong_AsUint(flag) == CB_AFTER))
     PyTritonOptions::callbackAfter = function;
 
-  else if ((PyLong_AsLong(flag) == CB_FINI))
+  else if ((PyLong_AsUint(flag) == CB_FINI))
     PyTritonOptions::callbackFini = function;
 
-  else if ((PyLong_AsLong(flag) == CB_SIGNALS))
+  else if ((PyLong_AsUint(flag) == CB_SIGNALS))
     PyTritonOptions::callbackSignals = function;
 
-  else if ((PyLong_AsLong(flag) == CB_SYSCALL_ENTRY))
+  else if ((PyLong_AsUint(flag) == CB_SYSCALL_ENTRY))
     PyTritonOptions::callbackSyscallEntry = function;
 
-  else if ((PyLong_AsLong(flag) == CB_SYSCALL_EXIT))
+  else if ((PyLong_AsUint(flag) == CB_SYSCALL_EXIT))
     PyTritonOptions::callbackSyscallExit = function;
 
-  else if ((PyLong_AsLong(flag) == CB_ROUTINE_ENTRY)){
+  else if (PyLong_AsUint(flag) == CB_IMAGE_LOAD)
+    PyTritonOptions::callbackImageLoad = function;
+
+  else if ((PyLong_AsUint(flag) == CB_ROUTINE_ENTRY)){
     if (routine == nullptr || !PyString_Check(routine))
-      return PyErr_Format(PyExc_TypeError, "addCallback(): expected a string as third argument");
+      return PyErr_Format(PyExc_TypeError, "addCallback(): expected a routine name (string) as third argument");
     PyTritonOptions::callbackRoutineEntry.insert(std::pair<const char*,PyObject*>(PyString_AsString(routine), function));
   }
 
-  else if ((PyLong_AsLong(flag) == CB_ROUTINE_EXIT)){
+  else if ((PyLong_AsUint(flag) == CB_ROUTINE_EXIT)){
     if (routine == nullptr || !PyString_Check(routine))
-      return PyErr_Format(PyExc_TypeError, "addCallback(): expected a string as third argument");
+      return PyErr_Format(PyExc_TypeError, "addCallback(): expected a routine name (string) as third argument");
     PyTritonOptions::callbackRoutineExit.insert(std::pair<const char*,PyObject*>(PyString_AsString(routine), function));
   }
 
   else
-    return PyErr_Format(PyExc_TypeError, "addCallback(): expected an IDREF.CALLBACK as second argument");
+    return PyErr_Format(PyExc_TypeError, "addCallback(): expected an IDREF.CALLBACK (integer) as second argument");
 
   Py_INCREF(Py_None);
   return Py_None;
@@ -113,12 +122,12 @@ static PyObject *Triton_addCallback(PyObject *self, PyObject *args) {
 
 static char Triton_checkReadAccess_doc[] = "Checks whether the memory page which contains this address has a read access protection";
 static PyObject *Triton_checkReadAccess(PyObject *self, PyObject *addr) {
-  uint64 ad;
+  __uint ad;
 
   if (!PyLong_Check(addr) && !PyInt_Check(addr))
     return PyErr_Format(PyExc_TypeError, "checkReadAccess(): expected an address (integer) as argument");
 
-  ad = PyLong_AsLong(addr);
+  ad = PyLong_AsUint(addr);
   if (PIN_CheckReadAccess(reinterpret_cast<void*>(ad)) == true)
     Py_RETURN_TRUE;
 
@@ -128,12 +137,12 @@ static PyObject *Triton_checkReadAccess(PyObject *self, PyObject *addr) {
 
 static char Triton_checkWriteAccess_doc[] = "Checks whether the memory page which contains this address has a write access protection";
 static PyObject *Triton_checkWriteAccess(PyObject *self, PyObject *addr) {
-  uint64 ad;
+  __uint ad;
 
   if (!PyLong_Check(addr) && !PyInt_Check(addr))
     return PyErr_Format(PyExc_TypeError, "checkWriteAccess(): expected an address (integer) as argument");
 
-  ad = PyLong_AsLong(addr);
+  ad = PyLong_AsUint(addr);
   if (PIN_CheckWriteAccess(reinterpret_cast<void*>(ad)) == true)
     Py_RETURN_TRUE;
 
@@ -141,31 +150,50 @@ static PyObject *Triton_checkWriteAccess(PyObject *self, PyObject *addr) {
 }
 
 
+static char Triton_detachProcess_doc[] = "Detach from the targeted process";
+static PyObject *Triton_detachProcess(PyObject *self, PyObject *noarg) {
+  PIN_Detach();
+  analysisTrigger.update(false);
+  Py_INCREF(Py_None);
+  return Py_None;
+}
+
+
 static char Triton_getMemValue_doc[] = "Gets the current value of the memory";
 static PyObject *Triton_getMemValue(PyObject *self, PyObject *args) {
-  PyObject *addr;
-  PyObject *readSize;
-  uint64 ad;
-  uint64 rs;
+  PyObject *addr = nullptr;
+  PyObject *readSize = nullptr;
+  __uint ad;
+  __uint rs;
 
   /* Extract arguments */
-  PyArg_ParseTuple(args, "O|O", &addr, &readSize);
+  PyArg_ParseTuple(args, "|OO", &addr, &readSize);
 
   if (!ap.getCurrentCtxH())
     return PyErr_Format(PyExc_TypeError, "getMemValue(): Can't call getMemValue() right now. You must run the program before.");
 
-  if (!PyLong_Check(addr) && !PyInt_Check(addr))
-    return PyErr_Format(PyExc_TypeError, "getMemValue(): expected an address (integer) as argument");
+  if (addr == nullptr || (!PyLong_Check(addr) && !PyInt_Check(addr)))
+    return PyErr_Format(PyExc_TypeError, "getMemValue(): expected an address (integer) as first argument");
 
-  ad = PyLong_AsLong(addr);
-  rs = PyLong_AsLong(readSize);
+  if (readSize == nullptr || (!PyLong_Check(readSize) && !PyInt_Check(readSize)))
+    return PyErr_Format(PyExc_TypeError, "getMemValue(): expected a read size (integer) as second argument");
 
-  if (rs != DQWORD_SIZE && rs != QWORD_SIZE && rs != DWORD_SIZE && rs != WORD_SIZE && rs != BYTE_SIZE)
-    return PyErr_Format(PyExc_TypeError, "getMemValue(): The readSize argument must be: DQWORD, QWORD, DWORD, WORD or BYTE");
+  ad = PyLong_AsUint(addr);
+  rs = PyLong_AsUint(readSize);
+
+  if (rs == 0)
+    return PyErr_Format(PyExc_TypeError, "getMemValue(): The readSize cannot be 0");
+
+  if (rs > DQWORD_SIZE_BIT)
+    return PyErr_Format(PyExc_TypeError, "getMemValue(): The readSize must be less than 128");
+
+  if (rs % BYTE_SIZE_BIT)
+    return PyErr_Format(PyExc_TypeError, "getMemValue(): The readSize must be a multiple of 8");
 
   if (PIN_CheckReadAccess(reinterpret_cast<void*>(ad)) == false)
     return PyErr_Format(PyExc_TypeError, "getMemValue(): The targeted address memory can not be read");
 
+  rs = rs / BYTE_SIZE_BIT;
   MemoryOperand mem(ad, rs);
 
   /* If this is a 128-bits read size, we must use uint128ToPyLongObject() */
@@ -179,14 +207,14 @@ static PyObject *Triton_getRegName(PyObject *self, PyObject *reg) {
   if (!PyLong_Check(reg) && !PyInt_Check(reg))
     return PyErr_Format(PyExc_TypeError, "getRegName(): expected a register id (integer) as argument");
 
-  return Py_BuildValue("s", PINConverter::getRegisterName(PyLong_AsLong(reg)).c_str());
+  return Py_BuildValue("s", PINConverter::getRegisterName(PyLong_AsUint(reg)).c_str());
 }
 
 
 static char Triton_getRegValue_doc[] = "Gets the current value of the register";
 static PyObject *Triton_getRegValue(PyObject *self, PyObject *regId) {
   RegisterOperand reg;
-  uint64 tritonReg;
+  __uint tritonReg;
 
   if (!PyLong_Check(regId) && !PyInt_Check(regId))
     return PyErr_Format(PyExc_TypeError, "getRegValue(): expected a register id (IDREF.REG) as argument");
@@ -194,10 +222,10 @@ static PyObject *Triton_getRegValue(PyObject *self, PyObject *regId) {
   if (!ap.getCurrentCtxH())
     return PyErr_Format(PyExc_TypeError, "getRegValue(): Can't call getRegValue() right now. You must run the program before.");
 
-  tritonReg = PyLong_AsLong(regId);
+  tritonReg = PyLong_AsUint(regId);
   reg = createTmpReg(tritonReg);
 
-  if (tritonReg >= ID_XMM0 && tritonReg <= ID_XMM15){
+  if (isSSERegId(tritonReg)){
     uint128 value = ap.getSSERegisterValue(reg);
     return uint128ToPyLongObject(value);
   }
@@ -216,7 +244,7 @@ static PyObject *Triton_getFlagValue(PyObject *self, PyObject *flagId) {
   if (!ap.getCurrentCtxH())
     return PyErr_Format(PyExc_TypeError, "getFlagValue(): Can't call getFlagValue() right now. You must run the program before.");
 
-  flag = createTmpFlag(PyLong_AsLong(flagId));
+  flag = createTmpFlag(PyLong_AsUint(flagId));
 
   return Py_BuildValue("k", ap.getFlagValue(flag));
 }
@@ -224,57 +252,57 @@ static PyObject *Triton_getFlagValue(PyObject *self, PyObject *flagId) {
 
 static char Triton_getSyscallArgument_doc[] = "Returns the syscall argument.";
 static PyObject *Triton_getSyscallArgument(PyObject *self, PyObject *args) {
-  PyObject *num;
-  PyObject *std;
-  uint64 ret;
+  PyObject *num = nullptr;
+  PyObject *std = nullptr;
+  __uint ret;
 
   /* Extract arguments */
-  PyArg_ParseTuple(args, "O|O", &std, &num);
+  PyArg_ParseTuple(args, "|OO", &std, &num);
 
-  if (!PyLong_Check(std) && !PyInt_Check(std))
+  if (std == nullptr || (!PyLong_Check(std) && !PyInt_Check(std)))
     return PyErr_Format(PyExc_TypeError, "getSyscallArgument(): expected an id (integer) as first argument");
 
-  if (!PyLong_Check(num) && !PyInt_Check(num))
+  if (num == nullptr || (!PyLong_Check(num) && !PyInt_Check(num)))
     return PyErr_Format(PyExc_TypeError, "getSyscallArgument(): expected an id (integer) as second argument");
 
-  LEVEL_CORE::SYSCALL_STANDARD standard = static_cast<LEVEL_CORE::SYSCALL_STANDARD>(PyLong_AsLong(std));;
+  LEVEL_CORE::SYSCALL_STANDARD standard = static_cast<LEVEL_CORE::SYSCALL_STANDARD>(PyLong_AsUint(std));;
   CONTEXT *ctx = static_cast<CONTEXT*>(ap.getCurrentCtxH()->getCtx());
 
-  ret = PIN_GetSyscallArgument(ctx, standard, PyLong_AsLong(num));
+  ret = PIN_GetSyscallArgument(ctx, standard, PyLong_AsUint(num));
 
-  return PyLong_FromLong(ret);
+  return PyLong_FromUint(ret);
 }
 
 
 static char Triton_getSyscallNumber_doc[] = "Returns the syscall number. This function must be called inside the syscall entry callback. Otherwise returns results in undefined behavior.";
 static PyObject *Triton_getSyscallNumber(PyObject *self, PyObject *std) {
-  uint64 syscallNumber;
+  __uint syscallNumber;
 
   if (!PyLong_Check(std) && !PyInt_Check(std))
     return PyErr_Format(PyExc_TypeError, "getSyscallNumber(): expected an id (integer) as argument");
 
-  LEVEL_CORE::SYSCALL_STANDARD standard = static_cast<LEVEL_CORE::SYSCALL_STANDARD>(PyLong_AsLong(std));;
+  LEVEL_CORE::SYSCALL_STANDARD standard = static_cast<LEVEL_CORE::SYSCALL_STANDARD>(PyLong_AsUint(std));;
   CONTEXT *ctx = static_cast<CONTEXT*>(ap.getCurrentCtxH()->getCtx());
 
   syscallNumber = PIN_GetSyscallNumber(ctx, standard);
 
-  return PyLong_FromLong(syscallNumber);
+  return PyLong_FromUint(syscallNumber);
 }
 
 
 static char Triton_getSyscallReturn_doc[] = "Returns the syscall return value.";
 static PyObject *Triton_getSyscallReturn(PyObject *self, PyObject *std) {
-  uint64 ret;
+  __uint ret;
 
   if (!PyLong_Check(std) && !PyInt_Check(std))
     return PyErr_Format(PyExc_TypeError, "getSyscallReturn(): expected an id (integer) as argument");
 
-  LEVEL_CORE::SYSCALL_STANDARD standard = static_cast<LEVEL_CORE::SYSCALL_STANDARD>(PyLong_AsLong(std));;
+  LEVEL_CORE::SYSCALL_STANDARD standard = static_cast<LEVEL_CORE::SYSCALL_STANDARD>(PyLong_AsUint(std));;
   CONTEXT *ctx = static_cast<CONTEXT*>(ap.getCurrentCtxH()->getCtx());
 
   ret = PIN_GetSyscallReturn(ctx, standard);
 
-  return PyLong_FromLong(ret);
+  return PyLong_FromUint(ret);
 }
 
 
@@ -283,14 +311,38 @@ static PyObject *Triton_opcodeToString(PyObject *self, PyObject *opcode) {
   if (!PyLong_Check(opcode) && !PyInt_Check(opcode))
     return PyErr_Format(PyExc_TypeError, "opcodeToString(): expected an opcode (integer) as argument");
 
-  return Py_BuildValue("s", OPCODE_StringShort(PyInt_AsLong(opcode)).c_str());
+  return Py_BuildValue("s", OPCODE_StringShort(PyLong_AsUint(opcode)).c_str());
 }
 
 
 static char Triton_runProgram_doc[] = "Starts the Pin instrumentation";
 static PyObject *Triton_runProgram(PyObject *self, PyObject *noarg) {
-  // Never returns - Rock 'n roll baby \o/
+  /* Never returns - Rock 'n roll baby \o/ */
   PIN_StartProgram();
+  Py_INCREF(Py_None);
+  return Py_None;
+}
+
+
+static char Triton_setATTSyntax_doc[] = "Sets the AT&T syntax";
+static PyObject *Triton_setATTSyntax(PyObject *self, PyObject *noarg) {
+  PIN_SetSyntaxATT();
+  Py_INCREF(Py_None);
+  return Py_None;
+}
+
+
+static char Triton_setIntelSyntax_doc[] = "Sets the Intel syntax";
+static PyObject *Triton_setIntelSyntax(PyObject *self, PyObject *noarg) {
+  PIN_SetSyntaxIntel();
+  Py_INCREF(Py_None);
+  return Py_None;
+}
+
+
+static char Triton_setXEDSyntax_doc[] = "Sets the XED syntax";
+static PyObject *Triton_setXEDSyntax(PyObject *self, PyObject *noarg) {
+  PIN_SetSyntaxXED();
   Py_INCREF(Py_None);
   return Py_None;
 }
@@ -298,35 +350,42 @@ static PyObject *Triton_runProgram(PyObject *self, PyObject *noarg) {
 
 static char Triton_setMemValue_doc[] = "Inserts value into the runtime memory";
 static PyObject *Triton_setMemValue(PyObject *self, PyObject *args) {
-  PyObject  *addr;
-  PyObject  *value;
-  PyObject  *writeSize;
+  PyObject  *addr = nullptr;
+  PyObject  *value = nullptr;
+  PyObject  *writeSize = nullptr;
   uint128   va; // value
-  uint64    ad; // address
-  uint64    ws; // write size
+  __uint    ad; // address
+  __uint    ws; // write size
 
   /* Extract arguments */
-  PyArg_ParseTuple(args, "O|O|O", &addr, &writeSize, &value);
+  PyArg_ParseTuple(args, "|OOO", &addr, &writeSize, &value);
 
-  if (!PyLong_Check(addr) && !PyInt_Check(addr))
+  if (addr == nullptr || (!PyLong_Check(addr) && !PyInt_Check(addr)))
     return PyErr_Format(PyExc_TypeError, "setMemValue(): expected an address (integer) as first argument");
 
-  if (!PyLong_Check(writeSize) && !PyInt_Check(writeSize))
+  if (writeSize == nullptr || (!PyLong_Check(writeSize) && !PyInt_Check(writeSize)))
     return PyErr_Format(PyExc_TypeError, "setMemValue(): expected an integer as second argument");
 
-  if (!PyLong_Check(value) && !PyInt_Check(value))
+  if (value == nullptr || (!PyLong_Check(value) && !PyInt_Check(value)))
     return PyErr_Format(PyExc_TypeError, "setMemValue(): expected an integer as third argument");
 
-  ad = PyLong_AsLong(addr);
-  ws = PyLong_AsLong(writeSize);
+  ad = PyLong_AsUint(addr);
+  ws = PyLong_AsUint(writeSize);
 
-  if (ws != DQWORD_SIZE && ws != QWORD_SIZE && ws != DWORD_SIZE && ws != WORD_SIZE && ws != BYTE_SIZE)
-    return PyErr_Format(PyExc_TypeError, "setMemValue(): The writeSize argument must be: DQWORD, QWORD, DWORD, WORD or BYTE");
+  if (ws == 0)
+    return PyErr_Format(PyExc_TypeError, "setMemValue(): The writeSize cannot be 0");
+
+  if (ws > DQWORD_SIZE_BIT)
+    return PyErr_Format(PyExc_TypeError, "setMemValue(): The writeSize must be less than 128");
+
+  if (ws % BYTE_SIZE_BIT)
+    return PyErr_Format(PyExc_TypeError, "setMemValue(): The writeSize must be a multiple of 8");
 
   if (PIN_CheckWriteAccess(reinterpret_cast<void*>(ad)) == false)
     return PyErr_Format(PyExc_TypeError, "setMemValue(): Can not write into the targeted address memory");
 
   va = PyLongObjectToUint128(value);
+  ws = ws / BYTE_SIZE_BIT;
   MemoryOperand mo(ad, ws);
   ap.setMemValue(mo, ws, va);
 
@@ -337,28 +396,72 @@ static PyObject *Triton_setMemValue(PyObject *self, PyObject *args) {
 
 static char Triton_setRegValue_doc[] = "Inserts value into the current context register";
 static PyObject *Triton_setRegValue(PyObject *self, PyObject *args) {
-  PyObject *reg;
-  PyObject *value;
+  PyObject *reg = nullptr;
+  PyObject *value = nullptr;
   uint128  va;
-  uint64   tr;
+  __uint   tr;
 
   /* Extract arguments */
-  PyArg_ParseTuple(args, "O|O", &reg, &value);
+  PyArg_ParseTuple(args, "|OO", &reg, &value);
 
-  if (!PyLong_Check(reg) && !PyInt_Check(reg))
+  if (reg == nullptr || (!PyLong_Check(reg) && !PyInt_Check(reg)))
     return PyErr_Format(PyExc_TypeError, "setRegValue(): expected an IDREF.REG as first argument");
 
-  if (!PyLong_Check(value) && !PyInt_Check(value))
+  if (value == nullptr || (!PyLong_Check(value) && !PyInt_Check(value)))
     return PyErr_Format(PyExc_TypeError, "setRegValue(): expected an integer as second argument");
 
   va = PyLongObjectToUint128(value);
-  tr = PyLong_AsLong(reg);
+  tr = PyLong_AsUint(reg);
   RegisterOperand ro = createTmpReg(tr);
 
-  if (tr >= ID_XMM0 && tr <= ID_XMM15)
+  if (isSSERegId(tr))
     ap.setSSERegisterValue(ro, va);
   else
-    ap.setRegisterValue(ro, boost::numeric_cast<uint64>(va));
+    ap.setRegisterValue(ro, boost::numeric_cast<__uint>(va));
+
+  Py_INCREF(Py_None);
+  return Py_None;
+}
+
+
+static char Triton_setupImageBlacklist_doc[] = "Setup an image blacklist";
+static PyObject *Triton_setupImageBlacklist(PyObject *self, PyObject *arg) {
+
+  /* Check if the arg is a list */
+  if (!PyList_Check(arg))
+    return PyErr_Format(PyExc_TypeError, "setupImageBlacklist(): expected a list as first argument");
+
+  /* Check if the arg list contains only string item and insert them in the internal list */
+  for (Py_ssize_t i = 0; i < PyList_Size(arg); i++){
+    PyObject *item = PyList_GetItem(arg, i);
+
+    if (!PyString_Check(item))
+      return PyErr_Format(PyExc_TypeError, "setupImageBlacklist(): The first argument must be a list of image name (string)");
+
+    PyTritonOptions::imageBlacklist.push_back(PyString_AsString(item));
+  }
+
+  Py_INCREF(Py_None);
+  return Py_None;
+}
+
+
+static char Triton_setupImageWhitelist_doc[] = "Setup an image whitelist";
+static PyObject *Triton_setupImageWhitelist(PyObject *self, PyObject *arg) {
+
+  /* Check if the arg is a list */
+  if (!PyList_Check(arg))
+    return PyErr_Format(PyExc_TypeError, "setupImageWhitelist(): expected a list as first argument");
+
+  /* Check if the arg list contains only string item and insert them in the internal list */
+  for (Py_ssize_t i = 0; i < PyList_Size(arg); i++){
+    PyObject *item = PyList_GetItem(arg, i);
+
+    if (!PyString_Check(item))
+      return PyErr_Format(PyExc_TypeError, "setupImageWhitelist(): The first argument must be a list of image name (string)");
+
+    PyTritonOptions::imageWhitelist.push_back(PyString_AsString(item));
+  }
 
   Py_INCREF(Py_None);
   return Py_None;
@@ -382,7 +485,7 @@ static PyObject *Triton_startAnalysisFromAddr(PyObject *self, PyObject *addr) {
   if (!PyLong_Check(addr) && !PyInt_Check(addr))
     return PyErr_Format(PyExc_TypeError, "startAnalysisFromAddr(): expected an address (integer) as argument");
 
-  PyTritonOptions::startAnalysisFromAddr.insert(PyLong_AsLong(addr));
+  PyTritonOptions::startAnalysisFromAddr.insert(PyLong_AsUint(addr));
   Py_INCREF(Py_None);
   return Py_None;
 }
@@ -393,7 +496,7 @@ static PyObject *Triton_startAnalysisFromOffset(PyObject *self, PyObject *offset
   if (!PyLong_Check(offset) && !PyInt_Check(offset))
     return PyErr_Format(PyExc_TypeError, "startAnalysisFromOffset(): expected an offset (integer) as argument");
 
-  PyTritonOptions::startAnalysisFromOffset.insert(PyLong_AsLong(offset));
+  PyTritonOptions::startAnalysisFromOffset.insert(PyLong_AsUint(offset));
   Py_INCREF(Py_None);
   return Py_None;
 }
@@ -404,7 +507,7 @@ static PyObject *Triton_stopAnalysisFromAddr(PyObject *self, PyObject *addr) {
   if (!PyLong_Check(addr) && !PyInt_Check(addr))
     return PyErr_Format(PyExc_TypeError, "stopAnalysisFromAddr(): expected an address (integer) as argument");
 
-  PyTritonOptions::stopAnalysisFromAddr.insert(PyLong_AsLong(addr));
+  PyTritonOptions::stopAnalysisFromAddr.insert(PyLong_AsUint(addr));
   Py_INCREF(Py_None);
   return Py_None;
 }
@@ -415,7 +518,7 @@ static PyObject *Triton_stopAnalysisFromOffset(PyObject *self, PyObject *offset)
   if (!PyLong_Check(offset) && !PyInt_Check(offset))
     return PyErr_Format(PyExc_TypeError, "stopAnalysisFromOffset(): expected an offset (integer) as argument");
 
-  PyTritonOptions::stopAnalysisFromOffset.insert(PyLong_AsLong(offset));
+  PyTritonOptions::stopAnalysisFromOffset.insert(PyLong_AsUint(offset));
   Py_INCREF(Py_None);
   return Py_None;
 }
@@ -423,22 +526,23 @@ static PyObject *Triton_stopAnalysisFromOffset(PyObject *self, PyObject *offset)
 
 static char Triton_syscallToString_doc[] = "Returns the syscall string from a syscall number";
 static PyObject *Triton_syscallToString(PyObject *self, PyObject *args) {
-  PyObject *std;
-  PyObject *num;
+  PyObject *std = nullptr;
+  PyObject *num = nullptr;
 
   /* Extract arguments */
-  PyArg_ParseTuple(args, "O|O", &std, &num);
+  PyArg_ParseTuple(args, "|OO", &std, &num);
 
-  if (!PyLong_Check(std) && !PyInt_Check(std))
+  if (std == nullptr || (!PyLong_Check(std) && !PyInt_Check(std)))
     return PyErr_Format(PyExc_TypeError, "syscallToString(): expected a standard IDREF.SYSCALL as first argument");
 
-  if (!PyLong_Check(num) && !PyInt_Check(num))
+  if (num == nullptr || (!PyLong_Check(num) && !PyInt_Check(num)))
     return PyErr_Format(PyExc_TypeError, "syscallToString(): expected a syscall number (integer) as second argument");
 
   const char *syscall = nullptr;
-  switch (PyLong_AsLong(std)){
+  switch (PyLong_AsUint(std)){
+    case SYSCALL_STANDARD_IA32_LINUX:
     case SYSCALL_STANDARD_IA32E_LINUX:
-      syscall = syscallNumberLinux64ToString(PyLong_AsLong(num));
+      syscall = syscallNumberLinuxToString(PyLong_AsUint(num));
       break;
     default:
       return PyErr_Format(PyExc_TypeError, "syscallToString(): IDREF.SYSCALL standard unsupported");
@@ -459,6 +563,28 @@ static PyObject *Triton_concretizeAllMem(PyObject *self, PyObject *noarg) {
 }
 
 
+static char Triton_assignSymExprToReg_doc[] = "Assign a symbolic expression to a register";
+static PyObject *Triton_assignSymExprToReg(PyObject *self, PyObject *args) {
+  PyObject *expr  = nullptr;
+  PyObject *regId = nullptr;
+
+  /* Extract arguments */
+  PyArg_ParseTuple(args, "|OO", &expr, &regId);
+
+  if (expr == nullptr || !PySymbolicExpression_Check(expr))
+    return PyErr_Format(PyExc_TypeError, "assignSymExprToReg(): expected a SymbolicExpression as first argument");
+
+  if (regId == nullptr || (!PyLong_Check(regId) && !PyInt_Check(regId)))
+    return PyErr_Format(PyExc_TypeError, "assignSymExprToReg(): expected a register id (IDREF.REG) as second argument");
+
+  if (ap.assignSEToReg(PySymbolicExpression_AsSymbolicExpression(expr), PyLong_AsUint(regId)) == false)
+    return PyErr_Format(PyExc_TypeError, "assignSymExprToReg(): Invalid register id");
+
+  Py_INCREF(Py_None);
+  return Py_None;
+}
+
+
 static char Triton_concretizeAllReg_doc[] = "Concretize all registers reference";
 static PyObject *Triton_concretizeAllReg(PyObject *self, PyObject *noarg) {
   ap.concretizeAllReg();
@@ -471,7 +597,7 @@ static PyObject *Triton_concretizeMem(PyObject *self, PyObject *addr) {
   if (!PyLong_Check(addr) && !PyInt_Check(addr))
     return PyErr_Format(PyExc_TypeError, "concretizeMem(): expected an address (integer) as argument");
 
-  MemoryOperand mem(PyLong_AsLong(addr), 1);
+  MemoryOperand mem(PyLong_AsUint(addr), 1);
   ap.concretizeMem(mem);
   Py_INCREF(Py_None);
   return Py_None;
@@ -483,7 +609,7 @@ static PyObject *Triton_concretizeReg(PyObject *self, PyObject *regId) {
   if (!PyLong_Check(regId) && !PyInt_Check(regId))
     return PyErr_Format(PyExc_TypeError, "concretizeReg(): expected a IDREF.REG as argument");
 
-  RegisterOperand reg = createTmpReg(PyLong_AsLong(regId));
+  RegisterOperand reg = createTmpReg(PyLong_AsUint(regId));
   ap.concretizeReg(reg);
   Py_INCREF(Py_None);
   return Py_None;
@@ -492,27 +618,38 @@ static PyObject *Triton_concretizeReg(PyObject *self, PyObject *regId) {
 
 static char Triton_convertExprToSymVar_doc[] = "Converts an expression to a symbolic variable";
 static PyObject *Triton_convertExprToSymVar(PyObject *self, PyObject *args) {
-  PyObject *exprId, *symVarSize, *varComment = nullptr;
-  uint64 vs, ei;
+  PyObject *exprId = nullptr;
+  PyObject *symVarSize = nullptr;
+  PyObject *varComment = nullptr;
+  __uint vs, ei;
   std::string vc;
 
   /* Extract arguments */
-  PyArg_ParseTuple(args, "O|O|O", &exprId, &symVarSize, &varComment);
+  PyArg_ParseTuple(args, "|OOO", &exprId, &symVarSize, &varComment);
 
   if (varComment == nullptr)
     varComment = PyString_FromString("");
 
-  if (!PyLong_Check(exprId) && !PyInt_Check(exprId))
+  if (exprId == nullptr || (!PyLong_Check(exprId) && !PyInt_Check(exprId)))
     return PyErr_Format(PyExc_TypeError, "convertExprToSymVar(): expected an integer as first argument");
 
-  if (!PyLong_Check(symVarSize) && !PyInt_Check(symVarSize))
+  if (symVarSize == nullptr || (!PyLong_Check(symVarSize) && !PyInt_Check(symVarSize)))
     return PyErr_Format(PyExc_TypeError, "convertExprToSymVar(): expected an integer as second argument");
+
+  if (PyLong_AsUint(symVarSize) == 0)
+    return PyErr_Format(PyExc_TypeError, "convertExprToSymVar(): The size must cannot be 0");
+
+  if (PyLong_AsUint(symVarSize) % BYTE_SIZE_BIT)
+    return PyErr_Format(PyExc_TypeError, "convertExprToSymVar(): The size must be a multiple of 8");
+
+  if (PyLong_AsUint(symVarSize) > DQWORD_SIZE_BIT)
+    return PyErr_Format(PyExc_TypeError, "convertExprToSymVar(): The size must be less than 128");
 
   if (!PyString_Check(varComment))
       return PyErr_Format(PyExc_TypeError, "convertExprToSymVar(): expected a comment (string) as third argument");
 
-  ei = PyLong_AsLong(exprId);
-  vs = PyLong_AsLong(symVarSize);
+  ei = PyLong_AsUint(exprId);
+  vs = PyLong_AsUint(symVarSize);
   vc = PyString_AsString(varComment);
 
   return PySymbolicVariable(ap.convertExprToSymVar(ei, vs, vc));
@@ -521,28 +658,39 @@ static PyObject *Triton_convertExprToSymVar(PyObject *self, PyObject *args) {
 
 static char Triton_convertMemToSymVar_doc[] = "Converts a memory address to a symbolic variable";
 static PyObject *Triton_convertMemToSymVar(PyObject *self, PyObject *args) {
-  PyObject *memAddr, *symVarSize, *varComment = nullptr;
-  uint64 vs;
+  PyObject *memAddr = nullptr;
+  PyObject *symVarSize = nullptr;
+  PyObject *varComment = nullptr;
+  __uint vs;
   std::string vc;
 
   /* Extract arguments */
-  PyArg_ParseTuple(args, "O|O|O", &memAddr, &symVarSize, &varComment);
+  PyArg_ParseTuple(args, "|OOO", &memAddr, &symVarSize, &varComment);
 
   if (varComment == nullptr)
     varComment = PyString_FromString("");
 
-  if (!PyLong_Check(memAddr) && !PyInt_Check(memAddr))
+  if (memAddr == nullptr || (!PyLong_Check(memAddr) && !PyInt_Check(memAddr)))
     return PyErr_Format(PyExc_TypeError, "convertMemToSymVar(): expected a memory address as first argument");
 
-  if (!PyLong_Check(symVarSize) && !PyInt_Check(symVarSize))
+  if (symVarSize == nullptr || (!PyLong_Check(symVarSize) && !PyInt_Check(symVarSize)))
     return PyErr_Format(PyExc_TypeError, "convertMemToSymVar(): expected a size as second argument");
+
+  if (PyLong_AsUint(symVarSize) == 0)
+    return PyErr_Format(PyExc_TypeError, "convertMemToSymVar(): The size must cannot be 0");
+
+  if (PyLong_AsUint(symVarSize) % BYTE_SIZE_BIT)
+    return PyErr_Format(PyExc_TypeError, "convertMemToSymVar(): The size must be a multiple of 8");
+
+  if (PyLong_AsUint(symVarSize) > DQWORD_SIZE_BIT)
+    return PyErr_Format(PyExc_TypeError, "convertMemToSymVar(): The size must be less than 128");
 
   if (!PyString_Check(varComment))
       return PyErr_Format(PyExc_TypeError, "convertMemToSymVar(): expected a comment (string) as third argument");
 
-  vs = PyLong_AsLong(symVarSize);
+  vs = PyLong_AsUint(symVarSize) / BYTE_SIZE_BIT;
   vc = PyString_AsString(varComment);
-  MemoryOperand mo(PyLong_AsLong(memAddr), vs);
+  MemoryOperand mo(PyLong_AsUint(memAddr), vs);
 
   return PySymbolicVariable(ap.convertMemToSymVar(mo, vs, vc));
 }
@@ -550,36 +698,89 @@ static PyObject *Triton_convertMemToSymVar(PyObject *self, PyObject *args) {
 
 static char Triton_convertRegToSymVar_doc[] = "Converts a register to a symbolic variable";
 static PyObject *Triton_convertRegToSymVar(PyObject *self, PyObject *args) {
-  PyObject *regId, *symVarSize, *varComment = nullptr;
-  uint64 vs;
+  PyObject *regId = nullptr;
+  PyObject *symVarSize = nullptr;
+  PyObject *varComment = nullptr;
+  __uint vs;
   std::string vc;
 
   /* Extract arguments */
-  PyArg_ParseTuple(args, "O|O|O", &regId, &symVarSize, &varComment);
+  PyArg_ParseTuple(args, "|OOO", &regId, &symVarSize, &varComment);
 
   if (varComment == nullptr)
     varComment = PyString_FromString("");
 
-  if (!PyLong_Check(regId) && !PyInt_Check(regId))
+  if (regId == nullptr || (!PyLong_Check(regId) && !PyInt_Check(regId)))
     return PyErr_Format(PyExc_TypeError, "convertRegToSymVar(): expected a IDREF.REG as first argument");
 
-  if (!PyLong_Check(symVarSize) && !PyInt_Check(symVarSize))
+  if (symVarSize == nullptr || (!PyLong_Check(symVarSize) && !PyInt_Check(symVarSize)))
     return PyErr_Format(PyExc_TypeError, "convertRegToSymVar(): expected a size as second argument");
+
+  if (PyLong_AsUint(symVarSize) == 0)
+    return PyErr_Format(PyExc_TypeError, "convertRegToSymVar(): The size must cannot be 0");
+
+  if (PyLong_AsUint(symVarSize) % BYTE_SIZE_BIT)
+    return PyErr_Format(PyExc_TypeError, "convertRegToSymVar(): The size must be a multiple of 8");
+
+  if (PyLong_AsUint(symVarSize) > DQWORD_SIZE_BIT)
+    return PyErr_Format(PyExc_TypeError, "convertRegToSymVar(): The size must be less than 128");
 
   if (!PyString_Check(varComment))
       return PyErr_Format(PyExc_TypeError, "convertRegToSymVar(): expected a comment (string) as third argument");
 
-  vs = PyLong_AsLong(symVarSize);
+  vs = PyLong_AsUint(symVarSize);
   vc = PyString_AsString(varComment);
-  RegisterOperand ro = createTmpReg(PyLong_AsLong(regId));
+  RegisterOperand ro = createTmpReg(PyLong_AsUint(regId));
 
   return PySymbolicVariable(ap.convertRegToSymVar(ro, vs, vc));
+}
+
+
+static char Triton_createSymExpr_doc[] = "Create a new symbolic expression";
+static PyObject *Triton_createSymExpr(PyObject *self, PyObject *args) {
+  SymbolicExpression *se = nullptr;
+  PyObject *symExpr = nullptr;
+  PyObject *symComment = nullptr;
+
+  /* Extract arguments */
+  PyArg_ParseTuple(args, "|OO", &symExpr, &symComment);
+
+  if (symComment == nullptr)
+    symComment = PyString_FromString("");
+
+  if (symExpr == nullptr || !PySmtAstNode_Check(symExpr))
+    return PyErr_Format(PyExc_TypeError, "createSymExpr(): expected a SmtAstNode as first argument");
+
+  if (!PyString_Check(symComment))
+      return PyErr_Format(PyExc_TypeError, "createSymExpr(): expected a comment (string) as second argument");
+
+  se = ap.createSE(PySmtAstNode_AsSmtAstNode(symExpr), PyString_AsString(symComment));
+  if (se == nullptr)
+    return PyErr_Format(PyExc_TypeError, "createSymExpr(): Cannot create the symbolic expression");
+
+  return PySymbolicExpression(se);
 }
 
 
 static char Triton_disableSnapshot_doc[] = "Disables the snapshot engine";
 static PyObject *Triton_disableSnapshot(PyObject *self, PyObject *noarg) {
   ap.disableSnapshot();
+  Py_INCREF(Py_None);
+  return Py_None;
+}
+
+
+static char Triton_disableSymEngine_doc[] = "Disables the symbolic engine";
+static PyObject *Triton_disableSymEngine(PyObject *self, PyObject *noarg) {
+  ap.disableSymEngine();
+  Py_INCREF(Py_None);
+  return Py_None;
+}
+
+
+static char Triton_enableSymEngine_doc[] = "Enables the symbolic engine";
+static PyObject *Triton_enableSymEngine(PyObject *self, PyObject *noarg) {
+  ap.enableSymEngine();
   Py_INCREF(Py_None);
   return Py_None;
 }
@@ -620,7 +821,7 @@ static PyObject *Triton_getMemSymbolicID(PyObject *self, PyObject *addr) {
   if (!PyLong_Check(addr) && !PyInt_Check(addr))
     return PyErr_Format(PyExc_TypeError, "getMemSymbolicID(): expected a memory address (integer) as argument");
 
-  MemoryOperand mem(PyLong_AsLong(addr), 1);
+  MemoryOperand mem(PyLong_AsUint(addr), 1);
   return Py_BuildValue("k", ap.getMemSymbolicID(mem));
 }
 
@@ -647,23 +848,23 @@ static PyObject *Triton_getModel(PyObject *self, PyObject *node) {
 
 static char Triton_getModels_doc[] = "Returns all models of the symbolic expression";
 static PyObject *Triton_getModels(PyObject *self, PyObject *args) {
-  PyObject                        *node = nullptr;
-  PyObject                        *limit;
+  PyObject                        *limit = nullptr;
   PyObject                        *modelsList;
+  PyObject                        *node = nullptr;
   std::vector<std::list<Smodel>>  models;
-  uint64                          limit_c = 0;
-  uint64                          modelsSize = 0;
+  __uint                          limit_c = 0;
+  __uint                          modelsSize = 0;
 
   /* Extract arguments */
-  PyArg_ParseTuple(args, "O|O", &node, &limit);
+  PyArg_ParseTuple(args, "|OO", &node, &limit);
 
   if (node == nullptr || !PySmtAstNode_Check(node))
     return PyErr_Format(PyExc_TypeError, "getModels(): expected a SmtAstNode as first argument");
 
-  if (!PyLong_Check(limit) && !PyInt_Check(limit))
+  if (limit == nullptr || (!PyLong_Check(limit) && !PyInt_Check(limit)))
     return PyErr_Format(PyExc_TypeError, "getModels(): expected a limit (integer) as second argument");
 
-  limit_c = PyLong_AsLong(limit);
+  limit_c = PyLong_AsUint(limit);
   if (limit_c == 0)
     return PyErr_Format(PyExc_TypeError, "getModels(): The limit must be greater than 0");
 
@@ -672,7 +873,7 @@ static PyObject *Triton_getModels(PyObject *self, PyObject *args) {
   modelsSize    = models.size();
   modelsList    = xPyList_New(modelsSize);
 
-  for (uint64 index = 0; index < modelsSize; index++){
+  for (__uint index = 0; index < modelsSize; index++){
     std::list<Smodel> model = models[index];
     std::list<Smodel>::iterator it;
     /* Craft the model dictionary */
@@ -690,8 +891,8 @@ static PyObject *Triton_getModels(PyObject *self, PyObject *args) {
 static char Triton_getPathConstraints_doc[] = "Returns the list of path constraints";
 static PyObject *Triton_getPathConstraints(PyObject *self, PyObject *noargs) {
   PyObject                        *ppc;
-  std::list<uint64>               pc;
-  std::list<uint64>::iterator     it;
+  std::list<__uint>               pc;
+  std::list<__uint>::iterator     it;
   Py_ssize_t                      size = 0;
 
   pc    = ap.getPathConstraints();
@@ -711,16 +912,13 @@ static PyObject *Triton_getPathConstraints(PyObject *self, PyObject *noargs) {
 static char Triton_getRegSymbolicID_doc[] = "Gets the symbolic register reference";
 static PyObject *Triton_getRegSymbolicID(PyObject *self, PyObject *reg) {
   RegisterOperand ro;
-  uint64 regId = 0;
+  __uint regId = 0;
 
   if (!PyLong_Check(reg) && !PyInt_Check(reg))
     return PyErr_Format(PyExc_TypeError, "getRegSymbolicID(): expected a register id (integer) as argument");
 
-  regId = PyLong_AsLong(reg);
-  if (regId >= ID_AF && regId <= ID_ZF)
-    ro = createTmpFlag(regId);
-  else
-    ro = createTmpReg(regId);
+  regId = PyLong_AsUint(reg);
+  ro = createTmpReg(regId);
 
   return Py_BuildValue("k", ap.getRegSymbolicID(ro));
 }
@@ -731,10 +929,16 @@ static PyObject *Triton_getRegs(PyObject *self, PyObject *noargs) {
   PyObject *regs = xPyDict_New();
 
   /* Build all Registers */
-  for (uint64 regId = ID_RAX; regId < ID_RFLAGS; regId++){
+  /* TODO_32Bits: something more sexy */
+  #if defined(__x86_64__) || defined(_M_X64)
+  for (__uint regId = ID_RAX; regId < ID_RFLAGS; regId++){
+  #endif
+  #if defined(__i386) || defined(_M_IX86)
+  for (__uint regId = ID_EAX; regId < ID_EFLAGS; regId++){
+  #endif
     PyObject *reg = xPyDict_New();
     RegisterOperand ro = createTmpReg(regId);
-    if (regId >= ID_XMM0 && regId <= ID_XMM15)
+    if (isSSERegId(regId))
       PyDict_SetItemString(reg, "concreteValue", uint128ToPyLongObject(ap.getSSERegisterValue(ro)));
     else
       PyDict_SetItemString(reg, "concreteValue", Py_BuildValue("k", ap.getRegisterValue(ro)));
@@ -743,7 +947,7 @@ static PyObject *Triton_getRegs(PyObject *self, PyObject *noargs) {
   }
 
   /* Build all Flags */
-  for (uint64 flagId = ID_AF; flagId <= ID_ZF; flagId++){
+  for (__uint flagId = ID_AF; flagId <= ID_ZF; flagId++){
     PyObject *flag = xPyDict_New();
     RegisterOperand fo = createTmpFlag(flagId);
     PyDict_SetItemString(flag, "concreteValue", Py_BuildValue("k", ap.getFlagValue(fo)));
@@ -758,23 +962,23 @@ static PyObject *Triton_getRegs(PyObject *self, PyObject *noargs) {
 static char Triton_getStats_doc[] = "Returns statistics of the execution";
 static PyObject *Triton_getStats(PyObject *self, PyObject *noargs) {
   PyObject *stats = xPyDict_New();
-  PyDict_SetItemString(stats, "branches",     PyLong_FromLong(ap.getNumberOfBranchesTaken()));
-  PyDict_SetItemString(stats, "expressions",  PyLong_FromLong(ap.getNumberOfExpressions()));
-  PyDict_SetItemString(stats, "time",         PyLong_FromLong(ap.getTimeOfExecution()));
-  PyDict_SetItemString(stats, "unknownExpr",  PyLong_FromLong(ap.getNumberOfUnknownInstruction()));
+  PyDict_SetItemString(stats, "branches",     PyLong_FromUint(ap.getNumberOfBranchesTaken()));
+  PyDict_SetItemString(stats, "expressions",  PyLong_FromUint(ap.getNumberOfExpressions()));
+  PyDict_SetItemString(stats, "time",         PyLong_FromUint(ap.getTimeOfExecution()));
+  PyDict_SetItemString(stats, "unknownExpr",  PyLong_FromUint(ap.getNumberOfUnknownInstruction()));
   return stats;
 }
 
 
 static char Triton_getSymExpr_doc[] = "Returns a SymbolicExpression class corresponding to the symbolic expression ID.";
 static PyObject *Triton_getSymExpr(PyObject *self, PyObject *id) {
-  uint64              exprId;
+  __uint              exprId;
   SymbolicExpression  *expr;
 
   if (!PyLong_Check(id) && !PyInt_Check(id))
     return PyErr_Format(PyExc_TypeError, "getSymExpr(): expected an id (integer) as argument");
 
-  exprId = PyLong_AsLong(id);
+  exprId = PyLong_AsUint(id);
   expr = ap.getExpressionFromId(exprId);
 
   if (expr == nullptr)
@@ -788,12 +992,12 @@ static char Triton_getSymExprs_doc[] = "Returns all SymbolicExpression class.";
 static PyObject *Triton_getSymExprs(PyObject *self, PyObject *noargs) {
   PyObject                          *ret;
   std::vector<SymbolicExpression *> exprs;
-  uint64                            numberOfExprs = 0;
+  __uint                            numberOfExprs = 0;
 
   exprs = ap.getExpressions();
   numberOfExprs = exprs.size();
   ret = xPyList_New(numberOfExprs);
-  for (uint64 index = 0; index < numberOfExprs; index++)
+  for (__uint index = 0; index < numberOfExprs; index++)
     PyList_SetItem(ret, index, PySymbolicExpression(exprs[index]));
 
   return ret;
@@ -808,7 +1012,7 @@ static PyObject *Triton_getSymVar(PyObject *self, PyObject *symVarPy) {
     return PyErr_Format(PyExc_TypeError, "getSymVar(): expected a symbolic variable ID or a symbolic variable name");
 
   if (PyLong_Check(symVarPy) || PyInt_Check(symVarPy))
-    symVar = ap.getSymVar(PyLong_AsLong(symVarPy));
+    symVar = ap.getSymVar(PyLong_AsUint(symVarPy));
   else
     symVar = ap.getSymVar(PyString_AsString(symVarPy));
 
@@ -827,7 +1031,7 @@ static PyObject *Triton_getSymVarSize(PyObject *self, PyObject *symVarPy) {
     return PyErr_Format(PyExc_TypeError, "getSymVarSize(): expected a symbolic variable ID or a symbolic variable name");
 
   if (PyLong_Check(symVarPy) || PyInt_Check(symVarPy))
-    symVar = ap.getSymVar(PyLong_AsLong(symVarPy));
+    symVar = ap.getSymVar(PyLong_AsUint(symVarPy));
   else
     symVar = ap.getSymVar(PyString_AsString(symVarPy));
 
@@ -862,8 +1066,8 @@ static PyObject *Triton_getTaintedExpressions(PyObject *self, PyObject *noarg) {
   PyObject                                  *ret;
   std::list<SymbolicExpression *>           exprs;
   std::list<SymbolicExpression *>::iterator it;
-  uint64                                    index = 0;
-  uint64                                    numberOfExprs = 0;
+  __uint                                    index = 0;
+  __uint                                    numberOfExprs = 0;
 
   exprs = ap.getTaintedExpressions();
   numberOfExprs = exprs.size();
@@ -882,7 +1086,7 @@ static PyObject *Triton_isMemTainted(PyObject *self, PyObject *mem) {
   if (!PyLong_Check(mem) && !PyInt_Check(mem))
     return PyErr_Format(PyExc_TypeError, "isMemTainted(): expected an address (integer) as argument");
 
-  MemoryOperand mo(PyInt_AsLong(mem), 1);
+  MemoryOperand mo(PyLong_AsUint(mem), 1);
   if (ap.isMemTainted(mo) == true)
     Py_RETURN_TRUE;
 
@@ -895,7 +1099,7 @@ static PyObject *Triton_isRegTainted(PyObject *self, PyObject *reg) {
   if (!PyLong_Check(reg) && !PyInt_Check(reg))
     return PyErr_Format(PyExc_TypeError, "isRegTainted(): expected a register id (integer) as argument");
 
-  RegisterOperand ro = createTmpReg(PyInt_AsLong(reg));
+  RegisterOperand ro = createTmpReg(PyLong_AsUint(reg));
   if (ap.isRegTainted(ro) == true)
     Py_RETURN_TRUE;
 
@@ -911,9 +1115,17 @@ static PyObject *Triton_isSnapshotEnabled(PyObject *self, PyObject *noarg) {
 }
 
 
+static char Triton_isSymEngineEnabled_doc[] = "Returns true if the symbolic engine is enabled";
+static PyObject *Triton_isSymEngineEnabled(PyObject *self, PyObject *noarg) {
+  if (ap.isSymEngineEnabled() == true)
+    Py_RETURN_TRUE;
+  Py_RETURN_FALSE;
+}
+
+
 static char Triton_restoreSnapshot_doc[] = "Restores the last snapshot";
 static PyObject *Triton_restoreSnapshot(PyObject *self, PyObject *noarg) {
-  ap.restoreSnapshot();
+  ap.setSnapshotRestoreFlag(true);
   Py_INCREF(Py_None);
   return Py_None;
 }
@@ -924,7 +1136,7 @@ static PyObject *Triton_taintMem(PyObject *self, PyObject *mem) {
   if (!PyLong_Check(mem) && !PyInt_Check(mem))
     return PyErr_Format(PyExc_TypeError, "TaintMem(): expected a memory address (integer) as argument");
 
-  MemoryOperand mo(PyInt_AsLong(mem), 1);
+  MemoryOperand mo(PyLong_AsUint(mem), 1);
   ap.taintMem(mo);
   Py_INCREF(Py_None);
   return Py_None;
@@ -933,19 +1145,19 @@ static PyObject *Triton_taintMem(PyObject *self, PyObject *mem) {
 
 static char Triton_taintMemFromAddr_doc[] = "Taints specific memory address from an address";
 static PyObject *Triton_taintMemFromAddr(PyObject *self, PyObject *args) {
-  PyObject *addr;
-  PyObject *mems;
-  std::list<uint64> memsList;
+  PyObject *addr = nullptr;
+  PyObject *mems = nullptr;
+  std::list<__uint> memsList;
 
   /* Extract arguments */
-  PyArg_ParseTuple(args, "O|O", &addr, &mems);
+  PyArg_ParseTuple(args, "|OO", &addr, &mems);
 
   /* Check if the first arg (addr) is a integer */
-  if (!PyLong_Check(addr) && !PyInt_Check(addr))
+  if (addr == nullptr || (!PyLong_Check(addr) && !PyInt_Check(addr)))
     return PyErr_Format(PyExc_TypeError, "taintMemFromAddr(): expected an address as first argument");
 
   /* Check if the second arg (mems) is a list */
-  if (!PyList_Check(mems))
+  if (mems == nullptr || !PyList_Check(mems))
     return PyErr_Format(PyExc_TypeError, "taintMemFromAddr(): expected a list as second argument");
 
   /* Check if the mems list contains only integer item and craft a std::list */
@@ -955,11 +1167,11 @@ static PyObject *Triton_taintMemFromAddr(PyObject *self, PyObject *args) {
     if (!PyLong_Check(item) && !PyInt_Check(item))
       return PyErr_Format(PyExc_TypeError, "taintMemFromAddr(): The second argument must be a list of addresses (integer)");
 
-    memsList.push_back(PyLong_AsLong(item));
+    memsList.push_back(PyLong_AsUint(item));
   }
 
   /* Update taint configuration */
-  PyTritonOptions::taintMemFromAddr.insert(std::pair<uint64, std::list<uint64>>(PyLong_AsLong(addr), memsList));
+  PyTritonOptions::taintMemFromAddr.insert(std::pair<__uint, std::list<__uint>>(PyLong_AsUint(addr), memsList));
   Py_INCREF(Py_None);
   return Py_None;
 }
@@ -970,7 +1182,7 @@ static PyObject *Triton_taintReg(PyObject *self, PyObject *reg) {
   if (!PyLong_Check(reg) && !PyInt_Check(reg))
     return PyErr_Format(PyExc_TypeError, "taintReg(): expected a register id (integer) as argument");
 
-  RegisterOperand ro = createTmpReg(PyInt_AsLong(reg));
+  RegisterOperand ro = createTmpReg(PyLong_AsUint(reg));
   ap.taintReg(ro);
   Py_INCREF(Py_None);
   return Py_None;
@@ -979,19 +1191,19 @@ static PyObject *Triton_taintReg(PyObject *self, PyObject *reg) {
 
 static char Triton_taintRegFromAddr_doc[] = "Taints specific registers from an address";
 static PyObject *Triton_taintRegFromAddr(PyObject *self, PyObject *args) {
-  PyObject *addr;
-  PyObject *regs;
-  std::list<uint64> regsList;
+  PyObject *addr = nullptr;
+  PyObject *regs = nullptr;
+  std::list<__uint> regsList;
 
   /* Extract arguments */
-  PyArg_ParseTuple(args, "O|O", &addr, &regs);
+  PyArg_ParseTuple(args, "|OO", &addr, &regs);
 
   /* Check if the first arg (addr) is a integer */
-  if (!PyLong_Check(addr) && !PyInt_Check(addr))
+  if (addr == nullptr || (!PyLong_Check(addr) && !PyInt_Check(addr)))
     return PyErr_Format(PyExc_TypeError, "taintRegFromAddr(): expected an address as first argument");
 
   /* Check if the second arg (regs) is a list */
-  if (!PyList_Check(regs))
+  if (regs == nullptr || !PyList_Check(regs))
     return PyErr_Format(PyExc_TypeError, "taintRegFromAddr(): expected a list as second argument");
 
   /* Check if the regs list contains only integer item and craft a std::list */
@@ -1001,11 +1213,11 @@ static PyObject *Triton_taintRegFromAddr(PyObject *self, PyObject *args) {
     if (!PyLong_Check(item) && !PyInt_Check(item))
       return PyErr_Format(PyExc_TypeError, "taintRegFromAddr(): The second argument must be a list of register id (integer)");
 
-    regsList.push_back(PyLong_AsLong(item));
+    regsList.push_back(PyLong_AsUint(item));
   }
 
   /* Update taint configuration */
-  PyTritonOptions::taintRegFromAddr.insert(std::pair<uint64, std::list<uint64>>(PyLong_AsLong(addr), regsList));
+  PyTritonOptions::taintRegFromAddr.insert(std::pair<__uint, std::list<__uint>>(PyLong_AsUint(addr), regsList));
   Py_INCREF(Py_None);
   return Py_None;
 }
@@ -1024,7 +1236,7 @@ static PyObject *Triton_untaintMem(PyObject *self, PyObject *mem) {
   if (!PyLong_Check(mem) && !PyInt_Check(mem))
     return PyErr_Format(PyExc_TypeError, "untaintMem(): expected a memory address (integer) as argument");
 
-  MemoryOperand mo(PyInt_AsLong(mem), 1);
+  MemoryOperand mo(PyLong_AsUint(mem), 1);
   ap.untaintMem(mo);
   Py_INCREF(Py_None);
   return Py_None;
@@ -1033,19 +1245,19 @@ static PyObject *Triton_untaintMem(PyObject *self, PyObject *mem) {
 
 static char Triton_untaintMemFromAddr_doc[] = "Untaints specific memory addresses from an address";
 static PyObject *Triton_untaintMemFromAddr(PyObject *self, PyObject *args) {
-  PyObject *addr;
-  PyObject *mems;
-  std::list<uint64> memsList;
+  PyObject *addr = nullptr;
+  PyObject *mems = nullptr;
+  std::list<__uint> memsList;
 
   /* Extract arguments */
-  PyArg_ParseTuple(args, "O|O", &addr, &mems);
+  PyArg_ParseTuple(args, "|OO", &addr, &mems);
 
   /* Check if the first arg (addr) is a integer */
-  if (!PyLong_Check(addr) && !PyInt_Check(addr))
+  if (addr == nullptr || (!PyLong_Check(addr) && !PyInt_Check(addr)))
     return PyErr_Format(PyExc_TypeError, "untaintMemFromAddr(): expected an address as first argument");
 
   /* Check if the second arg (mems) is a list */
-  if (!PyList_Check(mems))
+  if (mems == nullptr || !PyList_Check(mems))
     return PyErr_Format(PyExc_TypeError, "untaintMemFromAddr(): expected a list as second argument");
 
   /* Check if the mems list contains only integer item and craft a std::list */
@@ -1055,11 +1267,11 @@ static PyObject *Triton_untaintMemFromAddr(PyObject *self, PyObject *args) {
     if (!PyLong_Check(item) && !PyInt_Check(item))
       return PyErr_Format(PyExc_TypeError, "untaintMemFromAddr(): The second argument must be a list of register id (integer)");
 
-    memsList.push_back(PyLong_AsLong(item));
+    memsList.push_back(PyLong_AsUint(item));
   }
 
   /* Update taint configuration */
-  PyTritonOptions::untaintMemFromAddr.insert(std::pair<uint64, std::list<uint64>>(PyLong_AsLong(addr), memsList));
+  PyTritonOptions::untaintMemFromAddr.insert(std::pair<__uint, std::list<__uint>>(PyLong_AsUint(addr), memsList));
 
   Py_INCREF(Py_None);
   return Py_None;
@@ -1072,7 +1284,7 @@ static PyObject *Triton_untaintReg(PyObject *self, PyObject *reg) {
   if (!PyLong_Check(reg) && !PyInt_Check(reg))
     return PyErr_Format(PyExc_TypeError, "untaintReg(): expected a register id (integer) as argument");
 
-  RegisterOperand ro = createTmpReg(PyInt_AsLong(reg));
+  RegisterOperand ro = createTmpReg(PyLong_AsUint(reg));
   ap.untaintReg(ro);
   Py_INCREF(Py_None);
   return Py_None;
@@ -1081,19 +1293,19 @@ static PyObject *Triton_untaintReg(PyObject *self, PyObject *reg) {
 
 static char Triton_untaintRegFromAddr_doc[] = "Untaints specific registers from an address";
 static PyObject *Triton_untaintRegFromAddr(PyObject *self, PyObject *args) {
-  PyObject *addr;
-  PyObject *regs;
-  std::list<uint64> regsList;
+  PyObject *addr = nullptr;
+  PyObject *regs = nullptr;
+  std::list<__uint> regsList;
 
   /* Extract arguments */
-  PyArg_ParseTuple(args, "O|O", &addr, &regs);
+  PyArg_ParseTuple(args, "|OO", &addr, &regs);
 
   /* Check if the first arg (addr) is a integer */
-  if (!PyLong_Check(addr) && !PyInt_Check(addr))
+  if (addr == nullptr || (!PyLong_Check(addr) && !PyInt_Check(addr)))
     return PyErr_Format(PyExc_TypeError, "untaintRegFromAddr(): expected an address as first argument");
 
   /* Check if the second arg (regs) is a list */
-  if (!PyList_Check(regs))
+  if (regs == nullptr || !PyList_Check(regs))
     return PyErr_Format(PyExc_TypeError, "untaintRegFromAddr(): expected a list as second argument");
 
   /* Check if the regs list contains only integer item and craft a std::list */
@@ -1103,11 +1315,11 @@ static PyObject *Triton_untaintRegFromAddr(PyObject *self, PyObject *args) {
     if (!PyLong_Check(item) && !PyInt_Check(item))
       return PyErr_Format(PyExc_TypeError, "untaintRegFromAddr(): The second argument must be a list of register id (integer)");
 
-    regsList.push_back(PyLong_AsLong(item));
+    regsList.push_back(PyLong_AsUint(item));
   }
 
   /* Update taint configuration */
-  PyTritonOptions::untaintRegFromAddr.insert(std::pair<uint64, std::list<uint64>>(PyLong_AsLong(addr), regsList));
+  PyTritonOptions::untaintRegFromAddr.insert(std::pair<__uint, std::list<__uint>>(PyLong_AsUint(addr), regsList));
 
   Py_INCREF(Py_None);
   return Py_None;
@@ -1120,6 +1332,7 @@ PyMethodDef tritonCallbacks[] = {
   {"addCallback",               Triton_addCallback,               METH_VARARGS, Triton_addCallback_doc},
   {"checkReadAccess",           Triton_checkReadAccess,           METH_O,       Triton_checkReadAccess_doc},
   {"checkWriteAccess",          Triton_checkWriteAccess,          METH_O,       Triton_checkWriteAccess_doc},
+  {"detachProcess",             Triton_detachProcess,             METH_NOARGS,  Triton_detachProcess_doc},
   {"getFlagValue",              Triton_getFlagValue,              METH_O,       Triton_getFlagValue_doc},
   {"getMemValue",               Triton_getMemValue,               METH_VARARGS, Triton_getMemValue_doc},
   {"getRegName",                Triton_getRegName,                METH_O,       Triton_getRegName_doc},
@@ -1129,8 +1342,13 @@ PyMethodDef tritonCallbacks[] = {
   {"getSyscallReturn",          Triton_getSyscallReturn,          METH_O,       Triton_getSyscallReturn_doc},
   {"opcodeToString",            Triton_opcodeToString,            METH_O,       Triton_opcodeToString_doc},
   {"runProgram",                Triton_runProgram,                METH_NOARGS,  Triton_runProgram_doc},
+  {"setATTSyntax",              Triton_setATTSyntax,              METH_NOARGS,  Triton_setATTSyntax_doc},
+  {"setIntelSyntax",            Triton_setIntelSyntax,            METH_NOARGS,  Triton_setIntelSyntax_doc},
+  {"setXEDSyntax",              Triton_setXEDSyntax,              METH_NOARGS,  Triton_setXEDSyntax_doc},
   {"setMemValue",               Triton_setMemValue,               METH_VARARGS, Triton_setMemValue_doc},
   {"setRegValue",               Triton_setRegValue,               METH_VARARGS, Triton_setRegValue_doc},
+  {"setupImageBlacklist",       Triton_setupImageBlacklist,       METH_O,       Triton_setupImageBlacklist_doc},
+  {"setupImageWhitelist",       Triton_setupImageWhitelist,       METH_O,       Triton_setupImageWhitelist_doc},
   {"startAnalysisFromAddr",     Triton_startAnalysisFromAddr,     METH_O,       Triton_startAnalysisFromAddr_doc},
   {"startAnalysisFromOffset",   Triton_startAnalysisFromOffset,   METH_O,       Triton_startAnalysisFromOffset_doc},
   {"startAnalysisFromSymbol",   Triton_startAnalysisFromSymbol,   METH_O,       Triton_startAnalysisFromSymbol_doc},
@@ -1138,6 +1356,7 @@ PyMethodDef tritonCallbacks[] = {
   {"stopAnalysisFromOffset",    Triton_stopAnalysisFromOffset,    METH_O,       Triton_stopAnalysisFromOffset_doc},
   {"syscallToString",           Triton_syscallToString,           METH_VARARGS, Triton_syscallToString_doc},
   #ifndef LIGHT_VERSION
+  {"assignSymExprToReg",        Triton_assignSymExprToReg,        METH_VARARGS, Triton_assignSymExprToReg_doc},
   {"concretizeAllMem",          Triton_concretizeAllMem,          METH_NOARGS,  Triton_concretizeAllMem_doc},
   {"concretizeAllReg",          Triton_concretizeAllReg,          METH_NOARGS,  Triton_concretizeAllReg_doc},
   {"concretizeMem",             Triton_concretizeMem,             METH_O,       Triton_concretizeMem_doc},
@@ -1145,7 +1364,10 @@ PyMethodDef tritonCallbacks[] = {
   {"convertExprToSymVar",       Triton_convertExprToSymVar,       METH_VARARGS, Triton_convertExprToSymVar_doc},
   {"convertMemToSymVar",        Triton_convertMemToSymVar,        METH_VARARGS, Triton_convertMemToSymVar_doc},
   {"convertRegToSymVar",        Triton_convertRegToSymVar,        METH_VARARGS, Triton_convertRegToSymVar_doc},
+  {"createSymExpr",             Triton_createSymExpr,             METH_VARARGS, Triton_createSymExpr_doc},
   {"disableSnapshot",           Triton_disableSnapshot,           METH_NOARGS,  Triton_disableSnapshot_doc},
+  {"disableSymEngine",          Triton_disableSymEngine,          METH_NOARGS,  Triton_disableSymEngine_doc},
+  {"enableSymEngine",           Triton_enableSymEngine,           METH_NOARGS,  Triton_enableSymEngine_doc},
   {"evaluateAST",               Triton_evaluateAST,               METH_O,       Triton_evaluateAST_doc},
   {"getFullExpression",         Triton_getFullExpression,         METH_O,       Triton_getFullExpression_doc},
   {"getMemSymbolicID",          Triton_getMemSymbolicID,          METH_O,       Triton_getMemSymbolicID_doc},
@@ -1164,6 +1386,7 @@ PyMethodDef tritonCallbacks[] = {
   {"isMemTainted",              Triton_isMemTainted,              METH_O,       Triton_isMemTainted_doc},
   {"isRegTainted",              Triton_isRegTainted,              METH_O,       Triton_isRegTainted_doc},
   {"isSnapshotEnabled",         Triton_isSnapshotEnabled,         METH_NOARGS,  Triton_isSnapshotEnabled_doc},
+  {"isSymEngineEnabled",        Triton_isSymEngineEnabled,        METH_NOARGS,  Triton_isSymEngineEnabled_doc},
   {"restoreSnapshot",           Triton_restoreSnapshot,           METH_NOARGS,  Triton_restoreSnapshot_doc},
   {"taintMem",                  Triton_taintMem,                  METH_O,       Triton_taintMem_doc},
   {"taintMemFromAddr",          Triton_taintMemFromAddr,          METH_VARARGS, Triton_taintMemFromAddr_doc},
@@ -1177,5 +1400,4 @@ PyMethodDef tritonCallbacks[] = {
   #endif
   {nullptr,                     nullptr,                          0,            nullptr}
 };
-
 

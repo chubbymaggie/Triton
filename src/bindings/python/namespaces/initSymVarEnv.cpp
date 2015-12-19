@@ -13,9 +13,9 @@
 
 
 void initSymVarEnv(PyObject *idSymVarClassDict) {
-  PyDict_SetItemString(idSymVarClassDict, "MEM", PyInt_FromLong(SymVar::MEM));
-  PyDict_SetItemString(idSymVarClassDict, "REG", PyInt_FromLong(SymVar::REG));
-  PyDict_SetItemString(idSymVarClassDict, "UNDEF", PyInt_FromLong(SymVar::UNDEF));
+  PyDict_SetItemString(idSymVarClassDict, "MEM", PyLong_FromUint(SymVar::MEM));
+  PyDict_SetItemString(idSymVarClassDict, "REG", PyLong_FromUint(SymVar::REG));
+  PyDict_SetItemString(idSymVarClassDict, "UNDEF", PyLong_FromUint(SymVar::UNDEF));
 }
 
 #endif

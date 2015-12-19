@@ -11,7 +11,10 @@
 #include <python2.7/Python.h>
 
 uint128   PyLongObjectToUint128(PyObject *obj);
-PyObject      *uint128ToPyLongObject(uint128 value);
-PyObject      *uint512ToPyLongObject(uint512 value);
+PyObject  *uint128ToPyLongObject(uint128 value);
+PyObject  *uint512ToPyLongObject(uint512 value);
+
+#define PyLong_AsUint     PyLong_AsLongLong
+#define PyLong_FromUint   PyLong_FromLongLong
 
 #endif     /* !PYTHONUTILS_H */

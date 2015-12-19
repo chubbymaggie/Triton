@@ -16,22 +16,22 @@
 #include <SymbolicExpression.h>
 
 
-LeaIRBuilder::LeaIRBuilder(uint64 address, const std::string &disassembly):
+LeaIRBuilder::LeaIRBuilder(__uint address, const std::string &disassembly):
   BaseIRBuilder(address, disassembly) {
 }
 
 
-void LeaIRBuilder::regImm(AnalysisProcessor &ap, Inst &inst) const {
+void LeaIRBuilder::regImm(Inst &inst) const {
   TwoOperandsTemplate::stop(this->disas);
 }
 
 
-void LeaIRBuilder::regReg(AnalysisProcessor &ap, Inst &inst) const {
+void LeaIRBuilder::regReg(Inst &inst) const {
   TwoOperandsTemplate::stop(this->disas);
 }
 
 
-void LeaIRBuilder::regMem(AnalysisProcessor &ap, Inst &inst) const {
+void LeaIRBuilder::regMem(Inst &inst) const {
   SymbolicExpression *se;
   smt2lib::smtAstAbstractNode *expr, *dis2e, *base2e, *index2e, *scale2e;
   auto reg = this->operands[0].getReg();
@@ -44,25 +44,25 @@ void LeaIRBuilder::regMem(AnalysisProcessor &ap, Inst &inst) const {
   /* Base register */
   if (baseReg.getTritonRegId()) {
     /* If the base register is RIP, we must use nextAddress */
-    if (baseReg.getTritonRegId() == ID_RIP)
-      base2e = smt2lib::bv(this->nextAddress, regSize * REG_SIZE);
+    if (baseReg.getTritonRegId() == ID_IP)
+      base2e = smt2lib::bv(this->nextAddress, regSize * BYTE_SIZE_BIT);
     else
       base2e = ap.buildSymbolicRegOperand(baseReg, regSize);
   }
   else
-    base2e = smt2lib::bv(0, regSize * REG_SIZE);
+    base2e = smt2lib::bv(0, regSize * BYTE_SIZE_BIT);
 
   /* Index register if it exists */
   if (indexReg.getTritonRegId())
     index2e = ap.buildSymbolicRegOperand(indexReg, regSize);
   else
-    index2e = smt2lib::bv(0, regSize * REG_SIZE);
+    index2e = smt2lib::bv(0, regSize * BYTE_SIZE_BIT);
 
   /* Displacement */
-  dis2e = smt2lib::bv(displacement, regSize * REG_SIZE);
+  dis2e = smt2lib::bv(displacement, regSize * BYTE_SIZE_BIT);
 
   /* Scale */
-  scale2e = smt2lib::bv(memoryScale, regSize * REG_SIZE);
+  scale2e = smt2lib::bv(memoryScale, regSize * BYTE_SIZE_BIT);
 
   /* final SMT expression */
   /* Effective address = Displacement + BaseReg + IndexReg * Scale */
@@ -80,25 +80,25 @@ void LeaIRBuilder::regMem(AnalysisProcessor &ap, Inst &inst) const {
 }
 
 
-void LeaIRBuilder::memImm(AnalysisProcessor &ap, Inst &inst) const {
+void LeaIRBuilder::memImm(Inst &inst) const {
   TwoOperandsTemplate::stop(this->disas);
 }
 
 
-void LeaIRBuilder::memReg(AnalysisProcessor &ap, Inst &inst) const {
+void LeaIRBuilder::memReg(Inst &inst) const {
   TwoOperandsTemplate::stop(this->disas);
 }
 
 
-Inst *LeaIRBuilder::process(AnalysisProcessor &ap) const {
+Inst *LeaIRBuilder::process(void) const {
   this->checkSetup();
 
   Inst *inst = new Inst(ap.getThreadID(), this->address, this->disas);
 
   try {
-    this->templateMethod(ap, *inst, this->operands, "LEA");
+    this->templateMethod(*inst, this->operands, "LEA");
+    ControlFlow::rip(*inst, this->nextAddress);
     ap.incNumberOfExpressions(inst->numberOfExpressions()); /* Used for statistics */
-    ControlFlow::rip(*inst, ap, this->nextAddress);
   }
   catch (std::exception &e) {
     delete inst;

@@ -6,6 +6,7 @@
 
 #ifndef LIGHT_VERSION
 
+#include <SMT2Lib.h>
 #include <TritonPyObject.h>
 #include <xPyFunc.h>
 
@@ -15,7 +16,11 @@
  * - getAst() : Returns the AST node of the expression
  * - getComment() : Returns the comment of the expression
  * - getId() : Returns the id of the expression
- * - isTainted (): Returns true of false if the expression is tainted
+ * - getKind() : Returns the kind of the expression
+ * - getNewAst() : Returns a duplicated AST node of the expression
+ * - isMem() : Returns true if the expression is assigned to a memory
+ * - isReg() : Returns true if the expression is assigned to a register
+ * - isTainted() : Returns true if the expression is tainted
  */
 
 
@@ -48,6 +53,37 @@ static PyObject *SymbolicExpression_getId(PyObject *self, PyObject *noarg) {
 }
 
 
+static char SymbolicExpression_getKind_doc[] = "Returns the kind of the expression";
+static PyObject *SymbolicExpression_getKind(PyObject *self, PyObject *noarg) {
+  SymbolicExpression *expression = PySymbolicExpression_AsSymbolicExpression(self);
+  return Py_BuildValue("k", expression->getKind());
+}
+
+
+static char SymbolicExpression_getNewAst_doc[] = "Returns a duplicated AST node of the expression";
+static PyObject *SymbolicExpression_getNewAst(PyObject *self, PyObject *noarg) {
+  SymbolicExpression *expression = PySymbolicExpression_AsSymbolicExpression(self);
+  return PySmtAstNode(smt2lib::newInstance(expression->getExpression()));
+}
+
+
+static char SymbolicExpression_isReg_doc[] = "Returns true if the orgin's expression is a register";
+static PyObject *SymbolicExpression_isReg(PyObject *self, PyObject *noarg) {
+  SymbolicExpression *expression = PySymbolicExpression_AsSymbolicExpression(self);
+  if (expression->isReg() == true)
+    Py_RETURN_TRUE;
+  Py_RETURN_FALSE;
+}
+
+
+static char SymbolicExpression_isMem_doc[] = "Returns true if the orgin's expression is a memory";
+static PyObject *SymbolicExpression_isMem(PyObject *self, PyObject *noarg) {
+  SymbolicExpression *expression = PySymbolicExpression_AsSymbolicExpression(self);
+  if (expression->isMem() == true)
+    Py_RETURN_TRUE;
+  Py_RETURN_FALSE;
+}
+
 
 static char SymbolicExpression_isTainted_doc[] = "Returns true if the expression is tainted";
 static PyObject *SymbolicExpression_isTainted(PyObject *self, PyObject *noarg) {
@@ -56,6 +92,20 @@ static PyObject *SymbolicExpression_isTainted(PyObject *self, PyObject *noarg) {
     Py_RETURN_TRUE;
   Py_RETURN_FALSE;
 }
+
+
+static char SymbolicExpression_setAst_doc[] = "Set a new AST of the expression";
+static PyObject *SymbolicExpression_setAst(PyObject *self, PyObject *node) {
+  smt2lib::smtAstAbstractNode *src;
+
+  if (!PySmtAstNode_Check(node))
+    return PyErr_Format(PyExc_TypeError, "setAst(): expected a SmtAstNode as argument");
+
+  src = PySmtAstNode_AsSmtAstNode(node);
+  PySymbolicExpression_AsSymbolicExpression(self)->setExpression(src);
+  Py_RETURN_TRUE;
+}
+
 
 
 static PyObject *SymbolicExpression_str(SymbolicExpression_Object *obj) {
@@ -69,7 +119,12 @@ PyMethodDef SymbolicExpression_callbacks[] = {
   {"getAst",      SymbolicExpression_getAst,      METH_NOARGS,   SymbolicExpression_getAst_doc},
   {"getComment",  SymbolicExpression_getComment,  METH_NOARGS,   SymbolicExpression_getComment_doc},
   {"getId",       SymbolicExpression_getId,       METH_NOARGS,   SymbolicExpression_getId_doc},
+  {"getKind",     SymbolicExpression_getKind,     METH_NOARGS,   SymbolicExpression_getKind_doc},
+  {"getNewAst",   SymbolicExpression_getNewAst,   METH_NOARGS,   SymbolicExpression_getNewAst_doc},
+  {"isMem",       SymbolicExpression_isMem,       METH_NOARGS,   SymbolicExpression_isMem_doc},
+  {"isReg",       SymbolicExpression_isReg,       METH_NOARGS,   SymbolicExpression_isReg_doc},
   {"isTainted",   SymbolicExpression_isTainted,   METH_NOARGS,   SymbolicExpression_isTainted_doc},
+  {"setAst",      SymbolicExpression_setAst,      METH_O,        SymbolicExpression_setAst_doc},
   {nullptr,       nullptr,                        0,             nullptr}
 };
 

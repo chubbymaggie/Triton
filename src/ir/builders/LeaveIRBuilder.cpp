@@ -16,19 +16,19 @@
 #include <SymbolicExpression.h>
 
 
-LeaveIRBuilder::LeaveIRBuilder(uint64 address, const std::string &disassembly):
+LeaveIRBuilder::LeaveIRBuilder(__uint address, const std::string &disassembly):
   BaseIRBuilder(address, disassembly) {
 }
 
 
-static SymbolicExpression *alignStack(Inst &inst, AnalysisProcessor &ap, uint32 memSize)
+static SymbolicExpression *alignStack(Inst &inst, uint32 memSize)
 {
   SymbolicExpression *se;
   smt2lib::smtAstAbstractNode *expr, *op1, *op2;
 
   /* Create the SMT semantic */
   op1 = ap.buildSymbolicRegOperand(ID_TMP_RSP, REG_SIZE);
-  op2 = smt2lib::bv(memSize, memSize * REG_SIZE);
+  op2 = smt2lib::bv(memSize, memSize * BYTE_SIZE_BIT);
 
   expr = smt2lib::bvadd(op1, op2);
 
@@ -41,7 +41,7 @@ static SymbolicExpression *alignStack(Inst &inst, AnalysisProcessor &ap, uint32 
   return se;
 }
 
-void LeaveIRBuilder::none(AnalysisProcessor &ap, Inst &inst) const {
+void LeaveIRBuilder::none(Inst &inst) const {
   SymbolicExpression *se1, *se2;
   smt2lib::smtAstAbstractNode *expr1, *expr2;
   auto mem = this->operands[0].getMem(); // The src memory read
@@ -68,19 +68,19 @@ void LeaveIRBuilder::none(AnalysisProcessor &ap, Inst &inst) const {
   // RBP = Pop(); ---------------------------
 
   /* Add the symbolic expression to the current inst */
-  alignStack(inst, ap, memSize);
+  alignStack(inst, memSize);
 }
 
 
-Inst *LeaveIRBuilder::process(AnalysisProcessor &ap) const {
+Inst *LeaveIRBuilder::process(void) const {
   this->checkSetup();
 
   Inst *inst = new Inst(ap.getThreadID(), this->address, this->disas);
 
   try {
-    this->templateMethod(ap, *inst, this->operands, "LEAVE");
+    this->templateMethod(*inst, this->operands, "LEAVE");
+    ControlFlow::rip(*inst, this->nextAddress);
     ap.incNumberOfExpressions(inst->numberOfExpressions()); /* Used for statistics */
-    ControlFlow::rip(*inst, ap, this->nextAddress);
   }
   catch (std::exception &e) {
     delete inst;

@@ -16,12 +16,12 @@
 #include <SymbolicExpression.h>
 
 
-RcrIRBuilder::RcrIRBuilder(uint64 address, const std::string &disassembly):
+RcrIRBuilder::RcrIRBuilder(__uint address, const std::string &disassembly):
   BaseIRBuilder(address, disassembly) {
 }
 
 
-void RcrIRBuilder::regImm(AnalysisProcessor &ap, Inst &inst) const {
+void RcrIRBuilder::regImm(Inst &inst) const {
   SymbolicExpression *se1, *se2;
   smt2lib::smtAstAbstractNode *expr, *op1, *op2, *cf, *res;
   auto reg = this->operands[0].getReg();
@@ -50,7 +50,7 @@ void RcrIRBuilder::regImm(AnalysisProcessor &ap, Inst &inst) const {
   ap.assignmentSpreadTaintExprReg(se1, reg);
 
   /* Result expression */
-  res = smt2lib::extract((regSize * REG_SIZE) - 1, 0, expr);
+  res = smt2lib::extract((regSize * BYTE_SIZE_BIT) - 1, 0, expr);
 
   /* Create the symbolic expression for the result */
   se2 = ap.createRegSE(inst, res, reg, regSize);
@@ -59,12 +59,12 @@ void RcrIRBuilder::regImm(AnalysisProcessor &ap, Inst &inst) const {
   ap.aluSpreadTaintRegReg(se2, reg, reg);
 
   /* Add the symbolic flags expression to the current inst */
-  EflagsBuilder::cfRcl(inst, se1, ap, regSize, op2); /* Same as RCL */
-  EflagsBuilder::ofRor(inst, se2, ap, regSize, op2); /* Same as ROR */
+  EflagsBuilder::cfRcl(inst, se1, reg, op2); /* Same as RCL */
+  EflagsBuilder::ofRor(inst, se2, reg, op2); /* Same as ROR */
 }
 
 
-void RcrIRBuilder::regReg(AnalysisProcessor &ap, Inst &inst) const {
+void RcrIRBuilder::regReg(Inst &inst) const {
   SymbolicExpression *se1, *se2;
   smt2lib::smtAstAbstractNode *expr, *op1, *op2, *cf, *res;
   auto reg1 = this->operands[0].getReg();
@@ -92,7 +92,7 @@ void RcrIRBuilder::regReg(AnalysisProcessor &ap, Inst &inst) const {
   ap.assignmentSpreadTaintExprReg(se1, reg1);
 
   /* Result expression */
-  res = smt2lib::extract((regSize1 * REG_SIZE) - 1, 0, expr);
+  res = smt2lib::extract((regSize1 * BYTE_SIZE_BIT) - 1, 0, expr);
 
   /* Create the symbolic expression */
   se2 = ap.createRegSE(inst, res, reg1, regSize1);
@@ -101,17 +101,17 @@ void RcrIRBuilder::regReg(AnalysisProcessor &ap, Inst &inst) const {
   ap.aluSpreadTaintRegReg(se2, reg1, reg1);
 
   /* Add the symbolic flags expression to the current inst */
-  EflagsBuilder::cfRcl(inst, se1, ap, regSize1, op2); /* Same as RCL */
-  EflagsBuilder::ofRor(inst, se2, ap, regSize1, op2); /* Same as ROR */
+  EflagsBuilder::cfRcl(inst, se1, reg1, op2); /* Same as RCL */
+  EflagsBuilder::ofRor(inst, se2, reg1, op2); /* Same as ROR */
 }
 
 
-void RcrIRBuilder::regMem(AnalysisProcessor &ap, Inst &inst) const {
+void RcrIRBuilder::regMem(Inst &inst) const {
   TwoOperandsTemplate::stop(this->disas);
 }
 
 
-void RcrIRBuilder::memImm(AnalysisProcessor &ap, Inst &inst) const {
+void RcrIRBuilder::memImm(Inst &inst) const {
   SymbolicExpression *se1, *se2;
   smt2lib::smtAstAbstractNode *expr, *op1, *op2, *cf, *res;
   auto memSize = this->operands[0].getMem().getSize();
@@ -140,7 +140,7 @@ void RcrIRBuilder::memImm(AnalysisProcessor &ap, Inst &inst) const {
   ap.assignmentSpreadTaintExprMem(se1, mem, memSize);
 
   /* Result expression */
-  res = smt2lib::extract((memSize * REG_SIZE) - 1, 0, expr);
+  res = smt2lib::extract((memSize * BYTE_SIZE_BIT) - 1, 0, expr);
 
   /* Create the symbolic expression */
   se2 = ap.createMemSE(inst, res, mem, memSize);
@@ -149,12 +149,12 @@ void RcrIRBuilder::memImm(AnalysisProcessor &ap, Inst &inst) const {
   ap.aluSpreadTaintMemMem(se2, mem, mem, memSize);
 
   /* Add the symbolic flags expression to the current inst */
-  EflagsBuilder::cfRcl(inst, se1, ap, memSize, op2); /* Same as RCL */
-  EflagsBuilder::ofRor(inst, se2, ap, memSize, op2); /* Same as ROR */
+  EflagsBuilder::cfRcl(inst, se1, mem, op2); /* Same as RCL */
+  EflagsBuilder::ofRor(inst, se2, mem, op2); /* Same as ROR */
 }
 
 
-void RcrIRBuilder::memReg(AnalysisProcessor &ap, Inst &inst) const {
+void RcrIRBuilder::memReg(Inst &inst) const {
   SymbolicExpression *se1, *se2;
   smt2lib::smtAstAbstractNode *expr, *op1, *op2, *cf, *res;
   auto memSize = this->operands[0].getMem().getSize();
@@ -182,7 +182,7 @@ void RcrIRBuilder::memReg(AnalysisProcessor &ap, Inst &inst) const {
   ap.assignmentSpreadTaintExprMem(se1, mem, memSize);
 
   /* Result expression */
-  res = smt2lib::extract((memSize * REG_SIZE) - 1, 0, expr);
+  res = smt2lib::extract((memSize * BYTE_SIZE_BIT) - 1, 0, expr);
 
   /* Create the symbolic expression */
   se2 = ap.createMemSE(inst, res, mem, memSize);
@@ -191,20 +191,20 @@ void RcrIRBuilder::memReg(AnalysisProcessor &ap, Inst &inst) const {
   ap.aluSpreadTaintMemMem(se2, mem, mem, memSize);
 
   /* Add the symbolic flags expression to the current inst */
-  EflagsBuilder::cfRcl(inst, se1, ap, memSize, op2); /* Same as RCL */
-  EflagsBuilder::ofRor(inst, se2, ap, memSize, op2); /* Same as ROR */
+  EflagsBuilder::cfRcl(inst, se1, mem, op2); /* Same as RCL */
+  EflagsBuilder::ofRor(inst, se2, mem, op2); /* Same as ROR */
 }
 
 
-Inst *RcrIRBuilder::process(AnalysisProcessor &ap) const {
+Inst *RcrIRBuilder::process(void) const {
   this->checkSetup();
 
   Inst *inst = new Inst(ap.getThreadID(), this->address, this->disas);
 
   try {
-    this->templateMethod(ap, *inst, this->operands, "RCR");
+    this->templateMethod(*inst, this->operands, "RCR");
+    ControlFlow::rip(*inst, this->nextAddress);
     ap.incNumberOfExpressions(inst->numberOfExpressions()); /* Used for statistics */
-    ControlFlow::rip(*inst, ap, this->nextAddress);
   }
   catch (std::exception &e) {
     delete inst;

@@ -14,6 +14,7 @@
 #include <string>
 
 #include "CallbackDefine.h"
+#include "PythonUtils.h"
 #include "TritonTypes.h"
 
 extern PyMethodDef tritonCallbacks[];
@@ -28,10 +29,10 @@ namespace PyTritonOptions {
 
   /* Execution configurations */
   extern char *startAnalysisFromSymbol;
-  extern std::set<uint64> startAnalysisFromAddr;
-  extern std::set<uint64> startAnalysisFromOffset;
-  extern std::set<uint64> stopAnalysisFromAddr;
-  extern std::set<uint64> stopAnalysisFromOffset;
+  extern std::set<__uint> startAnalysisFromAddr;
+  extern std::set<__uint> startAnalysisFromOffset;
+  extern std::set<__uint> stopAnalysisFromAddr;
+  extern std::set<__uint> stopAnalysisFromOffset;
 
   /* Callback configurations */
   extern PyObject *callbackAfter;                                 // After the instruction processing
@@ -41,14 +42,17 @@ namespace PyTritonOptions {
   extern PyObject *callbackSignals;                               // When a signal occurs
   extern PyObject *callbackSyscallEntry;                          // Before syscall processing
   extern PyObject *callbackSyscallExit;                           // After syscall processing
+  extern PyObject *callbackImageLoad;                             // When an image is loaded
   extern std::map<const char *, PyObject *> callbackRoutineEntry; // Before routine processing
   extern std::map<const char *, PyObject *> callbackRoutineExit;  // After routine processing
+  extern std::list<const char *>            imageWhitelist;       // An image white list
+  extern std::list<const char *>            imageBlacklist;       // An image black list
 
   /* Taint configurations */
-  extern std::map<uint64, std::list<uint64>> taintRegFromAddr;
-  extern std::map<uint64, std::list<uint64>> untaintRegFromAddr;
-  extern std::map<uint64, std::list<uint64>> taintMemFromAddr;
-  extern std::map<uint64, std::list<uint64>> untaintMemFromAddr;
+  extern std::map<__uint, std::list<__uint>> taintRegFromAddr;
+  extern std::map<__uint, std::list<__uint>> untaintRegFromAddr;
+  extern std::map<__uint, std::list<__uint>> taintMemFromAddr;
+  extern std::map<__uint, std::list<__uint>> untaintMemFromAddr;
 };
 
 void initBindings(void);

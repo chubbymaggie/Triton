@@ -10,6 +10,6 @@
 
 #include <iostream>
 
-const char *syscallNumberLinux64ToString(uint64 syscallNumber);
+const char *syscallNumberLinuxToString(__uint syscallNumber);
 
 #endif     /* !__UTILS_H__ */

@@ -16,22 +16,22 @@
 #include <SymbolicExpression.h>
 
 
-MovhpsIRBuilder::MovhpsIRBuilder(uint64 address, const std::string &disassembly):
+MovhpsIRBuilder::MovhpsIRBuilder(__uint address, const std::string &disassembly):
   BaseIRBuilder(address, disassembly) {
 }
 
 
-void MovhpsIRBuilder::regImm(AnalysisProcessor &ap, Inst &inst) const {
+void MovhpsIRBuilder::regImm(Inst &inst) const {
   TwoOperandsTemplate::stop(this->disas);
 }
 
 
-void MovhpsIRBuilder::regReg(AnalysisProcessor &ap, Inst &inst) const {
+void MovhpsIRBuilder::regReg(Inst &inst) const {
   TwoOperandsTemplate::stop(this->disas);
 }
 
 
-void MovhpsIRBuilder::regMem(AnalysisProcessor &ap, Inst &inst) const {
+void MovhpsIRBuilder::regMem(Inst &inst) const {
   SymbolicExpression *se;
   smt2lib::smtAstAbstractNode *expr, *op1, *op2;
   auto mem = this->operands[1].getMem();
@@ -44,8 +44,8 @@ void MovhpsIRBuilder::regMem(AnalysisProcessor &ap, Inst &inst) const {
   op2 = ap.buildSymbolicMemOperand(mem, memSize);
 
   expr = smt2lib::concat(
-            smt2lib::extract(63, 0, op2), /* Destination[64..127] = Source */
-            smt2lib::extract(63, 0, op1)  /* Destination[0..63] unchanged */
+            smt2lib::extract((QWORD_SIZE_BIT - 1), 0, op2), /* Destination[127..64] = Source */
+            smt2lib::extract((QWORD_SIZE_BIT - 1), 0, op1)  /* Destination[63..0] unchanged */
           );
 
   /* Create the symbolic expression */
@@ -57,12 +57,12 @@ void MovhpsIRBuilder::regMem(AnalysisProcessor &ap, Inst &inst) const {
 }
 
 
-void MovhpsIRBuilder::memImm(AnalysisProcessor &ap, Inst &inst) const {
+void MovhpsIRBuilder::memImm(Inst &inst) const {
   TwoOperandsTemplate::stop(this->disas);
 }
 
 
-void MovhpsIRBuilder::memReg(AnalysisProcessor &ap, Inst &inst) const {
+void MovhpsIRBuilder::memReg(Inst &inst) const {
   SymbolicExpression *se;
   smt2lib::smtAstAbstractNode *expr, *op2;
   auto mem = this->operands[0].getMem();
@@ -73,7 +73,7 @@ void MovhpsIRBuilder::memReg(AnalysisProcessor &ap, Inst &inst) const {
   /* Create the SMT semantic */
   op2 = ap.buildSymbolicRegOperand(reg, regSize);
 
-  expr = smt2lib::extract(127, 64, op2);
+  expr = smt2lib::extract((DQWORD_SIZE_BIT - 1), QWORD_SIZE_BIT, op2);
 
   /* Create the symbolic expression */
   se = ap.createMemSE(inst, expr, mem, memSize);
@@ -84,15 +84,15 @@ void MovhpsIRBuilder::memReg(AnalysisProcessor &ap, Inst &inst) const {
 }
 
 
-Inst *MovhpsIRBuilder::process(AnalysisProcessor &ap) const {
+Inst *MovhpsIRBuilder::process(void) const {
   checkSetup();
 
   Inst *inst = new Inst(ap.getThreadID(), this->address, this->disas);
 
   try {
-    this->templateMethod(ap, *inst, this->operands, "MOVHPS");
+    this->templateMethod(*inst, this->operands, "MOVHPS");
+    ControlFlow::rip(*inst, this->nextAddress);
     ap.incNumberOfExpressions(inst->numberOfExpressions()); /* Used for statistics */
-    ControlFlow::rip(*inst, ap, this->nextAddress);
   }
   catch (std::exception &e) {
     delete inst;

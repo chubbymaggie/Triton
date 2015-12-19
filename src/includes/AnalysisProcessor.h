@@ -53,19 +53,22 @@ class AnalysisProcessor {
     uint32      getThreadID(void);
 
     /* Returns the value of the register */
-    uint64      getRegisterValue(RegisterOperand &reg);
-    uint64      getFlagValue(RegisterOperand &flag);
+    __uint      getRegisterValue(RegisterOperand &reg);
+    __uint      getFlagValue(RegisterOperand &flag);
     uint128     getSSERegisterValue(RegisterOperand &reg);
 
     /* Set the value into the register */
-    void        setRegisterValue(RegisterOperand &reg, uint64 value);
+    void        setRegisterValue(RegisterOperand &reg, __uint value);
     void        setSSERegisterValue(RegisterOperand &reg, uint128 value);
 
     /* Returns the value of the memory */
     uint128     getMemValue(MemoryOperand &mem, uint32 readSize);
-    uint128     getMemValue(uint64 mem, uint32 readSize);
+    uint128     getMemValue(__uint mem, uint32 readSize);
     void        setMemValue(MemoryOperand &mem, uint32 writeSize, uint128 value);
 
+    /* Deal with the context */
+    bool        isContextMustBeExecuted(void);
+    void        executeContext(void);
 
     /*
      * Trace Facade
@@ -75,6 +78,7 @@ class AnalysisProcessor {
     Inst      *getLastInstruction(void);
     Trace     &getTrace(void);
     void      addInstructionToTrace(Inst *instruction);
+    void      clearTrace(void);
 
 
     #ifndef LIGHT_VERSION
@@ -83,33 +87,38 @@ class AnalysisProcessor {
      * ----------------------
      */
 
+    /* Returns a symbolic expression. This methods is mainly used for temporary expression */
+    SymbolicExpression *createSE(smt2lib::smtAstAbstractNode *expr, std::string comment="");
+    SymbolicExpression *createSE(Inst &inst, smt2lib::smtAstAbstractNode *expr, std::string comment="");
+
     /* Returns a symbolic expression for the flag register */
     SymbolicExpression *createFlagSE(Inst &inst, smt2lib::smtAstAbstractNode *expr, RegisterOperand &flag, std::string comment="");
 
     /* Returns a symbolic expression for the register */
-    SymbolicExpression *createRegSE(Inst &inst, smt2lib::smtAstAbstractNode *expr, RegisterOperand &reg, uint64 regSize, std::string comment="");
+    SymbolicExpression *createRegSE(Inst &inst, smt2lib::smtAstAbstractNode *expr, RegisterOperand &reg, std::string comment="");
+    SymbolicExpression *createRegSE(Inst &inst, smt2lib::smtAstAbstractNode *expr, RegisterOperand &reg, __uint regSize, std::string comment="");
 
     /* Returns a symbolic expression for the memory address */
-    SymbolicExpression *createMemSE(Inst &inst, smt2lib::smtAstAbstractNode *expr, MemoryOperand &mem, uint64 writeSize, std::string comment="");
+    SymbolicExpression *createMemSE(Inst &inst, smt2lib::smtAstAbstractNode *expr, MemoryOperand &mem, __uint writeSize, std::string comment="");
 
-    /* Returns a symbolic expression. This methods is mainly used for temporary expression */
-    SymbolicExpression *createSE(Inst &inst, smt2lib::smtAstAbstractNode *expr, std::string comment="");
+    /* Assign a symbolic expression to a register */
+    bool assignSEToReg(SymbolicExpression *se, __uint regId);
 
     /*
      * Returns the ID of the symbolic expression currently present in the
      * symbolic register. If there is no symbolic expression, it returns UNSET
      */
-    uint64 getRegSymbolicID(RegisterOperand &reg);
+    __uint getRegSymbolicID(RegisterOperand &reg);
 
     /*
      * Returns the ID of the symbolic expression currently present in the
      * symbolic memory. If there is no symbolic expression, it returns UNSET
      */
-    uint64 getMemSymbolicID(MemoryOperand &mem);
-    uint64 getMemSymbolicID(uint64 address);
+    __uint getMemSymbolicID(MemoryOperand &mem);
+    __uint getMemSymbolicID(__uint address);
 
     /* Returns the symbolic expression from its id */
-    SymbolicExpression *getExpressionFromId(uint64 id);
+    SymbolicExpression *getExpressionFromId(__uint id);
 
     /* Returns all symbolic expressions */
     std::vector<SymbolicExpression *> getExpressions(void);
@@ -124,26 +133,27 @@ class AnalysisProcessor {
     SymbolicEngine &getSymbolicEngine(void);
 
     /* Converts an expression, register or memory to a symbolic variable */
-    SymbolicVariable *convertExprToSymVar(uint64 exprId, uint64 symVarSize, std::string symVarComment);
-    SymbolicVariable *convertMemToSymVar(MemoryOperand &mem, uint64 symVarSize, std::string symVarComment);
-    SymbolicVariable *convertRegToSymVar(RegisterOperand &reg, uint64 symVarSize, std::string symVarComment);
+    SymbolicVariable *convertExprToSymVar(__uint exprId, __uint symVarSize, std::string symVarComment);
+    SymbolicVariable *convertMemToSymVar(MemoryOperand &mem, __uint symVarSize, std::string symVarComment);
+    SymbolicVariable *convertRegToSymVar(RegisterOperand &reg, __uint symVarSize, std::string symVarComment);
 
     /* Returns the symbolic variable from ID or std::string */
-    SymbolicVariable *getSymVar(uint64 symVarId);
+    SymbolicVariable *getSymVar(__uint symVarId);
     SymbolicVariable *getSymVar(std::string symVarName);
 
     /* Returns all symbolic variables */
     std::vector<SymbolicVariable *> getSymVars(void);
 
     /* The a path constraint in the PC list */
-    void addPathConstraint(uint64 exprId);
-    std::list<uint64> getPathConstraints(void);
+    void addPathConstraint(__uint exprId);
+    std::list<__uint> getPathConstraints(void);
 
     /* Build a symbolic register operand */
-    smt2lib::smtAstAbstractNode *buildSymbolicRegOperand(RegisterOperand &reg, uint64 regSize);
-    smt2lib::smtAstAbstractNode *buildSymbolicRegOperand(RegisterOperand &reg, uint64 regSize, uint64 highExtract, uint64 lowExtract);
-    smt2lib::smtAstAbstractNode *buildSymbolicMemOperand(MemoryOperand &mem, uint64 memSize);
-    smt2lib::smtAstAbstractNode *buildSymbolicFlagOperand(RegisterOperand &flag, uint64 size);
+    smt2lib::smtAstAbstractNode *buildSymbolicRegOperand(RegisterOperand &reg);
+    smt2lib::smtAstAbstractNode *buildSymbolicRegOperand(RegisterOperand &reg, __uint regSize);
+    smt2lib::smtAstAbstractNode *buildSymbolicRegOperand(RegisterOperand &reg, __uint highExtract, __uint lowExtract);
+    smt2lib::smtAstAbstractNode *buildSymbolicMemOperand(MemoryOperand &mem, __uint memSize);
+    smt2lib::smtAstAbstractNode *buildSymbolicFlagOperand(RegisterOperand &flag, __uint size);
     smt2lib::smtAstAbstractNode *buildSymbolicFlagOperand(RegisterOperand &flag);
 
     /* Concretize register and memory */
@@ -151,6 +161,11 @@ class AnalysisProcessor {
     void concretizeAllMem(void);
     void concretizeReg(RegisterOperand &reg);
     void concretizeMem(MemoryOperand &mem);
+
+    /* Lock / Unlock flag */
+    bool isSymEngineEnabled(void);
+    void enableSymEngine(void);
+    void disableSymEngine(void);
 
 
     /*
@@ -163,8 +178,8 @@ class AnalysisProcessor {
 
     bool isMemTainted(MemoryOperand &mem);
     bool isRegTainted(RegisterOperand &reg);
-    void setTaintMem(SymbolicExpression *se, MemoryOperand &mem, uint64 flag);
-    void setTaintReg(SymbolicExpression *se, RegisterOperand &reg, uint64 flag);
+    void setTaintMem(SymbolicExpression *se, MemoryOperand &mem, __uint flag);
+    void setTaintReg(SymbolicExpression *se, RegisterOperand &reg, __uint flag);
     void taintMem(MemoryOperand &mem);
     void taintReg(RegisterOperand &reg);
     void untaintMem(MemoryOperand &mem);
@@ -183,9 +198,9 @@ class AnalysisProcessor {
     void assignmentSpreadTaintExprReg(SymbolicExpression *se, RegisterOperand &regSrc);
     void assignmentSpreadTaintExprRegMem(SymbolicExpression *se, RegisterOperand &regSrc, MemoryOperand &memSrc, uint32 readSize);
     void assignmentSpreadTaintExprRegReg(SymbolicExpression *se, RegisterOperand &regSrc1, RegisterOperand &regSrc2);
-    void assignmentSpreadTaintMemImm(SymbolicExpression *se, MemoryOperand &memDst, uint64 writeSize);
+    void assignmentSpreadTaintMemImm(SymbolicExpression *se, MemoryOperand &memDst, __uint writeSize);
     void assignmentSpreadTaintMemMem(SymbolicExpression *se, MemoryOperand &memDst, MemoryOperand &memSrc, uint32 readSize);
-    void assignmentSpreadTaintMemReg(SymbolicExpression *se, MemoryOperand &memDst, RegisterOperand &regSrc, uint64 writeSize);
+    void assignmentSpreadTaintMemReg(SymbolicExpression *se, MemoryOperand &memDst, RegisterOperand &regSrc, __uint writeSize);
     void assignmentSpreadTaintRegImm(SymbolicExpression *se, RegisterOperand &regDst);
     void assignmentSpreadTaintRegMem(SymbolicExpression *se, RegisterOperand &regDst, MemoryOperand &memSrc, uint32 readSize);
     void assignmentSpreadTaintRegReg(SymbolicExpression *se, RegisterOperand &regDst, RegisterOperand &regSrc);
@@ -200,7 +215,7 @@ class AnalysisProcessor {
     SolverEngine                    &getSolverEngine();
     /* Returns models */
     std::list<Smodel>               getModel(smt2lib::smtAstAbstractNode *node);
-    std::vector<std::list<Smodel>>  getModels(smt2lib::smtAstAbstractNode *node, uint64 limit);
+    std::vector<std::list<Smodel>>  getModels(smt2lib::smtAstAbstractNode *node, __uint limit);
 
 
     /*
@@ -212,13 +227,13 @@ class AnalysisProcessor {
     Stats   &getStats(void);
     void    incNumberOfBranchesTaken(void);
     void    incNumberOfBranchesTaken(bool isBranch);
-    void    incNumberOfExpressions(uint64 val);
+    void    incNumberOfExpressions(__uint val);
     void    incNumberOfExpressions(void);
     void    incNumberOfUnknownInstruction(void);
-    uint64  getNumberOfBranchesTaken(void);
-    uint64  getNumberOfExpressions(void);
-    uint64  getTimeOfExecution(void);
-    uint64  getNumberOfUnknownInstruction(void);
+    __uint  getNumberOfBranchesTaken(void);
+    __uint  getNumberOfExpressions(void);
+    __uint  getTimeOfExecution(void);
+    __uint  getNumberOfUnknownInstruction(void);
 
 
     /*
@@ -227,12 +242,14 @@ class AnalysisProcessor {
      */
 
     SnapshotEngine  &getSnapshotEngine(void);
-    bool            isSnapshotLocked(void);
-    void            addSnapshotModification(uint64 addr, char byte);
-    void            takeSnapshot(void);
-    void            restoreSnapshot(void);
-    void            disableSnapshot(void);
     bool            isSnapshotEnabled(void);
+    bool            isSnapshotLocked(void);
+    bool            isSnapshotMustBeRestored(void);
+    void            addSnapshotModification(__uint addr, char byte);
+    void            disableSnapshot(void);
+    void            restoreSnapshot(void);
+    void            setSnapshotRestoreFlag(bool flag);
+    void            takeSnapshot(void);
 
    /*
     * Convert the SMT AST to a Z3 ast and evaluate it

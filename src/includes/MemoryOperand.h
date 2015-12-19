@@ -9,27 +9,33 @@
 
 #include <string>
 
+#include "BitsVector.h"
+#include "CpuSize.h"
+#include "MemRegInterface.h"
 #include "TritonTypes.h"
 
 
-class MemoryOperand
+class MemoryOperand : public BitsVector, public MemRegInterface
 {
   private:
-    uint64  address;
-    uint64  size;
+    __uint  address;
+    __uint  size;
     void    copy(const MemoryOperand& other);
 
   public:
     MemoryOperand();
-    MemoryOperand(uint64 address, uint64 size);
+    MemoryOperand(__uint address, __uint size);
     MemoryOperand(const MemoryOperand& other);
     ~MemoryOperand();
 
-    uint64  getAddress(void) const;
-    uint64  getSize(void) const;
-    void    setAddress(uint64 addr);
-    void    setSize(uint64 size);
-    void    operator=(const MemoryOperand& other);
+    __uint          getAbstractHigh(void) const;
+    __uint          getAbstractLow(void) const;
+    __uint          getAddress(void) const;
+    __uint          getBitSize(void) const;
+    __uint          getSize(void) const;
+    void            operator=(const MemoryOperand& other);
+    void            setAddress(__uint addr);
+    void            setSize(__uint size);
 };
 
 #endif     /* !MEMORYOPERAND */

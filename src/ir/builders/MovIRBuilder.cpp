@@ -17,12 +17,12 @@
 
 
 
-MovIRBuilder::MovIRBuilder(uint64 address, const std::string &disassembly):
+MovIRBuilder::MovIRBuilder(__uint address, const std::string &disassembly):
   BaseIRBuilder(address, disassembly) {
 }
 
 
-void MovIRBuilder::regImm(AnalysisProcessor &ap, Inst &inst) const {
+void MovIRBuilder::regImm(Inst &inst) const {
   SymbolicExpression *se;
   smt2lib::smtAstAbstractNode *expr;
   auto reg = this->operands[0].getReg();
@@ -30,7 +30,7 @@ void MovIRBuilder::regImm(AnalysisProcessor &ap, Inst &inst) const {
   auto imm = this->operands[1].getImm().getValue();
 
   /* Create the SMT semantic */
-  expr = smt2lib::bv(imm, regSize * REG_SIZE);
+  expr = smt2lib::bv(imm, regSize * BYTE_SIZE_BIT);
 
   /* Create the symbolic expression */
   se = ap.createRegSE(inst, expr, reg, regSize);
@@ -40,7 +40,7 @@ void MovIRBuilder::regImm(AnalysisProcessor &ap, Inst &inst) const {
 }
 
 
-void MovIRBuilder::regReg(AnalysisProcessor &ap, Inst &inst) const {
+void MovIRBuilder::regReg(Inst &inst) const {
   SymbolicExpression *se;
   smt2lib::smtAstAbstractNode *expr;
   auto reg1 = this->operands[0].getReg();
@@ -59,7 +59,7 @@ void MovIRBuilder::regReg(AnalysisProcessor &ap, Inst &inst) const {
 }
 
 
-void MovIRBuilder::regMem(AnalysisProcessor &ap, Inst &inst) const {
+void MovIRBuilder::regMem(Inst &inst) const {
   SymbolicExpression *se;
   smt2lib::smtAstAbstractNode *expr;
   auto mem = this->operands[1].getMem();
@@ -78,7 +78,7 @@ void MovIRBuilder::regMem(AnalysisProcessor &ap, Inst &inst) const {
 }
 
 
-void MovIRBuilder::memImm(AnalysisProcessor &ap, Inst &inst) const {
+void MovIRBuilder::memImm(Inst &inst) const {
   SymbolicExpression *se;
   smt2lib::smtAstAbstractNode *expr;
   auto memSize = this->operands[0].getMem().getSize();
@@ -86,7 +86,7 @@ void MovIRBuilder::memImm(AnalysisProcessor &ap, Inst &inst) const {
   auto imm = this->operands[1].getImm().getValue();
 
   /* Create the SMT semantic */
-  expr = smt2lib::bv(imm, memSize * REG_SIZE);
+  expr = smt2lib::bv(imm, memSize * BYTE_SIZE_BIT);
 
   /* Create the symbolic expression */
   se = ap.createMemSE(inst, expr, mem, memSize);
@@ -96,7 +96,7 @@ void MovIRBuilder::memImm(AnalysisProcessor &ap, Inst &inst) const {
 }
 
 
-void MovIRBuilder::memReg(AnalysisProcessor &ap, Inst &inst) const {
+void MovIRBuilder::memReg(Inst &inst) const {
   SymbolicExpression *se;
   smt2lib::smtAstAbstractNode *expr;
   auto memSize = this->operands[0].getMem().getSize();
@@ -115,15 +115,15 @@ void MovIRBuilder::memReg(AnalysisProcessor &ap, Inst &inst) const {
 }
 
 
-Inst *MovIRBuilder::process(AnalysisProcessor &ap) const {
+Inst *MovIRBuilder::process(void) const {
   checkSetup();
 
   Inst *inst = new Inst(ap.getThreadID(), this->address, this->disas);
 
   try {
-    this->templateMethod(ap, *inst, this->operands, "MOV");
+    this->templateMethod(*inst, this->operands, "MOV");
+    ControlFlow::rip(*inst, this->nextAddress);
     ap.incNumberOfExpressions(inst->numberOfExpressions()); /* Used for statistics */
-    ControlFlow::rip(*inst, ap, this->nextAddress);
   }
   catch (std::exception &e) {
     delete inst;

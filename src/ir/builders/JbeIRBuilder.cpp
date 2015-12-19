@@ -16,12 +16,12 @@
 #include <SymbolicExpression.h>
 
 
-JbeIRBuilder::JbeIRBuilder(uint64 address, const std::string &disassembly):
+JbeIRBuilder::JbeIRBuilder(__uint address, const std::string &disassembly):
   BaseIRBuilder(address, disassembly) {
 }
 
 
-void JbeIRBuilder::imm(AnalysisProcessor &ap, Inst &inst) const {
+void JbeIRBuilder::imm(Inst &inst) const {
   SymbolicExpression *se;
   smt2lib::smtAstAbstractNode *expr, *cf, *zf;
   auto imm = this->operands[0].getImm().getValue();
@@ -47,35 +47,39 @@ void JbeIRBuilder::imm(AnalysisProcessor &ap, Inst &inst) const {
             smt2lib::bv(this->nextAddress, REG_SIZE_BIT));
 
   /* Create the symbolic expression */
-  se = ap.createRegSE(inst, expr, ID_TMP_RIP, REG_SIZE, "RIP");
+  se = ap.createRegSE(inst, expr, ID_TMP_RIP, REG_SIZE, "Program Counter");
+
+  /* Apply the taint */
+  ap.aluSpreadTaintRegReg(se, ID_TMP_RIP, ID_TMP_CF);
+  ap.aluSpreadTaintRegReg(se, ID_TMP_RIP, ID_TMP_ZF);
 
   /* Add the constraint in the PathConstraints list */
   ap.addPathConstraint(se->getID());
 }
 
 
-void JbeIRBuilder::reg(AnalysisProcessor &ap, Inst &inst) const {
+void JbeIRBuilder::reg(Inst &inst) const {
   OneOperandTemplate::stop(this->disas);
 }
 
 
-void JbeIRBuilder::mem(AnalysisProcessor &ap, Inst &inst) const {
+void JbeIRBuilder::mem(Inst &inst) const {
   OneOperandTemplate::stop(this->disas);
 }
 
 
-void JbeIRBuilder::none(AnalysisProcessor &ap, Inst &inst) const {
+void JbeIRBuilder::none(Inst &inst) const {
   OneOperandTemplate::stop(this->disas);
 }
 
 
-Inst *JbeIRBuilder::process(AnalysisProcessor &ap) const {
+Inst *JbeIRBuilder::process(void) const {
   this->checkSetup();
 
   Inst *inst = new Inst(ap.getThreadID(), this->address, this->disas);
 
   try {
-    this->templateMethod(ap, *inst, this->operands, "JBE");
+    this->templateMethod(*inst, this->operands, "JBE");
     ap.incNumberOfExpressions(inst->numberOfExpressions()); /* Used for statistics */
   }
   catch (std::exception &e) {

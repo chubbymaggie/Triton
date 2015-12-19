@@ -16,12 +16,13 @@
 #include <SymbolicExpression.h>
 
 
-JmpIRBuilder::JmpIRBuilder(uint64 address, const std::string &disassembly):
+JmpIRBuilder::JmpIRBuilder(__uint address, const std::string &disassembly):
   BaseIRBuilder(address, disassembly) {
 }
 
 
-void JmpIRBuilder::imm(AnalysisProcessor &ap, Inst &inst) const {
+void JmpIRBuilder::imm(Inst &inst) const {
+  SymbolicExpression *se;
   smt2lib::smtAstAbstractNode *expr;
   auto imm = this->operands[0].getImm().getValue();
 
@@ -29,11 +30,15 @@ void JmpIRBuilder::imm(AnalysisProcessor &ap, Inst &inst) const {
   expr = smt2lib::bv(imm, REG_SIZE_BIT);
 
   /* Create the symbolic expression */
-  ap.createRegSE(inst, expr, ID_TMP_RIP, REG_SIZE, "RIP");
+  se = ap.createRegSE(inst, expr, ID_TMP_RIP, REG_SIZE, "Program Counter");
+
+  /* Apply the taint */
+  ap.assignmentSpreadTaintRegImm(se, ID_TMP_RIP);
 }
 
 
-void JmpIRBuilder::reg(AnalysisProcessor &ap, Inst &inst) const {
+void JmpIRBuilder::reg(Inst &inst) const {
+  SymbolicExpression *se;
   smt2lib::smtAstAbstractNode *expr, *op1;
   auto reg = this->operands[0].getReg();
   auto regSize = this->operands[0].getReg().getSize();
@@ -45,11 +50,15 @@ void JmpIRBuilder::reg(AnalysisProcessor &ap, Inst &inst) const {
   expr = op1;
 
   /* Create the symbolic expression */
-  ap.createRegSE(inst, expr, ID_TMP_RIP, REG_SIZE, "RIP");
+  se = ap.createRegSE(inst, expr, ID_TMP_RIP, REG_SIZE, "Program Counter");
+
+  /* Apply the taint */
+  ap.assignmentSpreadTaintRegReg(se, ID_TMP_RIP, reg);
 }
 
 
-void JmpIRBuilder::mem(AnalysisProcessor &ap, Inst &inst) const {
+void JmpIRBuilder::mem(Inst &inst) const {
+  SymbolicExpression *se;
   smt2lib::smtAstAbstractNode *expr, *op1;
   auto mem = this->operands[0].getMem();
   auto memSize = this->operands[0].getMem().getSize();
@@ -61,22 +70,25 @@ void JmpIRBuilder::mem(AnalysisProcessor &ap, Inst &inst) const {
   expr = op1;
 
   /* Create the symbolic expression */
-  ap.createRegSE(inst, expr, ID_TMP_RIP, REG_SIZE, "RIP");
+  se = ap.createRegSE(inst, expr, ID_TMP_RIP, REG_SIZE, "Program Counter");
+
+  /* Apply the taint */
+  ap.assignmentSpreadTaintRegMem(se, ID_TMP_RIP, mem, memSize);
 }
 
 
-void JmpIRBuilder::none(AnalysisProcessor &ap, Inst &inst) const {
+void JmpIRBuilder::none(Inst &inst) const {
   OneOperandTemplate::stop(this->disas);
 }
 
 
-Inst *JmpIRBuilder::process(AnalysisProcessor &ap) const {
+Inst *JmpIRBuilder::process(void) const {
   this->checkSetup();
 
   Inst *inst = new Inst(ap.getThreadID(), this->address, this->disas);
 
   try {
-    this->templateMethod(ap, *inst, this->operands, "JMP");
+    this->templateMethod(*inst, this->operands, "JMP");
     ap.incNumberOfExpressions(inst->numberOfExpressions()); /* Used for statistics */
   }
   catch (std::exception &e) {

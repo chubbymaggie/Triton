@@ -16,12 +16,12 @@
 #include <SymbolicExpression.h>
 
 
-MulIRBuilder::MulIRBuilder(uint64 address, const std::string &disassembly):
+MulIRBuilder::MulIRBuilder(__uint address, const std::string &disassembly):
   BaseIRBuilder(address, disassembly) {
 }
 
 
-void MulIRBuilder::reg(AnalysisProcessor &ap, Inst &inst) const {
+void MulIRBuilder::reg(Inst &inst) const {
   SymbolicExpression *se;
   smt2lib::smtAstAbstractNode *expr, *op1, *op2, *rax, *rdx;
   auto reg = this->operands[0].getReg();
@@ -45,9 +45,9 @@ void MulIRBuilder::reg(AnalysisProcessor &ap, Inst &inst) const {
       /* Apply the taint */
       ap.aluSpreadTaintRegReg(se, ID_TMP_RAX, reg);
       /* Add the symbolic flags expression to the current inst */
-      rax = smt2lib::extract(15, 8, expr);
-      EflagsBuilder::cfMul(inst, se, ap, regSize, rax);
-      EflagsBuilder::ofMul(inst, se, ap, regSize, rax);
+      rax = smt2lib::extract((WORD_SIZE_BIT - 1), BYTE_SIZE_BIT, expr);
+      EflagsBuilder::cfMul(inst, se, reg, rax);
+      EflagsBuilder::ofMul(inst, se, reg, rax);
       break;
 
     /* DX:AX = AX * r/m16 */
@@ -57,8 +57,8 @@ void MulIRBuilder::reg(AnalysisProcessor &ap, Inst &inst) const {
                 smt2lib::zx(WORD_SIZE_BIT, op1),
                 smt2lib::zx(WORD_SIZE_BIT, op2)
               );
-      rax = smt2lib::extract(15, 0, expr);
-      rdx = smt2lib::extract(31, 16, expr);
+      rax = smt2lib::extract((WORD_SIZE_BIT - 1), 0, expr);
+      rdx = smt2lib::extract((DWORD_SIZE_BIT - 1), WORD_SIZE_BIT, expr);
       /* Create the symbolic expression for AX */
       se = ap.createRegSE(inst, rax, ID_TMP_RAX, WORD_SIZE);
       /* Apply the taint */
@@ -68,8 +68,8 @@ void MulIRBuilder::reg(AnalysisProcessor &ap, Inst &inst) const {
       /* Apply the taint */
       ap.aluSpreadTaintRegReg(se, ID_TMP_RDX, reg);
       /* Add the symbolic flags expression to the current inst */
-      EflagsBuilder::cfMul(inst, se, ap, regSize, rdx);
-      EflagsBuilder::ofMul(inst, se, ap, regSize, rdx);
+      EflagsBuilder::cfMul(inst, se, reg, rdx);
+      EflagsBuilder::ofMul(inst, se, reg, rdx);
       break;
 
     /* EDX:EAX = EAX * r/m32 */
@@ -79,8 +79,8 @@ void MulIRBuilder::reg(AnalysisProcessor &ap, Inst &inst) const {
                 smt2lib::zx(DWORD_SIZE_BIT, op1),
                 smt2lib::zx(DWORD_SIZE_BIT, op2)
               );
-      rax = smt2lib::extract(31, 0, expr);
-      rdx = smt2lib::extract(63, 32, expr);
+      rax = smt2lib::extract((DWORD_SIZE_BIT - 1), 0, expr);
+      rdx = smt2lib::extract((QWORD_SIZE_BIT - 1), DWORD_SIZE_BIT, expr);
       /* Create the symbolic expression for EAX */
       se = ap.createRegSE(inst, rax, ID_TMP_RAX, DWORD_SIZE);
       /* Apply the taint */
@@ -90,8 +90,8 @@ void MulIRBuilder::reg(AnalysisProcessor &ap, Inst &inst) const {
       /* Apply the taint */
       ap.aluSpreadTaintRegReg(se, ID_TMP_RDX, reg);
       /* Add the symbolic flags expression to the current inst */
-      EflagsBuilder::cfMul(inst, se, ap, regSize, rdx);
-      EflagsBuilder::ofMul(inst, se, ap, regSize, rdx);
+      EflagsBuilder::cfMul(inst, se, reg, rdx);
+      EflagsBuilder::ofMul(inst, se, reg, rdx);
       break;
 
     /* RDX:RAX = RAX * r/m64 */
@@ -101,8 +101,8 @@ void MulIRBuilder::reg(AnalysisProcessor &ap, Inst &inst) const {
                 smt2lib::zx(QWORD_SIZE_BIT, op1),
                 smt2lib::zx(QWORD_SIZE_BIT, op2)
               );
-      rax = smt2lib::extract(63, 0, expr);
-      rdx = smt2lib::extract(127, 64, expr);
+      rax = smt2lib::extract((QWORD_SIZE_BIT - 1), 0, expr);
+      rdx = smt2lib::extract((DQWORD_SIZE_BIT - 1), QWORD_SIZE_BIT, expr);
       /* Create the symbolic expression for RAX */
       se = ap.createRegSE(inst, rax, ID_TMP_RAX, QWORD_SIZE);
       /* Apply the taint */
@@ -112,8 +112,8 @@ void MulIRBuilder::reg(AnalysisProcessor &ap, Inst &inst) const {
       /* Apply the taint */
       ap.aluSpreadTaintRegReg(se, ID_TMP_RDX, reg);
       /* Add the symbolic flags expression to the current inst */
-      EflagsBuilder::cfMul(inst, se, ap, regSize, rdx);
-      EflagsBuilder::ofMul(inst, se, ap, regSize, rdx);
+      EflagsBuilder::cfMul(inst, se, reg, rdx);
+      EflagsBuilder::ofMul(inst, se, reg, rdx);
       break;
 
   }
@@ -121,7 +121,7 @@ void MulIRBuilder::reg(AnalysisProcessor &ap, Inst &inst) const {
 }
 
 
-void MulIRBuilder::mem(AnalysisProcessor &ap, Inst &inst) const {
+void MulIRBuilder::mem(Inst &inst) const {
   SymbolicExpression *se;
   smt2lib::smtAstAbstractNode *expr, *op1, *op2, *rax, *rdx;
   auto mem = this->operands[0].getMem();
@@ -145,9 +145,9 @@ void MulIRBuilder::mem(AnalysisProcessor &ap, Inst &inst) const {
       /* Apply the taint */
       ap.aluSpreadTaintRegMem(se, ID_TMP_RAX, mem, memSize);
       /* Add the symbolic flags expression to the current inst */
-      rax = smt2lib::extract(15, 8, expr);
-      EflagsBuilder::cfMul(inst, se, ap, memSize, rax);
-      EflagsBuilder::ofMul(inst, se, ap, memSize, rax);
+      rax = smt2lib::extract((WORD_SIZE_BIT - 1), BYTE_SIZE_BIT, expr);
+      EflagsBuilder::cfMul(inst, se, mem, rax);
+      EflagsBuilder::ofMul(inst, se, mem, rax);
       break;
 
     /* DX:AX = AX * r/m16 */
@@ -157,8 +157,8 @@ void MulIRBuilder::mem(AnalysisProcessor &ap, Inst &inst) const {
                 smt2lib::zx(WORD_SIZE_BIT, op1),
                 smt2lib::zx(WORD_SIZE_BIT, op2)
               );
-      rax = smt2lib::extract(15, 0, expr);
-      rdx = smt2lib::extract(31, 16, expr);
+      rax = smt2lib::extract((WORD_SIZE_BIT - 1), 0, expr);
+      rdx = smt2lib::extract((DWORD_SIZE_BIT - 1), WORD_SIZE_BIT, expr);
       /* Create the symbolic expression for AX */
       se = ap.createRegSE(inst, rax, ID_TMP_RAX, WORD_SIZE);
       /* Apply the taint */
@@ -168,8 +168,8 @@ void MulIRBuilder::mem(AnalysisProcessor &ap, Inst &inst) const {
       /* Apply the taint */
       ap.aluSpreadTaintRegMem(se, ID_TMP_RDX, mem, memSize);
       /* Add the symbolic flags expression to the current inst */
-      EflagsBuilder::cfMul(inst, se, ap, memSize, rdx);
-      EflagsBuilder::ofMul(inst, se, ap, memSize, rdx);
+      EflagsBuilder::cfMul(inst, se, mem, rdx);
+      EflagsBuilder::ofMul(inst, se, mem, rdx);
       break;
 
     /* EDX:EAX = EAX * r/m32 */
@@ -179,8 +179,8 @@ void MulIRBuilder::mem(AnalysisProcessor &ap, Inst &inst) const {
                 smt2lib::zx(DWORD_SIZE_BIT, op1),
                 smt2lib::zx(DWORD_SIZE_BIT, op2)
               );
-      rax = smt2lib::extract(31, 0, expr);
-      rdx = smt2lib::extract(63, 32, expr);
+      rax = smt2lib::extract((DWORD_SIZE_BIT - 1), 0, expr);
+      rdx = smt2lib::extract((QWORD_SIZE_BIT - 1), DWORD_SIZE_BIT, expr);
       /* Create the symbolic expression for EAX */
       se = ap.createRegSE(inst, rax, ID_TMP_RAX, DWORD_SIZE);
       /* Apply the taint */
@@ -190,8 +190,8 @@ void MulIRBuilder::mem(AnalysisProcessor &ap, Inst &inst) const {
       /* Apply the taint */
       ap.aluSpreadTaintRegMem(se, ID_TMP_RDX, mem, memSize);
       /* Add the symbolic flags expression to the current inst */
-      EflagsBuilder::cfMul(inst, se, ap, memSize, rdx);
-      EflagsBuilder::ofMul(inst, se, ap, memSize, rdx);
+      EflagsBuilder::cfMul(inst, se, mem, rdx);
+      EflagsBuilder::ofMul(inst, se, mem, rdx);
       break;
 
     /* RDX:RAX = RAX * r/m64 */
@@ -201,8 +201,8 @@ void MulIRBuilder::mem(AnalysisProcessor &ap, Inst &inst) const {
                 smt2lib::zx(QWORD_SIZE_BIT, op1),
                 smt2lib::zx(QWORD_SIZE_BIT, op2)
               );
-      rax = smt2lib::extract(63, 0, expr);
-      rdx = smt2lib::extract(127, 64, expr);
+      rax = smt2lib::extract((QWORD_SIZE_BIT - 1), 0, expr);
+      rdx = smt2lib::extract((DQWORD_SIZE_BIT - 1), QWORD_SIZE_BIT, expr);
       /* Create the symbolic expression for RAX */
       se = ap.createRegSE(inst, rax, ID_TMP_RAX, QWORD_SIZE);
       /* Apply the taint */
@@ -212,8 +212,8 @@ void MulIRBuilder::mem(AnalysisProcessor &ap, Inst &inst) const {
       /* Apply the taint */
       ap.aluSpreadTaintRegMem(se, ID_TMP_RDX, mem, memSize);
       /* Add the symbolic flags expression to the current inst */
-      EflagsBuilder::cfMul(inst, se, ap, memSize, rdx);
-      EflagsBuilder::ofMul(inst, se, ap, memSize, rdx);
+      EflagsBuilder::cfMul(inst, se, mem, rdx);
+      EflagsBuilder::ofMul(inst, se, mem, rdx);
       break;
 
   }
@@ -221,27 +221,27 @@ void MulIRBuilder::mem(AnalysisProcessor &ap, Inst &inst) const {
 }
 
 
-void MulIRBuilder::imm(AnalysisProcessor &ap, Inst &inst) const {
+void MulIRBuilder::imm(Inst &inst) const {
   /* There is no <inc imm> available in x86 */
   OneOperandTemplate::stop(this->disas);
 }
 
 
-void MulIRBuilder::none(AnalysisProcessor &ap, Inst &inst) const {
+void MulIRBuilder::none(Inst &inst) const {
   /* There is no <inc none> available in x86 */
   OneOperandTemplate::stop(this->disas);
 }
 
 
-Inst *MulIRBuilder::process(AnalysisProcessor &ap) const {
+Inst *MulIRBuilder::process(void) const {
   this->checkSetup();
 
   Inst *inst = new Inst(ap.getThreadID(), this->address, this->disas);
 
   try {
-    this->templateMethod(ap, *inst, this->operands, "MUL");
+    this->templateMethod(*inst, this->operands, "MUL");
+    ControlFlow::rip(*inst, this->nextAddress);
     ap.incNumberOfExpressions(inst->numberOfExpressions()); /* Used for statistics */
-    ControlFlow::rip(*inst, ap, this->nextAddress);
   }
   catch (std::exception &e) {
     delete inst;

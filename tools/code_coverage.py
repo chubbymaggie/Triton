@@ -62,6 +62,7 @@
 import  smt2lib
 from    triton      import *
 from    collections import OrderedDict
+from    copy        import deepcopy
 
 
 
@@ -102,11 +103,14 @@ class TritonExecution(object):
     exitPoint   = 0
     whitelist   = None
     myPC        = None
+    AddrAfterEP = 0
 
     @staticmethod
     def cbefore(instruction):
+        if instruction.getAddress() == TritonExecution.entryPoint:
+            TritonExecution.AddrAfterEP = instruction.getNextAddress()
 
-        if instruction.getAddress() == TritonExecution.entryPoint + 2:
+        if instruction.getAddress() == TritonExecution.AddrAfterEP:
             TritonExecution.myPC = []                                  # Reset the path constraint
             TritonExecution.input = TritonExecution.worklist.pop()     # Take the first input
             TritonExecution.inputTested.append(TritonExecution.input)  # Add this input to the tested input
@@ -143,18 +147,18 @@ class TritonExecution(object):
                     ripId = TritonExecution.myPC[i][0]
                     symExp = getFullExpression(getSymExpr(ripId).getAst())
                     addr = TritonExecution.myPC[i][1]
-                    expr.append(smt2lib.smtAssert(smt2lib.equal(symExp, smt2lib.bv(addr,  64))))
+                    expr.append(smt2lib.smtAssert(smt2lib.equal(symExp, smt2lib.bv(addr,  IDREF.CPUSIZE.QWORD_BIT))))
 
                 ripId = TritonExecution.myPC[j][0]
                 symExp = getFullExpression(getSymExpr(ripId).getAst())
                 addr = TritonExecution.myPC[j][2]
-                expr.append(smt2lib.smtAssert(smt2lib.equal(symExp, smt2lib.bv(addr,  64))))
+                expr.append(smt2lib.smtAssert(smt2lib.equal(symExp, smt2lib.bv(addr,  IDREF.CPUSIZE.QWORD_BIT))))
 
                 expr = smt2lib.compound(expr)
                 model = getModel(expr)
 
                 if len(model) > 0:
-                    newInput = TritonExecution.input
+                    newInput = deepcopy(TritonExecution.input)
                     newInput.setBound(j + 1)
 
                     for k,v in model.items():
@@ -192,22 +196,22 @@ class TritonExecution(object):
         rdi = getRegValue(IDREF.REG.RDI) # argc
         rsi = getRegValue(IDREF.REG.RSI) # argv
 
-        argv0_addr = getMemValue(rsi, IDREF.CPUSIZE.QWORD)      # argv[0] pointer
-        argv1_addr = getMemValue(rsi + 8, IDREF.CPUSIZE.QWORD)  # argv[1] pointer
+        argv0_addr = getMemValue(rsi, IDREF.CPUSIZE.REG_BIT)      # argv[0] pointer
+        argv1_addr = getMemValue(rsi + IDREF.CPUSIZE.REG, IDREF.CPUSIZE.REG_BIT)  # argv[1] pointer
 
         print "[+] In main() we set :"
         od = OrderedDict(sorted(TritonExecution.input.dataAddr.items()))
 
         for k,v in od.iteritems():
             print "\t[0x%x] = %x %c" % (k, v, v)
-            setMemValue(k, IDREF.CPUSIZE.BYTE, v)
-            convertMemToSymVar(k, IDREF.CPUSIZE.BYTE, "addr_%d" % k)
+            setMemValue(k, IDREF.CPUSIZE.BYTE_BIT, v)
+            convertMemToSymVar(k, IDREF.CPUSIZE.BYTE_BIT, "addr_%d" % k)
 
         for idx, byte in enumerate(TritonExecution.input.data):
             if argv1_addr + idx not in TritonExecution.input.dataAddr: # Not overwrite the previous setting
                 print "\t[0x%x] = %x %c" % (argv1_addr + idx, ord(byte), ord(byte))
-                setMemValue(argv1_addr + idx, IDREF.CPUSIZE.BYTE, ord(byte))
-                convertMemToSymVar(argv1_addr + idx, IDREF.CPUSIZE.BYTE, "addr_%d" % idx)
+                setMemValue(argv1_addr + idx, IDREF.CPUSIZE.BYTE_BIT, ord(byte))
+                convertMemToSymVar(argv1_addr + idx, IDREF.CPUSIZE.BYTE_BIT, "addr_%d" % idx)
 
 
     @staticmethod
@@ -229,6 +233,8 @@ class TritonExecution(object):
 
 
 if __name__=='__main__':
-    TritonExecution.run("aaa", 0x4004a0, 0x40065D, ["main", "myatoi"])  # ./triton ./tools/code_coverage.py ./samples/code_coverage/test_atoi a
-    #TritonExecution.run("bad !", 0x400480, 0x40061B, ["main", "check"]) # ./triton ./tools/code_coverage.py ./samples/crackmes/crackme_xor abc
+    #TritonExecution.run("aaa", 0x4004a0, 0x40065D, ["main", "myatoi"])           # ./triton ./tools/code_coverage.py ./samples/code_coverage/test_atoi a
+    #TritonExecution.run("bad !", 0x400480, 0x40061B, ["main", "check"])          # ./triton ./tools/code_coverage.py ./samples/crackmes/crackme_xor abc
+    TritonExecution.run("aaaaaaaa", 0x400460, 0x400666, ["main", "check"])       # ./triton ./tools/code_coverage.py ./samples/crackmes/crackme_regex_fsm a
+    #TritonExecution.run("aaaaaaaa", 0x400460, 0x402ECA, ["main", "checkinput"])  # ./triton ./tools/code_coverage.py ./samples/crackmes/crackme_regex_fsm_obfuscated a
 

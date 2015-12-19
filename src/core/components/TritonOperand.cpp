@@ -6,6 +6,7 @@
 
 #include <cstdint>
 #include <stdexcept>
+#include <CpuSize.h>
 #include <Registers.h>
 #include <TritonOperand.h>
 
@@ -137,13 +138,14 @@ void TritonOperand::setMem(MemoryOperand mem) {
 }
 
 
-void TritonOperand::setMemAddress(uint64 addr) {
+void TritonOperand::setMemAddress(__uint addr) {
   this->mem.setAddress(addr);
 }
 
 
-void TritonOperand::setMemSize(uint64 size) {
+void TritonOperand::setMemSize(__uint size) {
   this->mem.setSize(size);
+  this->mem.setHigh((size * BYTE_SIZE_BIT) - 1);
 }
 
 
@@ -152,7 +154,7 @@ void TritonOperand::setReg(RegisterOperand reg) {
 }
 
 
-void TritonOperand::setRegSize(uint64 size) {
+void TritonOperand::setRegSize(__uint size) {
   this->reg.setSize(size);
 }
 

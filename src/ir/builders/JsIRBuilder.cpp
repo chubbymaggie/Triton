@@ -16,12 +16,12 @@
 #include <SymbolicExpression.h>
 
 
-JsIRBuilder::JsIRBuilder(uint64 address, const std::string &disassembly):
+JsIRBuilder::JsIRBuilder(__uint address, const std::string &disassembly):
   BaseIRBuilder(address, disassembly) {
 }
 
 
-void JsIRBuilder::imm(AnalysisProcessor &ap, Inst &inst) const {
+void JsIRBuilder::imm(Inst &inst) const {
   SymbolicExpression *se;
   smt2lib::smtAstAbstractNode *expr, *sf;
   auto imm = this->operands[0].getImm().getValue();
@@ -38,35 +38,38 @@ void JsIRBuilder::imm(AnalysisProcessor &ap, Inst &inst) const {
             smt2lib::bv(this->nextAddress, REG_SIZE_BIT));
 
   /* Create the symbolic expression */
-  se = ap.createRegSE(inst, expr, ID_TMP_RIP, REG_SIZE, "RIP");
+  se = ap.createRegSE(inst, expr, ID_TMP_RIP, REG_SIZE, "Program Counter");
+
+  /* Apply the taint */
+  ap.aluSpreadTaintRegReg(se, ID_TMP_RIP, ID_TMP_SF);
 
   /* Add the constraint in the PathConstraints list */
   ap.addPathConstraint(se->getID());
 }
 
 
-void JsIRBuilder::reg(AnalysisProcessor &ap, Inst &inst) const {
+void JsIRBuilder::reg(Inst &inst) const {
   OneOperandTemplate::stop(this->disas);
 }
 
 
-void JsIRBuilder::mem(AnalysisProcessor &ap, Inst &inst) const {
+void JsIRBuilder::mem(Inst &inst) const {
   OneOperandTemplate::stop(this->disas);
 }
 
 
-void JsIRBuilder::none(AnalysisProcessor &ap, Inst &inst) const {
+void JsIRBuilder::none(Inst &inst) const {
   OneOperandTemplate::stop(this->disas);
 }
 
 
-Inst *JsIRBuilder::process(AnalysisProcessor &ap) const {
+Inst *JsIRBuilder::process(void) const {
   this->checkSetup();
 
   Inst *inst = new Inst(ap.getThreadID(), this->address, this->disas);
 
   try {
-    this->templateMethod(ap, *inst, this->operands, "JS");
+    this->templateMethod(*inst, this->operands, "JS");
     ap.incNumberOfExpressions(inst->numberOfExpressions()); /* Used for statistics */
   }
   catch (std::exception &e) {

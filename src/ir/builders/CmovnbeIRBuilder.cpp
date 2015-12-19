@@ -16,17 +16,17 @@
 #include <SymbolicExpression.h>
 
 
-CmovnbeIRBuilder::CmovnbeIRBuilder(uint64 address, const std::string &disassembly):
+CmovnbeIRBuilder::CmovnbeIRBuilder(__uint address, const std::string &disassembly):
   BaseIRBuilder(address, disassembly){
 }
 
 
-void CmovnbeIRBuilder::regImm(AnalysisProcessor &ap, Inst &inst) const {
+void CmovnbeIRBuilder::regImm(Inst &inst) const {
   TwoOperandsTemplate::stop(this->disas);
 }
 
 
-void CmovnbeIRBuilder::regReg(AnalysisProcessor &ap, Inst &inst) const {
+void CmovnbeIRBuilder::regReg(Inst &inst) const {
   SymbolicExpression *se;
   smt2lib::smtAstAbstractNode *expr, *reg1e, *reg2e, *cf, *zf;
   auto reg1 = this->operands[0].getReg();
@@ -60,7 +60,7 @@ void CmovnbeIRBuilder::regReg(AnalysisProcessor &ap, Inst &inst) const {
 }
 
 
-void CmovnbeIRBuilder::regMem(AnalysisProcessor &ap, Inst &inst) const {
+void CmovnbeIRBuilder::regMem(Inst &inst) const {
   SymbolicExpression *se;
   smt2lib::smtAstAbstractNode *expr, *reg1e, *mem1e, *cf, *zf;
   auto memSize = this->operands[1].getMem().getSize();
@@ -94,25 +94,25 @@ void CmovnbeIRBuilder::regMem(AnalysisProcessor &ap, Inst &inst) const {
 }
 
 
-void CmovnbeIRBuilder::memImm(AnalysisProcessor &ap, Inst &inst) const {
+void CmovnbeIRBuilder::memImm(Inst &inst) const {
   TwoOperandsTemplate::stop(this->disas);
 }
 
 
-void CmovnbeIRBuilder::memReg(AnalysisProcessor &ap, Inst &inst) const {
+void CmovnbeIRBuilder::memReg(Inst &inst) const {
   TwoOperandsTemplate::stop(this->disas);
 }
 
 
-Inst *CmovnbeIRBuilder::process(AnalysisProcessor &ap) const {
+Inst *CmovnbeIRBuilder::process(void) const {
   checkSetup();
 
   Inst *inst = new Inst(ap.getThreadID(), this->address, this->disas);
 
   try {
-    this->templateMethod(ap, *inst, this->operands, "CMOVNBE");
+    this->templateMethod(*inst, this->operands, "CMOVNBE");
+    ControlFlow::rip(*inst, this->nextAddress);
     ap.incNumberOfExpressions(inst->numberOfExpressions()); /* Used for statistics */
-    ControlFlow::rip(*inst, ap, this->nextAddress);
   }
   catch (std::exception &e) {
     delete inst;

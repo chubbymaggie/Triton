@@ -16,12 +16,12 @@
 #include <SymbolicExpression.h>
 
 
-RetIRBuilder::RetIRBuilder(uint64 address, const std::string &disassembly):
+RetIRBuilder::RetIRBuilder(__uint address, const std::string &disassembly):
   BaseIRBuilder(address, disassembly) {
 }
 
 
-static SymbolicExpression *alignStack(Inst &inst, AnalysisProcessor &ap)
+static SymbolicExpression *alignStack(Inst &inst)
 {
   SymbolicExpression *se;
   smt2lib::smtAstAbstractNode *expr, *op1, *op2;
@@ -42,7 +42,7 @@ static SymbolicExpression *alignStack(Inst &inst, AnalysisProcessor &ap)
 }
 
 
-static SymbolicExpression *alignStack(Inst &inst, AnalysisProcessor &ap, uint64 imm)
+static SymbolicExpression *alignStack(Inst &inst, __uint imm)
 {
   SymbolicExpression *se;
   smt2lib::smtAstAbstractNode *expr, *op1, *op2;
@@ -63,13 +63,13 @@ static SymbolicExpression *alignStack(Inst &inst, AnalysisProcessor &ap, uint64 
 }
 
 
-void RetIRBuilder::reg(AnalysisProcessor &ap, Inst &inst) const {
+void RetIRBuilder::reg(Inst &inst) const {
   /* There is no 'ret reg' in x86 */
   OneOperandTemplate::stop(this->disas);
 }
 
 
-void RetIRBuilder::imm(AnalysisProcessor &ap, Inst &inst) const {
+void RetIRBuilder::imm(Inst &inst) const {
   SymbolicExpression *se;
   smt2lib::smtAstAbstractNode *expr, *op1;
   auto imm = this->operands[0].getImm().getValue();
@@ -83,18 +83,18 @@ void RetIRBuilder::imm(AnalysisProcessor &ap, Inst &inst) const {
   expr = op1;
 
   /* Create the symbolic expression */
-  se = ap.createRegSE(inst, expr, ID_TMP_RIP, REG_SIZE, "RIP");
+  se = ap.createRegSE(inst, expr, ID_TMP_RIP, REG_SIZE, "Program Counter");
 
   /* Apply the taint */
   ap.assignmentSpreadTaintRegMem(se, ID_TMP_RIP, mem, memSize);
 
   /* Create the SMT semantic side effect */
-  alignStack(inst, ap);
-  alignStack(inst, ap, imm);
+  alignStack(inst);
+  alignStack(inst, imm);
 }
 
 
-void RetIRBuilder::mem(AnalysisProcessor &ap, Inst &inst) const {
+void RetIRBuilder::mem(Inst &inst) const {
   SymbolicExpression *se;
   smt2lib::smtAstAbstractNode *expr, *op1;
   auto mem = this->operands[0].getMem(); // The dst memory read
@@ -107,30 +107,30 @@ void RetIRBuilder::mem(AnalysisProcessor &ap, Inst &inst) const {
   expr = op1;
 
   /* Create the symbolic expression */
-  se = ap.createRegSE(inst, expr, ID_TMP_RIP, REG_SIZE, "RIP");
+  se = ap.createRegSE(inst, expr, ID_TMP_RIP, REG_SIZE, "Program Counter");
 
   /* Apply the taint */
   ap.assignmentSpreadTaintRegMem(se, ID_TMP_RIP, mem, memSize);
 
   /* Create the SMT semantic side effect */
-  alignStack(inst, ap);
+  alignStack(inst);
 }
 
 
-void RetIRBuilder::none(AnalysisProcessor &ap, Inst &inst) const {
+void RetIRBuilder::none(Inst &inst) const {
   /* The ret instruction without argument is in the RetIRBuilder::mem function. */
   /* As ret has an implicit read memory (saved EIP), it contains at least one memory argument. */
   OneOperandTemplate::stop(this->disas);
 }
 
 
-Inst *RetIRBuilder::process(AnalysisProcessor &ap) const {
+Inst *RetIRBuilder::process(void) const {
   this->checkSetup();
 
   Inst *inst = new Inst(ap.getThreadID(), this->address, this->disas);
 
   try {
-    this->templateMethod(ap, *inst, this->operands, "RET");
+    this->templateMethod(*inst, this->operands, "RET");
     ap.incNumberOfExpressions(inst->numberOfExpressions()); /* Used for statistics */
   }
   catch (std::exception &e) {

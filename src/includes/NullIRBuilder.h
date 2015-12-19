@@ -11,14 +11,17 @@
 
 #include <string>
 
+#include "AnalysisProcessor.h"
 #include "BaseIRBuilder.h"
 #include "TritonOperand.h"
+
+extern AnalysisProcessor ap;
 
 
 // Null object, it's purpose is to handle "nicely" not implemented instructions.
 class NullIRBuilder: public BaseIRBuilder {
   public:
-    NullIRBuilder(uint64 address, const std::string &disas) :
+    NullIRBuilder(__uint address, const std::string &disas) :
       BaseIRBuilder(address, disas) {
     }
 
@@ -30,7 +33,7 @@ class NullIRBuilder: public BaseIRBuilder {
       return this->operands;
     }
 
-    Inst *process(AnalysisProcessor &ap) const {
+    Inst *process(void) const {
       #ifndef LIGHT_VERSION
       ap.incNumberOfUnknownInstruction(); /* Used for statistics */
       #endif

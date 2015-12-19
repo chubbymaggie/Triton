@@ -16,17 +16,17 @@
 #include <SymbolicExpression.h>
 
 
-OrpdIRBuilder::OrpdIRBuilder(uint64 address, const std::string &disassembly):
+OrpdIRBuilder::OrpdIRBuilder(__uint address, const std::string &disassembly):
   BaseIRBuilder(address, disassembly) {
 }
 
 
-void OrpdIRBuilder::regImm(AnalysisProcessor &ap, Inst &inst) const {
+void OrpdIRBuilder::regImm(Inst &inst) const {
   TwoOperandsTemplate::stop(this->disas);
 }
 
 
-void OrpdIRBuilder::regReg(AnalysisProcessor &ap, Inst &inst) const {
+void OrpdIRBuilder::regReg(Inst &inst) const {
   SymbolicExpression *se;
   smt2lib::smtAstAbstractNode *expr, *op1, *op2;
   auto reg1 = this->operands[0].getReg();
@@ -49,13 +49,13 @@ void OrpdIRBuilder::regReg(AnalysisProcessor &ap, Inst &inst) const {
 }
 
 
-void OrpdIRBuilder::regMem(AnalysisProcessor &ap, Inst &inst) const {
+void OrpdIRBuilder::regMem(Inst &inst) const {
   SymbolicExpression *se;
   smt2lib::smtAstAbstractNode *expr, *op1, *op2;
-  auto memSize = this->operands[1].getMem().getSize();
   auto mem = this->operands[1].getMem();
+  auto memSize = this->operands[1].getMem().getSize();
   auto reg = this->operands[0].getReg();
-  auto regSize = this->operands[1].getReg().getSize();
+  auto regSize = this->operands[0].getReg().getSize();
 
   /* Create the SMT semantic */
   op1 = ap.buildSymbolicRegOperand(reg, regSize);
@@ -72,25 +72,25 @@ void OrpdIRBuilder::regMem(AnalysisProcessor &ap, Inst &inst) const {
 }
 
 
-void OrpdIRBuilder::memImm(AnalysisProcessor &ap, Inst &inst) const {
+void OrpdIRBuilder::memImm(Inst &inst) const {
   TwoOperandsTemplate::stop(this->disas);
 }
 
 
-void OrpdIRBuilder::memReg(AnalysisProcessor &ap, Inst &inst) const {
+void OrpdIRBuilder::memReg(Inst &inst) const {
   TwoOperandsTemplate::stop(this->disas);
 }
 
 
-Inst *OrpdIRBuilder::process(AnalysisProcessor &ap) const {
+Inst *OrpdIRBuilder::process(void) const {
   this->checkSetup();
 
   Inst *inst = new Inst(ap.getThreadID(), this->address, this->disas);
 
   try {
-    this->templateMethod(ap, *inst, this->operands, "ORPD");
+    this->templateMethod(*inst, this->operands, "ORPD");
+    ControlFlow::rip(*inst, this->nextAddress);
     ap.incNumberOfExpressions(inst->numberOfExpressions()); /* Used for statistics */
-    ControlFlow::rip(*inst, ap, this->nextAddress);
   }
   catch (std::exception &e) {
     delete inst;

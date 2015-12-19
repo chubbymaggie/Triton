@@ -41,12 +41,12 @@
 */
 
 
-ImulIRBuilder::ImulIRBuilder(uint64 address, const std::string &disassembly):
+ImulIRBuilder::ImulIRBuilder(__uint address, const std::string &disassembly):
   BaseIRBuilder(address, disassembly) {
 }
 
 
-void ImulIRBuilder::regImm(AnalysisProcessor &ap, Inst &inst) const {
+void ImulIRBuilder::regImm(Inst &inst) const {
   SymbolicExpression *se;
   smt2lib::smtAstAbstractNode *expr, *op1, *op2;
   auto reg = this->operands[0].getReg();
@@ -55,31 +55,31 @@ void ImulIRBuilder::regImm(AnalysisProcessor &ap, Inst &inst) const {
 
   /* Create the SMT semantic */
   op1 = ap.buildSymbolicRegOperand(reg, regSize);
-  op2 = smt2lib::bv(imm, regSize * REG_SIZE);
+  op2 = smt2lib::bv(imm, regSize * BYTE_SIZE_BIT);
 
   /* Finale expr */
   expr = smt2lib::bvmul(
-          smt2lib::sx(regSize * REG_SIZE, op1),
-          smt2lib::sx(regSize * REG_SIZE, op2)
+          smt2lib::sx(regSize * BYTE_SIZE_BIT, op1),
+          smt2lib::sx(regSize * BYTE_SIZE_BIT, op2)
          );
 
   /* Create the symbolic expression */
-  se = ap.createRegSE(inst, smt2lib::extract((regSize * REG_SIZE) - 1, 0, expr), reg, regSize);
+  se = ap.createRegSE(inst, smt2lib::extract((regSize * BYTE_SIZE_BIT) - 1, 0, expr), reg, regSize);
 
   /* Apply the taint */
   ap.aluSpreadTaintRegImm(se, reg);
 
   /* Add the symbolic flags expression to the current inst */
-  EflagsBuilder::cfImul(inst, se, ap, regSize, expr);
-  EflagsBuilder::ofImul(inst, se, ap, regSize, expr);
-  EflagsBuilder::sf(inst, se, ap, regSize);
+  EflagsBuilder::cfImul(inst, se, reg, expr);
+  EflagsBuilder::ofImul(inst, se, reg, expr);
+  EflagsBuilder::sf(inst, se, reg);
 }
 
 
-void ImulIRBuilder::regReg(AnalysisProcessor &ap, Inst &inst) const {
+void ImulIRBuilder::regReg(Inst &inst) const {
   SymbolicExpression *se;
   smt2lib::smtAstAbstractNode *expr, *op1, *op2, *op3;
-  uint64 imm = 0;
+  __uint imm = 0;
   auto reg1 = this->operands[0].getReg();
   auto regSize1 = this->operands[0].getReg().getSize();
   auto reg2 = this->operands[1].getReg();
@@ -91,15 +91,15 @@ void ImulIRBuilder::regReg(AnalysisProcessor &ap, Inst &inst) const {
   /* Create the SMT semantic */
   op1 = ap.buildSymbolicRegOperand(reg1, regSize1);
   op2 = ap.buildSymbolicRegOperand(reg2, regSize2);
-  op3 = smt2lib::bv(imm, regSize2 * REG_SIZE);
+  op3 = smt2lib::bv(imm, regSize2 * BYTE_SIZE_BIT);
 
   /* Case 1 */
   if (this->operands[0].isReadOnly()) {
 
     /* Expr */
     expr = smt2lib::bvmul(
-             smt2lib::sx(regSize2 * REG_SIZE, op2),
-             smt2lib::sx(regSize1 * REG_SIZE, op1)
+             smt2lib::sx(regSize2 * BYTE_SIZE_BIT, op2),
+             smt2lib::sx(regSize1 * BYTE_SIZE_BIT, op1)
            );
 
     switch (regSize1) {
@@ -147,12 +147,12 @@ void ImulIRBuilder::regReg(AnalysisProcessor &ap, Inst &inst) const {
   else if (this->operands[0].isReadAndWrite()) {
     /* Expr */
     expr = smt2lib::bvmul(
-             smt2lib::sx(regSize1 * REG_SIZE, op1),
-             smt2lib::sx(regSize2 * REG_SIZE, op2)
+             smt2lib::sx(regSize1 * BYTE_SIZE_BIT, op1),
+             smt2lib::sx(regSize2 * BYTE_SIZE_BIT, op2)
            );
 
     /* Create the symbolic expression */
-    se = ap.createRegSE(inst, smt2lib::extract((regSize1 * REG_SIZE) - 1, 0, expr), reg1, regSize1);
+    se = ap.createRegSE(inst, smt2lib::extract((regSize1 * BYTE_SIZE_BIT) - 1, 0, expr), reg1, regSize1);
 
     /* Apply the taint */
     ap.aluSpreadTaintRegReg(se, reg1, reg2);
@@ -162,12 +162,12 @@ void ImulIRBuilder::regReg(AnalysisProcessor &ap, Inst &inst) const {
   else if (this->operands[0].isWriteOnly()) {
     /* Expr */
     expr = smt2lib::bvmul(
-             smt2lib::sx(regSize2 * REG_SIZE, op2),
-             smt2lib::sx(regSize2 * REG_SIZE, op3)
+             smt2lib::sx(regSize2 * BYTE_SIZE_BIT, op2),
+             smt2lib::sx(regSize2 * BYTE_SIZE_BIT, op3)
            );
 
     /* Create the symbolic expression */
-    se = ap.createRegSE(inst, smt2lib::extract((regSize1 * REG_SIZE) - 1, 0, expr), reg1, regSize1);
+    se = ap.createRegSE(inst, smt2lib::extract((regSize1 * BYTE_SIZE_BIT) - 1, 0, expr), reg1, regSize1);
 
     /* Apply the taint */
     ap.aluSpreadTaintRegReg(se, reg1, reg2);
@@ -178,16 +178,16 @@ void ImulIRBuilder::regReg(AnalysisProcessor &ap, Inst &inst) const {
   }
 
   /* Add the symbolic flags expression to the current inst */
-  EflagsBuilder::cfImul(inst, se, ap, regSize1, expr);
-  EflagsBuilder::ofImul(inst, se, ap, regSize1, expr);
-  EflagsBuilder::sf(inst, se, ap, regSize1);
+  EflagsBuilder::cfImul(inst, se, reg1, expr);
+  EflagsBuilder::ofImul(inst, se, reg1, expr);
+  EflagsBuilder::sf(inst, se, reg1);
 }
 
 
-void ImulIRBuilder::regMem(AnalysisProcessor &ap, Inst &inst) const {
+void ImulIRBuilder::regMem(Inst &inst) const {
   SymbolicExpression *se;
   smt2lib::smtAstAbstractNode *expr, *op1, *op2, *op3;
-  uint64 imm = 0;
+  __uint imm = 0;
   auto reg1 = this->operands[0].getReg();
   auto regSize1 = this->operands[0].getReg().getSize();
   auto mem2 = this->operands[1].getMem();
@@ -199,15 +199,15 @@ void ImulIRBuilder::regMem(AnalysisProcessor &ap, Inst &inst) const {
   /* Create the SMT semantic */
   op1 = ap.buildSymbolicRegOperand(reg1, regSize1);
   op2 = ap.buildSymbolicMemOperand(mem2, memSize2);
-  op3 = smt2lib::bv(imm, memSize2 * REG_SIZE);
+  op3 = smt2lib::bv(imm, memSize2 * BYTE_SIZE_BIT);
 
   /* Case 1 */
   if (this->operands[0].isReadOnly()) {
 
     /* Expr */
     expr = smt2lib::bvmul(
-             smt2lib::sx(memSize2 * REG_SIZE, op2),
-             smt2lib::sx(regSize1 * REG_SIZE, op1)
+             smt2lib::sx(memSize2 * BYTE_SIZE_BIT, op2),
+             smt2lib::sx(regSize1 * BYTE_SIZE_BIT, op1)
            );
 
     switch (regSize1) {
@@ -255,12 +255,12 @@ void ImulIRBuilder::regMem(AnalysisProcessor &ap, Inst &inst) const {
   else if (this->operands[0].isReadAndWrite()) {
     /* Expr */
     expr = smt2lib::bvmul(
-             smt2lib::sx(regSize1 * REG_SIZE, op1),
-             smt2lib::sx(memSize2 * REG_SIZE, op2)
+             smt2lib::sx(regSize1 * BYTE_SIZE_BIT, op1),
+             smt2lib::sx(memSize2 * BYTE_SIZE_BIT, op2)
            );
 
     /* Create the symbolic expression */
-    se = ap.createRegSE(inst, smt2lib::extract((regSize1 * REG_SIZE) - 1, 0, expr), reg1, regSize1);
+    se = ap.createRegSE(inst, smt2lib::extract((regSize1 * BYTE_SIZE_BIT) - 1, 0, expr), reg1, regSize1);
 
     /* Apply the taint */
     ap.aluSpreadTaintRegMem(se, reg1, mem2, memSize2);
@@ -270,12 +270,12 @@ void ImulIRBuilder::regMem(AnalysisProcessor &ap, Inst &inst) const {
   else if (this->operands[0].isWriteOnly()) {
     /* Expr */
     expr = smt2lib::bvmul(
-             smt2lib::sx(memSize2 * REG_SIZE, op2),
-             smt2lib::sx(memSize2 * REG_SIZE, op3)
+             smt2lib::sx(memSize2 * BYTE_SIZE_BIT, op2),
+             smt2lib::sx(memSize2 * BYTE_SIZE_BIT, op3)
            );
 
     /* Create the symbolic expression */
-    se = ap.createRegSE(inst, smt2lib::extract((regSize1 * REG_SIZE) - 1, 0, expr), reg1, regSize1);
+    se = ap.createRegSE(inst, smt2lib::extract((regSize1 * BYTE_SIZE_BIT) - 1, 0, expr), reg1, regSize1);
 
     /* Apply the taint */
     ap.aluSpreadTaintRegMem(se, reg1, mem2, memSize2);
@@ -286,31 +286,31 @@ void ImulIRBuilder::regMem(AnalysisProcessor &ap, Inst &inst) const {
   }
 
   /* Add the symbolic flags expression to the current inst */
-  EflagsBuilder::cfImul(inst, se, ap, regSize1, expr);
-  EflagsBuilder::ofImul(inst, se, ap, regSize1, expr);
-  EflagsBuilder::sf(inst, se, ap, regSize1);
+  EflagsBuilder::cfImul(inst, se, reg1, expr);
+  EflagsBuilder::ofImul(inst, se, reg1, expr);
+  EflagsBuilder::sf(inst, se, reg1);
 }
 
 
-void ImulIRBuilder::memImm(AnalysisProcessor &ap, Inst &inst) const {
+void ImulIRBuilder::memImm(Inst &inst) const {
   TwoOperandsTemplate::stop(this->disas);
 }
 
 
-void ImulIRBuilder::memReg(AnalysisProcessor &ap, Inst &inst) const {
+void ImulIRBuilder::memReg(Inst &inst) const {
   TwoOperandsTemplate::stop(this->disas);
 }
 
 
-Inst *ImulIRBuilder::process(AnalysisProcessor &ap) const {
+Inst *ImulIRBuilder::process(void) const {
   this->checkSetup();
 
   Inst *inst = new Inst(ap.getThreadID(), this->address, this->disas);
 
   try {
-    this->templateMethod(ap, *inst, this->operands, "IMUL");
+    this->templateMethod(*inst, this->operands, "IMUL");
+    ControlFlow::rip(*inst, this->nextAddress);
     ap.incNumberOfExpressions(inst->numberOfExpressions()); /* Used for statistics */
-    ControlFlow::rip(*inst, ap, this->nextAddress);
   }
   catch (std::exception &e) {
     delete inst;

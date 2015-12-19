@@ -16,20 +16,20 @@
 #include <SymbolicExpression.h>
 
 
-CwdeIRBuilder::CwdeIRBuilder(uint64 address, const std::string &disassembly):
+CwdeIRBuilder::CwdeIRBuilder(__uint address, const std::string &disassembly):
   BaseIRBuilder(address, disassembly) {
 }
 
 
-void CwdeIRBuilder::none(AnalysisProcessor &ap, Inst &inst) const {
+void CwdeIRBuilder::none(Inst &inst) const {
   SymbolicExpression *se;
   smt2lib::smtAstAbstractNode *expr, *op1;
 
   /* Create the SMT semantic */
-  op1 = ap.buildSymbolicRegOperand(ID_TMP_RAX, REG_SIZE, 16, 0);
+  op1 = ap.buildSymbolicRegOperand(ID_TMP_RAX, (WORD_SIZE_BIT - 1), 0);
 
   /* Finale expr */
-  expr = smt2lib::sx(16, op1);
+  expr = smt2lib::sx(WORD_SIZE_BIT, op1);
 
   /* Create the symbolic expression */
   se = ap.createRegSE(inst, expr, ID_TMP_RAX, DWORD_SIZE);
@@ -39,15 +39,15 @@ void CwdeIRBuilder::none(AnalysisProcessor &ap, Inst &inst) const {
 }
 
 
-Inst *CwdeIRBuilder::process(AnalysisProcessor &ap) const {
+Inst *CwdeIRBuilder::process(void) const {
   this->checkSetup();
 
   Inst *inst = new Inst(ap.getThreadID(), this->address, this->disas);
 
   try {
-    this->templateMethod(ap, *inst, this->operands, "CWDE");
+    this->templateMethod(*inst, this->operands, "CWDE");
+    ControlFlow::rip(*inst, this->nextAddress);
     ap.incNumberOfExpressions(inst->numberOfExpressions()); /* Used for statistics */
-    ControlFlow::rip(*inst, ap, this->nextAddress);
   }
   catch (std::exception &e) {
     delete inst;

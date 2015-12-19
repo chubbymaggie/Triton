@@ -16,17 +16,17 @@
 #include <SymbolicExpression.h>
 
 
-MovhlpsIRBuilder::MovhlpsIRBuilder(uint64 address, const std::string &disassembly):
+MovhlpsIRBuilder::MovhlpsIRBuilder(__uint address, const std::string &disassembly):
   BaseIRBuilder(address, disassembly) {
 }
 
 
-void MovhlpsIRBuilder::regImm(AnalysisProcessor &ap, Inst &inst) const {
+void MovhlpsIRBuilder::regImm(Inst &inst) const {
   TwoOperandsTemplate::stop(this->disas);
 }
 
 
-void MovhlpsIRBuilder::regReg(AnalysisProcessor &ap, Inst &inst) const {
+void MovhlpsIRBuilder::regReg(Inst &inst) const {
   SymbolicExpression *se;
   smt2lib::smtAstAbstractNode *expr, *op1, *op2;
   auto reg1 = this->operands[0].getReg();
@@ -38,10 +38,10 @@ void MovhlpsIRBuilder::regReg(AnalysisProcessor &ap, Inst &inst) const {
   op1 = ap.buildSymbolicRegOperand(reg1, regSize1);
   op2 = ap.buildSymbolicRegOperand(reg2, regSize2);
 
-  /* Destination[0..63] = Source[64..127] */
+  /* Destination[63..0] = Source[127..64] */
   expr = smt2lib::concat(
-            smt2lib::extract(127, 64, op1), /* Destination[64..127] unchanged */
-            smt2lib::extract(127, 64, op2)  /* Destination[0..63] = Source[64..127]; */
+            smt2lib::extract((DQWORD_SIZE_BIT - 1), QWORD_SIZE_BIT, op1), /* Destination[127..64] unchanged */
+            smt2lib::extract((DQWORD_SIZE_BIT - 1), QWORD_SIZE_BIT, op2)  /* Destination[63..0] = Source[127..64]; */
           );
 
   /* Create the symbolic expression */
@@ -52,30 +52,30 @@ void MovhlpsIRBuilder::regReg(AnalysisProcessor &ap, Inst &inst) const {
 }
 
 
-void MovhlpsIRBuilder::regMem(AnalysisProcessor &ap, Inst &inst) const {
+void MovhlpsIRBuilder::regMem(Inst &inst) const {
   TwoOperandsTemplate::stop(this->disas);
 }
 
 
-void MovhlpsIRBuilder::memImm(AnalysisProcessor &ap, Inst &inst) const {
+void MovhlpsIRBuilder::memImm(Inst &inst) const {
   TwoOperandsTemplate::stop(this->disas);
 }
 
 
-void MovhlpsIRBuilder::memReg(AnalysisProcessor &ap, Inst &inst) const {
+void MovhlpsIRBuilder::memReg(Inst &inst) const {
   TwoOperandsTemplate::stop(this->disas);
 }
 
 
-Inst *MovhlpsIRBuilder::process(AnalysisProcessor &ap) const {
+Inst *MovhlpsIRBuilder::process(void) const {
   checkSetup();
 
   Inst *inst = new Inst(ap.getThreadID(), this->address, this->disas);
 
   try {
-    this->templateMethod(ap, *inst, this->operands, "MOVHLPS");
+    this->templateMethod(*inst, this->operands, "MOVHLPS");
+    ControlFlow::rip(*inst, this->nextAddress);
     ap.incNumberOfExpressions(inst->numberOfExpressions()); /* Used for statistics */
-    ControlFlow::rip(*inst, ap, this->nextAddress);
   }
   catch (std::exception &e) {
     delete inst;

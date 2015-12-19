@@ -16,17 +16,17 @@
 #include <SymbolicExpression.h>
 
 
-CmovlIRBuilder::CmovlIRBuilder(uint64 address, const std::string &disassembly):
+CmovlIRBuilder::CmovlIRBuilder(__uint address, const std::string &disassembly):
   BaseIRBuilder(address, disassembly){
 }
 
 
-void CmovlIRBuilder::regImm(AnalysisProcessor &ap, Inst &inst) const {
+void CmovlIRBuilder::regImm(Inst &inst) const {
   TwoOperandsTemplate::stop(this->disas);
 }
 
 
-void CmovlIRBuilder::regReg(AnalysisProcessor &ap, Inst &inst) const {
+void CmovlIRBuilder::regReg(Inst &inst) const {
   SymbolicExpression *se;
   smt2lib::smtAstAbstractNode *expr, *reg1e, *reg2e, *sf, *of;
   auto reg1 = this->operands[0].getReg();
@@ -57,7 +57,7 @@ void CmovlIRBuilder::regReg(AnalysisProcessor &ap, Inst &inst) const {
 }
 
 
-void CmovlIRBuilder::regMem(AnalysisProcessor &ap, Inst &inst) const {
+void CmovlIRBuilder::regMem(Inst &inst) const {
   SymbolicExpression *se;
   smt2lib::smtAstAbstractNode *expr, *reg1e, *mem1e, *sf, *of;
   auto memSize = this->operands[1].getMem().getSize();
@@ -88,25 +88,25 @@ void CmovlIRBuilder::regMem(AnalysisProcessor &ap, Inst &inst) const {
 }
 
 
-void CmovlIRBuilder::memImm(AnalysisProcessor &ap, Inst &inst) const {
+void CmovlIRBuilder::memImm(Inst &inst) const {
   TwoOperandsTemplate::stop(this->disas);
 }
 
 
-void CmovlIRBuilder::memReg(AnalysisProcessor &ap, Inst &inst) const {
+void CmovlIRBuilder::memReg(Inst &inst) const {
   TwoOperandsTemplate::stop(this->disas);
 }
 
 
-Inst *CmovlIRBuilder::process(AnalysisProcessor &ap) const {
+Inst *CmovlIRBuilder::process(void) const {
   checkSetup();
 
   Inst *inst = new Inst(ap.getThreadID(), this->address, this->disas);
 
   try {
-    this->templateMethod(ap, *inst, this->operands, "CMOVL");
+    this->templateMethod(*inst, this->operands, "CMOVL");
+    ControlFlow::rip(*inst, this->nextAddress);
     ap.incNumberOfExpressions(inst->numberOfExpressions()); /* Used for statistics */
-    ControlFlow::rip(*inst, ap, this->nextAddress);
   }
   catch (std::exception &e) {
     delete inst;
