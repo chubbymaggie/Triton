@@ -312,7 +312,7 @@ namespace triton {
     }
 
 
-    std::set<triton::arch::RegisterOperand*> x8664Cpu::getParentRegisters(void) {
+    std::set<triton::arch::RegisterOperand*> x8664Cpu::getParentRegister(void) {
       std::set<triton::arch::RegisterOperand*> ret;
       ret.insert(&TRITON_X86_REG_RAX);
       ret.insert(&TRITON_X86_REG_RBX);
@@ -413,6 +413,10 @@ namespace triton {
                 triton::arch::RegisterOperand index(triton::arch::x86::capstoneRegToTritonReg(op->mem.index));
                 triton::arch::ImmediateOperand disp(op->mem.disp, op->size);
                 triton::arch::ImmediateOperand scale(op->mem.scale, op->size);
+
+                /* Specify that LEA contains a PC relative */
+                if (base == TRITON_X86_REG_PC)
+                  mem.setPcRelative(inst.getNextAddress());
 
                 mem.setBaseReg(base);
                 mem.setIndexReg(index);

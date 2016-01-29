@@ -6,6 +6,8 @@
 */
 
 #include <stdexcept>
+
+#include <api.hpp>
 #include <cpuSize.hpp>
 #include <memoryOperand.hpp>
 
@@ -18,6 +20,7 @@ namespace triton {
       this->address       = 0;
       this->concreteValue = 0;
       this->trusted       = false;
+      this->pcRelative    = 0;
     }
 
 
@@ -25,6 +28,7 @@ namespace triton {
       this->address       = address;
       this->concreteValue = concreteValue;
       this->trusted       = true;
+      this->pcRelative    = 0;
 
       if (size == 0)
         throw std::runtime_error("MemoryOperand::MemoryOperand(): size cannot be zero.");
@@ -56,7 +60,34 @@ namespace triton {
 
 
     triton::__uint MemoryOperand::getAddress(void) const {
-      return this->address;
+      triton::__uint address = 0;
+
+      /* Return the address if it is already defined */
+      if (this->address)
+        return this->address;
+
+      /* Otherwise, try to compute the address */
+      if (triton::api.isArchitectureValid() && this->getBitSize() >= BYTE_SIZE_BIT) {
+        RegisterOperand base          = this->baseReg;
+        RegisterOperand index         = this->indexReg;
+        triton::__uint baseValue      = 0;
+        triton::__uint indexValue     = 0;
+        triton::__uint scaleValue     = this->scale.getValue();
+        triton::__uint dispValue      = this->displacement.getValue();
+        triton::__uint mask           = -1;
+
+        if (this->pcRelative)
+          baseValue = this->pcRelative;
+        else if (base.isValid())
+          baseValue = triton::api.getRegisterValue(base).convert_to<triton::__uint>();
+
+        if (index.isValid())
+          indexValue = triton::api.getRegisterValue(index).convert_to<triton::__uint>();
+
+        address = (((baseValue + (indexValue * scaleValue)) + dispValue) & mask);
+      }
+
+      return address;
     }
 
 
@@ -67,6 +98,11 @@ namespace triton {
 
     triton::uint128 MemoryOperand::getConcreteValue(void) const {
       return this->concreteValue;
+    }
+
+
+    triton::__uint MemoryOperand::getPcRelative(void) const {
+      return this->pcRelative;
     }
 
 
@@ -128,6 +164,11 @@ namespace triton {
     }
 
 
+    void MemoryOperand::setPcRelative(triton::__uint addr) {
+      this->pcRelative = addr;
+    }
+
+
     void MemoryOperand::setBaseReg(RegisterOperand base) {
       this->baseReg = base;
     }
@@ -163,6 +204,7 @@ namespace triton {
       this->low           = other.low;
       this->scale         = other.scale;
       this->trusted       = other.trusted;
+      this->pcRelative    = other.pcRelative;
     }
 
 

@@ -60,6 +60,14 @@ namespace triton {
           //! Enable / Disable flag.
           bool enableFlag;
 
+          /*! \brief Defines if we use a symbolic emulation.
+           *
+           * \description
+           * **true**: full symbolic execution (emulation).
+           * **false**: concolic execution.
+           */
+          bool emulationFlag;
+
           //! Number of registers
           triton::uint32 numberOfReg;
 
@@ -93,6 +101,14 @@ namespace triton {
            */
           std::map<triton::__uint, triton::__uint> memoryReference;
 
+          /*! \brief map of <address:size> -> symbolic expression.
+           *
+           * \description
+           * **item1**: <addr:size><br>
+           * **item2**: symbolic reference id
+           */
+          std::map<std::pair<triton::__uint, triton::uint32>, smt2lib::smtAstAbstractNode*> alignedMemoryReference;
+
 
         public:
 
@@ -104,6 +120,9 @@ namespace triton {
 
           //! Removes the symbolic expression corresponding to the id.
           void removeSymbolicExpression(triton::__uint symExprId);
+
+          //! Removes aligned entry.
+          void removeAlignedMemory(triton::__uint addr);
 
           //! Adds a symbolic variable.
           SymbolicVariable* newSymbolicVariable(symkind_e kind, triton::__uint kindValue, triton::uint32 size, std::string comment="");
@@ -129,8 +148,23 @@ namespace triton {
           //! Returns the symbolic expression corresponding to the id.
           SymbolicExpression* getSymbolicExpressionFromId(triton::__uint symExprId);
 
+          //! Returns the map of symbolic registers defined.
+          std::map<triton::arch::RegisterOperand, SymbolicExpression*> getSymbolicRegister(void);
+
+          //! Returns the map of symbolic memory defined.
+          std::map<triton::__uint, SymbolicExpression*> getSymbolicMemory(void);
+
           //! Returns the symbolic expression id corresponding to the register.
           triton::__uint getSymbolicRegisterId(triton::arch::RegisterOperand& reg);
+
+          //! Returns the symbolic memory value.
+          triton::uint8 getSymbolicMemoryValue(triton::__uint address);
+
+          //! Returns the symbolic memory value.
+          triton::uint128 getSymbolicMemoryValue(triton::arch::MemoryOperand& mem);
+
+          //! Returns the symbolic register value.
+          triton::uint128 getSymbolicRegisterValue(triton::arch::RegisterOperand& reg);
 
           //! Returns an immediate symbolic operand.
           smt2lib::smtAstAbstractNode* buildSymbolicImmediateOperand(triton::arch::ImmediateOperand& imm);
@@ -195,8 +229,19 @@ namespace triton {
           //! Concretizes a specific symbolic register reference.
           void concretizeReg(triton::arch::RegisterOperand& reg);
 
+          /*! \brief Enables or disables the symbolic emulation.
+           *
+           * \description
+           * **true**: full symbolic execution (emulation).
+           * **false**: concolic execution.
+           */
+          void emulation(bool flag);
+
           //! Enables or disables the symbolic execution engine.
           void enable(bool flag);
+
+          //! Returns true if the we perform a full symbolic emulation.
+          bool isEmulationEnabled(void);
 
           //! Returns true if the symbolic execution engine is enabled.
           bool isEnabled(void);
