@@ -9,8 +9,9 @@
 #define TRITON_ARCHITECTURE_H
 
 #include <set>
+#include <vector>
 
-#include "abstractCpu.hpp"
+#include "cpuInterface.hpp"
 #include "instruction.hpp"
 #include "memoryOperand.hpp"
 #include "registerOperand.hpp"
@@ -50,7 +51,7 @@ namespace triton {
         triton::uint32 arch;
 
         //! Instance to the real CPU class.
-        triton::arch::AbstractCpu *cpu;
+        triton::arch::cpuInterface* cpu;
 
       public:
 
@@ -58,40 +59,40 @@ namespace triton {
         /*!
           \param regId the register id.
         */
-        bool isFlag(triton::uint32 regId);
+        bool isFlag(triton::uint32 regId) const;
 
         //! Returns true if the regId is a register.
         /*!
           \param regId the register id.
         */
-        bool isReg(triton::uint32 regId);
+        bool isRegister(triton::uint32 regId) const;
 
         //! Returns true if the regId is a register or a flag.
         /*!
           \param regId the register id.
         */
-        bool isRegValid(triton::uint32 regId);
+        bool isRegisterValid(triton::uint32 regId) const;
 
         //! Returns true if the architecture is valid.
-        bool isValid(void);
+        bool isValid(void) const;
 
         //! Returns the architecture as triton::arch::architecture_e.
         triton::uint32 getArchitecture(void) const;
 
         //! Returns the CPU
-        triton::arch::AbstractCpu* getCpu(void);
+        triton::arch::cpuInterface* getCpu(void);
 
         //! Returns the invalid CPU register id.
-        triton::uint32 invalidReg(void);
+        triton::uint32 invalidRegister(void) const;
 
         //! Returns the number of registers according to the CPU architecture.
-        triton::uint32 numberOfReg(void);
+        triton::uint32 numberOfRegisters(void) const;
 
         //! Returns the max size (in bit) of the CPU register (GPR).
-        triton::uint32 regBitSize(void);
+        triton::uint32 registerBitSize(void) const;
 
         //! Returns the max size (in byte) of the CPU register (GPR).
-        triton::uint32 regSize(void);
+        triton::uint32 registerSize(void) const;
 
         //! Setup an architecture.
         /*!
@@ -107,34 +108,43 @@ namespace triton {
           \param reg the register id.
           \return std::tuple<name, b-high, b-low, parentId>
         */
-        std::tuple<std::string, triton::uint32, triton::uint32, triton::uint32> getRegInfo(triton::uint32 reg);
+        std::tuple<std::string, triton::uint32, triton::uint32, triton::uint32> getRegisterInformation(triton::uint32 reg) const;
+
+        //! Returns all registers.
+        std::set<triton::arch::RegisterOperand*> getAllRegisters(void) const;
 
         //! Returns all parent registers.
-        std::set<triton::arch::RegisterOperand*> getParentRegister(void);
+        std::set<triton::arch::RegisterOperand*> getParentRegisters(void) const;
 
         //! Disassembles the instruction according to the architecture.
-        void disassembly(triton::arch::Instruction &inst);
+        void disassembly(triton::arch::Instruction &inst) const;
 
         //! Builds the instruction semantics according to the architecture.
-        void buildSemantics(triton::arch::Instruction &inst);
+        void buildSemantics(triton::arch::Instruction &inst) const;
 
         //! Returns the last concrete value recorded of a memory access.
-        triton::uint8 getLastMemoryValue(triton::__uint addr);
+        triton::uint8 getLastMemoryValue(triton::__uint addr) const;
 
         //! Returns the last concrete value recorded of a memory access.
-        triton::uint128 getLastMemoryValue(triton::arch::MemoryOperand& mem);
+        triton::uint512 getLastMemoryValue(const triton::arch::MemoryOperand& mem) const;
+
+        //! Returns the last concrete values of a memory area.
+        std::vector<triton::uint8> getLastMemoryAreaValue(triton::__uint baseAddr, triton::uint32 size) const;
 
         //! Returns the last concrete value recorded of a register state.
-        triton::uint128 getLastRegisterValue(triton::arch::RegisterOperand& reg);
+        triton::uint512 getLastRegisterValue(const triton::arch::RegisterOperand& reg) const;
 
         //! Sets the last concrete value of a memory access.
         void setLastMemoryValue(triton::__uint addr, triton::uint8 value);
 
         //! Sets the last concrete value of a memory access.
-        void setLastMemoryValue(triton::arch::MemoryOperand& mem);
+        void setLastMemoryValue(const triton::arch::MemoryOperand& mem);
+
+        //! Sets the last concrete values of a memory area.
+        void setLastMemoryAreaValue(triton::__uint baseAddr, const std::vector<triton::uint8>& values);
 
         //! Sets the last concrete value of a register state.
-        void setLastRegisterValue(triton::arch::RegisterOperand& reg);
+        void setLastRegisterValue(const triton::arch::RegisterOperand& reg);
 
         //! Constructor.
         Architecture();

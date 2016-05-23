@@ -6,6 +6,9 @@
 */
 
 #include <stdexcept>
+
+#include <api.hpp>
+#include <cpuSize.hpp>
 #include <symbolicVariable.hpp>
 
 
@@ -18,26 +21,18 @@ namespace triton {
                                          triton::__uint kindValue,
                                          triton::__uint id,
                                          triton::uint32 size,
-                                         std::string comment,
-                                         triton::uint128 concreteValue) {
+                                         const std::string& comment,
+                                         triton::uint512 concreteValue) {
         this->symVarComment          = comment;
         this->symVarId               = id;
         this->symVarKind             = kind;
         this->symVarKindValue        = kindValue;
-        this->symVarName             = SYMVAR_NAME + std::to_string(id);
+        this->symVarName             = TRITON_SYMVAR_NAME + std::to_string(id);
         this->symVarSize             = size;
         this->symVarConcreteValue    = concreteValue;
-        this->symVarHasConcreteValue = true;
-      }
 
-
-      SymbolicVariable::SymbolicVariable(symkind_e kind,
-                                         triton::__uint kindValue,
-                                         triton::__uint id,
-                                         triton::uint32 size,
-                                         std::string comment
-                                         ) : SymbolicVariable(kind, kindValue, id, size, comment, 0) {
-        this->symVarHasConcreteValue = false;
+        if (this->symVarSize > MAX_BITS_SUPPORTED)
+          throw std::runtime_error("SymbolicVariable::SymbolicVariable(): Size connot be greater than MAX_BITS_SUPPORTED.");
       }
 
 
@@ -49,7 +44,6 @@ namespace triton {
         this->symVarName             = copy.symVarName;
         this->symVarSize             = copy.symVarSize;
         this->symVarConcreteValue    = copy.symVarConcreteValue;
-        this->symVarHasConcreteValue = copy.symVarHasConcreteValue;
       }
 
 
@@ -57,63 +51,63 @@ namespace triton {
       }
 
 
-      symkind_e SymbolicVariable::getSymVarKind(void) {
+      symkind_e SymbolicVariable::getSymVarKind(void) const {
         return this->symVarKind;
       }
 
 
-      std::string SymbolicVariable::getSymVarName(void) {
+      const std::string& SymbolicVariable::getSymVarName(void) const {
         return this->symVarName;
       }
 
 
-      triton::__uint SymbolicVariable::getSymVarId(void) {
+      triton::__uint SymbolicVariable::getSymVarId(void) const {
         return this->symVarId;
       }
 
 
-      triton::__uint SymbolicVariable::getSymVarKindValue(void) {
+      triton::__uint SymbolicVariable::getSymVarKindValue(void) const {
         return this->symVarKindValue;
       }
 
 
-      triton::uint32 SymbolicVariable::getSymVarSize(void) {
+      triton::uint32 SymbolicVariable::getSymVarSize(void) const {
         return this->symVarSize;
       }
 
 
-      std::string SymbolicVariable::getSymVarComment(void) {
+      const std::string& SymbolicVariable::getSymVarComment(void) const {
         return this->symVarComment;
       }
 
 
-      triton::uint128 SymbolicVariable::getConcreteValue(void) {
-        if (this->symVarHasConcreteValue)
-          return this->symVarConcreteValue;
-        else
-          throw std::runtime_error("SymbolicVariable::SymbolicVariable(): The symbolic variable has not a concrete value");
+      triton::uint512 SymbolicVariable::getConcreteValue(void) const {
+        return this->symVarConcreteValue;
       }
 
 
-      bool SymbolicVariable::hasConcreteValue(void) {
-        return this->symVarHasConcreteValue;
+      void SymbolicVariable::setSymVarComment(const std::string& comment) {
+        this->symVarComment = comment;
       }
 
 
-      void SymbolicVariable::setSymVarConcreteValue(triton::uint128 value) {
-        this->symVarConcreteValue    = value;
-        this->symVarHasConcreteValue = true;
+      void SymbolicVariable::setSymVarConcreteValue(triton::uint512 value) {
+        triton::ast::AbstractNode* node = triton::api.getAstVariableNode(this->getSymVarName());
+
+        this->symVarConcreteValue = value;
+        if (node)
+          node->init();
       }
 
 
-      std::ostream &operator<<(std::ostream &stream, SymbolicVariable symVar) {
+      std::ostream& operator<<(std::ostream& stream, const SymbolicVariable& symVar) {
         stream << symVar.getSymVarName() << ":" << symVar.getSymVarSize();
         return stream;
       }
 
 
-      std::ostream &operator<<(std::ostream &stream, SymbolicVariable* symVar) {
-        stream << symVar->getSymVarName() << ":" << symVar->getSymVarSize();
+      std::ostream& operator<<(std::ostream& stream, const SymbolicVariable* symVar) {
+        stream << *symVar;
         return stream;
       }
 

@@ -70,10 +70,13 @@ namespace tracer {
         /* 3 - Save current taint engine state */
         this->snapshotTaintEngine = new triton::engines::taint::TaintEngine(*triton::api.getTaintEngine());
 
-        /* 4 - Save current taint engine state */
-        this->nodesList = triton::smt2lib::allocatedNodes;
+        /* 4 - Save current set of nodes */
+        this->nodesList = triton::api.getAllocatedAstNodes();
 
-        /* 5 - Save the Triton CPU state */
+        /* 5 - Save current map of variables */
+        this->variablesMap = triton::api.getAstVariableNodes();
+
+        /* 6 - Save the Triton CPU state */
         #if defined(__x86_64__) || defined(_M_X64)
         this->cpu = new triton::arch::x86::x8664Cpu(*reinterpret_cast<triton::arch::x86::x8664Cpu*>(triton::api.getCpu()));
         #endif
@@ -81,7 +84,7 @@ namespace tracer {
         this->cpu = new triton::arch::x86::x86Cpu(*reinterpret_cast<triton::arch::x86::x86Cpu*>(triton::api.getCpu()));
         #endif
 
-        /* 6 - Save Pin registers context */
+        /* 7 - Save Pin registers context */
         PIN_SaveContext(ctx, &this->pinCtx);
       }
 
@@ -118,20 +121,17 @@ namespace tracer {
             delete currentSymbolicVars[i->first];
         }
 
-        /* 4 - Delete unused AST nodes */
-        for (auto i = triton::smt2lib::allocatedNodes.begin(); i != triton::smt2lib::allocatedNodes.end(); ++i) {
-          if (this->nodesList.find(*i) == this->nodesList.end())
-            delete *i;
-        }
-
-        /* 5 - Restore current symbolic engine state */
+        /* 4 - Restore current symbolic engine state */
         *triton::api.getSymbolicEngine() = *this->snapshotSymEngine;
 
-        /* 6 - Restore current taint engine state */
+        /* 5 - Restore current taint engine state */
         *triton::api.getTaintEngine() = *this->snapshotTaintEngine;
 
-        /* 7 - Restore current AST node state */
-        triton::smt2lib::allocatedNodes = this->nodesList;
+        /* 6 - Restore current AST node state */
+        triton::api.setAllocatedAstNodes(this->nodesList);
+
+        /* 7 - Restore current variables map state */
+        triton::api.setAstVariableNodes(this->variablesMap);
 
         /* 8 - Restore the Triton CPU state */
         #if defined(__x86_64__) || defined(_M_X64)

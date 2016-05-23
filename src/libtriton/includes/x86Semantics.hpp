@@ -45,7 +45,7 @@ namespace triton {
 
       /* Utils ================================================================================= */
 
-      //! Builds the instruction's semantics.
+      //! Builds the semantics of the instruction.
       void build(triton::arch::Instruction& inst);
 
 
@@ -67,91 +67,97 @@ namespace triton {
       void controlFlow_s(triton::arch::Instruction& inst);
 
       //! The AF semantics.
-      void af_s(triton::arch::Instruction& inst, triton::engines::symbolic::SymbolicExpression* parent, triton::arch::OperandWrapper& dst, smt2lib::smtAstAbstractNode* op1, smt2lib::smtAstAbstractNode* op2, bool vol=false);
+      void af_s(triton::arch::Instruction& inst, triton::engines::symbolic::SymbolicExpression* parent, triton::arch::OperandWrapper& dst, triton::ast::AbstractNode* op1, triton::ast::AbstractNode* op2, bool vol=false);
 
       //! The AF semantics.
-      void afNeg_s(triton::arch::Instruction& inst, triton::engines::symbolic::SymbolicExpression* parent, triton::arch::OperandWrapper& dst, smt2lib::smtAstAbstractNode* op1, bool vol=false);
+      void afNeg_s(triton::arch::Instruction& inst, triton::engines::symbolic::SymbolicExpression* parent, triton::arch::OperandWrapper& dst, triton::ast::AbstractNode* op1, bool vol=false);
 
       //! The CF semantics.
-      void cfAdd_s(triton::arch::Instruction& inst, triton::engines::symbolic::SymbolicExpression* parent, triton::arch::OperandWrapper& dst, smt2lib::smtAstAbstractNode* op1, smt2lib::smtAstAbstractNode* op2, bool vol=false);
+      void cfAdd_s(triton::arch::Instruction& inst, triton::engines::symbolic::SymbolicExpression* parent, triton::arch::OperandWrapper& dst, triton::ast::AbstractNode* op1, triton::ast::AbstractNode* op2, bool vol=false);
 
       //! The CF semantics.
-      void cfImul_s(triton::arch::Instruction& inst, triton::engines::symbolic::SymbolicExpression* parent, triton::arch::OperandWrapper& dst, smt2lib::smtAstAbstractNode* op1, smt2lib::smtAstAbstractNode* res, bool vol=false);
+      void cfImul_s(triton::arch::Instruction& inst, triton::engines::symbolic::SymbolicExpression* parent, triton::arch::OperandWrapper& dst, triton::ast::AbstractNode* op1, triton::ast::AbstractNode* res, bool vol=false);
 
       //! The CF semantics.
-      void cfMul_s(triton::arch::Instruction& inst, triton::engines::symbolic::SymbolicExpression* parent, triton::arch::OperandWrapper& dst, smt2lib::smtAstAbstractNode* op1, bool vol=false);
+      void cfMul_s(triton::arch::Instruction& inst, triton::engines::symbolic::SymbolicExpression* parent, triton::arch::OperandWrapper& dst, triton::ast::AbstractNode* op1, bool vol=false);
 
       //! The CF semantics.
-      void cfNeg_s(triton::arch::Instruction& inst, triton::engines::symbolic::SymbolicExpression* parent, triton::arch::OperandWrapper& dst, smt2lib::smtAstAbstractNode* op1, bool vol=false);
+      void cfNeg_s(triton::arch::Instruction& inst, triton::engines::symbolic::SymbolicExpression* parent, triton::arch::OperandWrapper& dst, triton::ast::AbstractNode* op1, bool vol=false);
 
       //! The CF semantics.
-      void cfRcl_s(triton::arch::Instruction& inst, triton::engines::symbolic::SymbolicExpression* parent, triton::arch::OperandWrapper& dst, smt2lib::smtAstAbstractNode* op2, bool vol=false);
+      void cfPtest_s(triton::arch::Instruction& inst, triton::engines::symbolic::SymbolicExpression* parent, triton::arch::OperandWrapper& dst, bool vol=false);
 
       //! The CF semantics.
-      void cfRol_s(triton::arch::Instruction& inst, triton::engines::symbolic::SymbolicExpression* parent, triton::arch::OperandWrapper& dst, smt2lib::smtAstAbstractNode* op2, bool vol=false);
+      void cfRcl_s(triton::arch::Instruction& inst, triton::engines::symbolic::SymbolicExpression* parent, triton::arch::OperandWrapper& dst, triton::ast::AbstractNode* op2, bool vol=false);
 
       //! The CF semantics.
-      void cfRor_s(triton::arch::Instruction& inst, triton::engines::symbolic::SymbolicExpression* parent, triton::arch::OperandWrapper& dst, smt2lib::smtAstAbstractNode* op2, bool vol=false);
+      void cfRol_s(triton::arch::Instruction& inst, triton::engines::symbolic::SymbolicExpression* parent, triton::arch::OperandWrapper& dst, triton::ast::AbstractNode* op2, bool vol=false);
 
       //! The CF semantics.
-      void cfSar_s(triton::arch::Instruction& inst, triton::engines::symbolic::SymbolicExpression* parent, triton::arch::OperandWrapper& dst, smt2lib::smtAstAbstractNode* op1, smt2lib::smtAstAbstractNode* op2, bool vol=false);
+      void cfRor_s(triton::arch::Instruction& inst, triton::engines::symbolic::SymbolicExpression* parent, triton::arch::OperandWrapper& dst, triton::ast::AbstractNode* op2, bool vol=false);
 
       //! The CF semantics.
-      void cfShl_s(triton::arch::Instruction& inst, triton::engines::symbolic::SymbolicExpression* parent, triton::arch::OperandWrapper& dst, smt2lib::smtAstAbstractNode* op1, smt2lib::smtAstAbstractNode* op2, bool vol=false);
+      void cfSar_s(triton::arch::Instruction& inst, triton::engines::symbolic::SymbolicExpression* parent, triton::arch::OperandWrapper& dst, triton::ast::AbstractNode* op1, triton::ast::AbstractNode* op2, bool vol=false);
 
       //! The CF semantics.
-      void cfShr_s(triton::arch::Instruction& inst, triton::engines::symbolic::SymbolicExpression* parent, triton::arch::OperandWrapper& dst, smt2lib::smtAstAbstractNode* op1, smt2lib::smtAstAbstractNode* op2, bool vol=false);
+      void cfShl_s(triton::arch::Instruction& inst, triton::engines::symbolic::SymbolicExpression* parent, triton::arch::OperandWrapper& dst, triton::ast::AbstractNode* op1, triton::ast::AbstractNode* op2, bool vol=false);
 
       //! The CF semantics.
-      void cfSub_s(triton::arch::Instruction& inst, triton::engines::symbolic::SymbolicExpression* parent, triton::arch::OperandWrapper& dst, smt2lib::smtAstAbstractNode* op1, smt2lib::smtAstAbstractNode* op2, bool vol=false);
+      void cfShr_s(triton::arch::Instruction& inst, triton::engines::symbolic::SymbolicExpression* parent, triton::arch::OperandWrapper& dst, triton::ast::AbstractNode* op1, triton::ast::AbstractNode* op2, bool vol=false);
+
+      //! The CF semantics.
+      void cfSub_s(triton::arch::Instruction& inst, triton::engines::symbolic::SymbolicExpression* parent, triton::arch::OperandWrapper& dst, triton::ast::AbstractNode* op1, triton::ast::AbstractNode* op2, bool vol=false);
 
       //! The OF semantics.
-      void ofAdd_s(triton::arch::Instruction& inst, triton::engines::symbolic::SymbolicExpression* parent, triton::arch::OperandWrapper& dst, smt2lib::smtAstAbstractNode* op1, smt2lib::smtAstAbstractNode* op2, bool vol=false);
+      void ofAdd_s(triton::arch::Instruction& inst, triton::engines::symbolic::SymbolicExpression* parent, triton::arch::OperandWrapper& dst, triton::ast::AbstractNode* op1, triton::ast::AbstractNode* op2, bool vol=false);
 
       //! The OF semantics.
-      void ofImul_s(triton::arch::Instruction& inst, triton::engines::symbolic::SymbolicExpression* parent, triton::arch::OperandWrapper& dst,  smt2lib::smtAstAbstractNode* op1, smt2lib::smtAstAbstractNode* res, bool vol=false);
+      void ofImul_s(triton::arch::Instruction& inst, triton::engines::symbolic::SymbolicExpression* parent, triton::arch::OperandWrapper& dst,  triton::ast::AbstractNode* op1, triton::ast::AbstractNode* res, bool vol=false);
 
       //! The OF semantics.
-      void ofMul_s(triton::arch::Instruction& inst, triton::engines::symbolic::SymbolicExpression* parent, triton::arch::OperandWrapper& dst, smt2lib::smtAstAbstractNode* op1, bool vol=false);
+      void ofMul_s(triton::arch::Instruction& inst, triton::engines::symbolic::SymbolicExpression* parent, triton::arch::OperandWrapper& dst, triton::ast::AbstractNode* op1, bool vol=false);
 
       //! The OF semantics.
-      void ofNeg_s(triton::arch::Instruction& inst, triton::engines::symbolic::SymbolicExpression* parent, triton::arch::OperandWrapper& dst, smt2lib::smtAstAbstractNode* op1, bool vol=false);
+      void ofNeg_s(triton::arch::Instruction& inst, triton::engines::symbolic::SymbolicExpression* parent, triton::arch::OperandWrapper& dst, triton::ast::AbstractNode* op1, bool vol=false);
 
       //! The OF semantics.
-      void ofRol_s(triton::arch::Instruction& inst, triton::engines::symbolic::SymbolicExpression* parent, triton::arch::OperandWrapper& dst, smt2lib::smtAstAbstractNode* op2, bool vol=false);
+      void ofRol_s(triton::arch::Instruction& inst, triton::engines::symbolic::SymbolicExpression* parent, triton::arch::OperandWrapper& dst, triton::ast::AbstractNode* op2, bool vol=false);
 
       //! The OF semantics.
-      void ofRor_s(triton::arch::Instruction& inst, triton::engines::symbolic::SymbolicExpression* parent, triton::arch::OperandWrapper& dst, smt2lib::smtAstAbstractNode* op2, bool vol=false);
+      void ofRor_s(triton::arch::Instruction& inst, triton::engines::symbolic::SymbolicExpression* parent, triton::arch::OperandWrapper& dst, triton::ast::AbstractNode* op2, bool vol=false);
 
       //! The OF semantics.
-      void ofSar_s(triton::arch::Instruction& inst, triton::engines::symbolic::SymbolicExpression* parent, triton::arch::OperandWrapper& dst, smt2lib::smtAstAbstractNode* op2, bool vol=false);
+      void ofSar_s(triton::arch::Instruction& inst, triton::engines::symbolic::SymbolicExpression* parent, triton::arch::OperandWrapper& dst, triton::ast::AbstractNode* op2, bool vol=false);
 
       //! The OF semantics.
-      void ofShl_s(triton::arch::Instruction& inst, triton::engines::symbolic::SymbolicExpression* parent, triton::arch::OperandWrapper& dst, smt2lib::smtAstAbstractNode* op1, smt2lib::smtAstAbstractNode* op2, bool vol=false);
+      void ofShl_s(triton::arch::Instruction& inst, triton::engines::symbolic::SymbolicExpression* parent, triton::arch::OperandWrapper& dst, triton::ast::AbstractNode* op1, triton::ast::AbstractNode* op2, bool vol=false);
 
       //! The OF semantics.
-      void ofShr_s(triton::arch::Instruction& inst, triton::engines::symbolic::SymbolicExpression* parent, triton::arch::OperandWrapper& dst, smt2lib::smtAstAbstractNode* op1, smt2lib::smtAstAbstractNode* op2, bool vol=false);
+      void ofShr_s(triton::arch::Instruction& inst, triton::engines::symbolic::SymbolicExpression* parent, triton::arch::OperandWrapper& dst, triton::ast::AbstractNode* op1, triton::ast::AbstractNode* op2, bool vol=false);
 
       //! The OF semantics.
-      void ofSub_s(triton::arch::Instruction& inst, triton::engines::symbolic::SymbolicExpression* parent, triton::arch::OperandWrapper& dst, smt2lib::smtAstAbstractNode* op1, smt2lib::smtAstAbstractNode* op2, bool vol=false);
+      void ofSub_s(triton::arch::Instruction& inst, triton::engines::symbolic::SymbolicExpression* parent, triton::arch::OperandWrapper& dst, triton::ast::AbstractNode* op1, triton::ast::AbstractNode* op2, bool vol=false);
 
       //! The PF semantics.
       void pf_s(triton::arch::Instruction& inst, triton::engines::symbolic::SymbolicExpression* parent, triton::arch::OperandWrapper& dst, bool vol=false);
 
       //! The PF semantics.
-      void pfShl_s(triton::arch::Instruction& inst, triton::engines::symbolic::SymbolicExpression* parent, triton::arch::OperandWrapper& dst, smt2lib::smtAstAbstractNode* op2, bool vol=false);
+      void pfShl_s(triton::arch::Instruction& inst, triton::engines::symbolic::SymbolicExpression* parent, triton::arch::OperandWrapper& dst, triton::ast::AbstractNode* op2, bool vol=false);
 
       //! The SF semantics.
       void sf_s(triton::arch::Instruction& inst, triton::engines::symbolic::SymbolicExpression* parent, triton::arch::OperandWrapper& dst, bool vol=false);
 
       //! The SF semantics.
-      void sfShl_s(triton::arch::Instruction& inst, triton::engines::symbolic::SymbolicExpression* parent, triton::arch::OperandWrapper& dst, smt2lib::smtAstAbstractNode* op2, bool vol=false);
+      void sfShl_s(triton::arch::Instruction& inst, triton::engines::symbolic::SymbolicExpression* parent, triton::arch::OperandWrapper& dst, triton::ast::AbstractNode* op2, bool vol=false);
 
       //! The ZF semantics.
       void zf_s(triton::arch::Instruction& inst, triton::engines::symbolic::SymbolicExpression* parent, triton::arch::OperandWrapper& dst, bool vol=false);
 
       //! The ZF semantics.
-      void zfShl_s(triton::arch::Instruction& inst, triton::engines::symbolic::SymbolicExpression* parent, triton::arch::OperandWrapper& dst, smt2lib::smtAstAbstractNode* op2, bool vol=false);
+      void zfBsf_s(triton::arch::Instruction& inst, triton::engines::symbolic::SymbolicExpression* parent, triton::arch::OperandWrapper& src, triton::ast::AbstractNode* op2, bool vol=false);
+
+      //! The ZF semantics.
+      void zfShl_s(triton::arch::Instruction& inst, triton::engines::symbolic::SymbolicExpression* parent, triton::arch::OperandWrapper& dst, triton::ast::AbstractNode* op2, bool vol=false);
 
       //! The ADC semantics.
       void adc_s(triton::arch::Instruction& inst);
@@ -174,8 +180,26 @@ namespace triton {
       //! The ANDPS semantics.
       void andps_s(triton::arch::Instruction& inst);
 
+      //! The BSF semantics.
+      void bsf_s(triton::arch::Instruction& inst);
+
+      //! The BSR semantics.
+      void bsr_s(triton::arch::Instruction& inst);
+
       //! The BSWAP semantics.
       void bswap_s(triton::arch::Instruction& inst);
+
+      //! The BT semantics.
+      void bt_s(triton::arch::Instruction& inst);
+
+      //! The BTC semantics.
+      void btc_s(triton::arch::Instruction& inst);
+
+      //! The BTR semantics.
+      void btr_s(triton::arch::Instruction& inst);
+
+      //! The BTS semantics.
+      void bts_s(triton::arch::Instruction& inst);
 
       //! The CALL semantics.
       void call_s(triton::arch::Instruction& inst);
@@ -246,8 +270,29 @@ namespace triton {
       //! The CMP semantics.
       void cmp_s(triton::arch::Instruction& inst);
 
+      //! The CMPSB semantics.
+      void cmpsb_s(triton::arch::Instruction& inst);
+
+      //! The CMPSD semantics.
+      void cmpsd_s(triton::arch::Instruction& inst);
+
+      //! The CMPSQ semantics.
+      void cmpsq_s(triton::arch::Instruction& inst);
+
+      //! The CMPSW semantics.
+      void cmpsw_s(triton::arch::Instruction& inst);
+
       //! The CMPXCHG semantics.
       void cmpxchg_s(triton::arch::Instruction& inst);
+
+      //! The CMPXCHG16B semantics.
+      void cmpxchg16b_s(triton::arch::Instruction& inst);
+
+      //! The CMPXCHG8B semantics.
+      void cmpxchg8b_s(triton::arch::Instruction& inst);
+
+      //! The CPUID semantics.
+      void cpuid_s(triton::arch::Instruction& inst);
 
       //! The CQO semantics.
       void cqo_s(triton::arch::Instruction& inst);
@@ -321,11 +366,29 @@ namespace triton {
       //! The JS semantics.
       void js_s(triton::arch::Instruction& inst);
 
+      //! The LDDQU semantics.
+      void lddqu_s(triton::arch::Instruction& inst);
+
+      //! The LDMXCSR semantics.
+      void ldmxcsr_s(triton::arch::Instruction& inst);
+
       //! The LEA semantics.
       void lea_s(triton::arch::Instruction& inst);
 
       //! The LEAVE semantics.
       void leave_s(triton::arch::Instruction& inst);
+
+      //! The LODSB semantics.
+      void lodsb_s(triton::arch::Instruction& inst);
+
+      //! The LODSD semantics.
+      void lodsd_s(triton::arch::Instruction& inst);
+
+      //! The LODSQ semantics.
+      void lodsq_s(triton::arch::Instruction& inst);
+
+      //! The LODSW semantics.
+      void lodsw_s(triton::arch::Instruction& inst);
 
       //! The MOV semantics.
       void mov_s(triton::arch::Instruction& inst);
@@ -338,6 +401,15 @@ namespace triton {
 
       //! The MOVAPS semantics.
       void movaps_s(triton::arch::Instruction& inst);
+
+      //! The MOVD semantics.
+      void movd_s(triton::arch::Instruction& inst);
+
+      //! The MOVDDUP semantics.
+      void movddup_s(triton::arch::Instruction& inst);
+
+      //! The MOVDQ2Q semantics.
+      void movdq2q_s(triton::arch::Instruction& inst);
 
       //! The MOVDQA semantics.
       void movdqa_s(triton::arch::Instruction& inst);
@@ -362,6 +434,57 @@ namespace triton {
 
       //! The MOVLPS semantics.
       void movlps_s(triton::arch::Instruction& inst);
+
+      //! The MOVMSKPD semantics.
+      void movmskpd_s(triton::arch::Instruction& inst);
+
+      //! The MOVMSKPS semantics.
+      void movmskps_s(triton::arch::Instruction& inst);
+
+      //! The MOVNTDQ semantics.
+      void movntdq_s(triton::arch::Instruction& inst);
+
+      //! The MOVNTI semantics.
+      void movnti_s(triton::arch::Instruction& inst);
+
+      //! The MOVNTPD semantics.
+      void movntpd_s(triton::arch::Instruction& inst);
+
+      //! The MOVNTPS semantics.
+      void movntps_s(triton::arch::Instruction& inst);
+
+      //! The MOVNTQ semantics.
+      void movntq_s(triton::arch::Instruction& inst);
+
+      //! The MOVSHDUP semantics.
+      void movshdup_s(triton::arch::Instruction& inst);
+
+      //! The MOVSLDUP semantics.
+      void movsldup_s(triton::arch::Instruction& inst);
+
+      //! The MOVQ semantics.
+      void movq_s(triton::arch::Instruction& inst);
+
+      //! The MOVQ2DQ semantics.
+      void movq2dq_s(triton::arch::Instruction& inst);
+
+      //! The MOVSB semantics.
+      void movsb_s(triton::arch::Instruction& inst);
+
+      //! The MOVSD semantics.
+      void movsd_s(triton::arch::Instruction& inst);
+
+      //! The MOVUPD semantics.
+      void movupd_s(triton::arch::Instruction& inst);
+
+      //! The MOVUPS semantics.
+      void movups_s(triton::arch::Instruction& inst);
+
+      //! The MOVSQ semantics.
+      void movsq_s(triton::arch::Instruction& inst);
+
+      //! The MOVSW semantics.
+      void movsw_s(triton::arch::Instruction& inst);
 
       //! The MOVSX semantics.
       void movsx_s(triton::arch::Instruction& inst);
@@ -393,6 +516,24 @@ namespace triton {
       //! The ORPS semantics.
       void orps_s(triton::arch::Instruction& inst);
 
+      //! The PADDB semantics.
+      void paddb_s(triton::arch::Instruction& inst);
+
+      //! The PADDD semantics.
+      void paddd_s(triton::arch::Instruction& inst);
+
+      //! The PADDQ semantics.
+      void paddq_s(triton::arch::Instruction& inst);
+
+      //! The PADDW semantics.
+      void paddw_s(triton::arch::Instruction& inst);
+
+      //! The PAND semantics.
+      void pand_s(triton::arch::Instruction& inst);
+
+      //! The PANDN semantics.
+      void pandn_s(triton::arch::Instruction& inst);
+
       //! The PCMPEQB semantics.
       void pcmpeqb_s(triton::arch::Instruction& inst);
 
@@ -402,14 +543,140 @@ namespace triton {
       //! The PCMPEQW semantics.
       void pcmpeqw_s(triton::arch::Instruction& inst);
 
+      //! The PCMPGTB semantics.
+      void pcmpgtb_s(triton::arch::Instruction& inst);
+
+      //! The PCMPGTD semantics.
+      void pcmpgtd_s(triton::arch::Instruction& inst);
+
+      //! The PCMPGTW semantics.
+      void pcmpgtw_s(triton::arch::Instruction& inst);
+
+      //! The PMAXSB semantics.
+      void pmaxsb_s(triton::arch::Instruction& inst);
+
+      //! The PMAXSD semantics.
+      void pmaxsd_s(triton::arch::Instruction& inst);
+
+      //! The PMAXSW semantics.
+      void pmaxsw_s(triton::arch::Instruction& inst);
+
+      //! The PMAXUB semantics.
+      void pmaxub_s(triton::arch::Instruction& inst);
+
+      //! The PMAXUD semantics.
+      void pmaxud_s(triton::arch::Instruction& inst);
+
+      //! The PMAXUW semantics.
+      void pmaxuw_s(triton::arch::Instruction& inst);
+
+      //! The PMINSB semantics.
+      void pminsb_s(triton::arch::Instruction& inst);
+
+      //! The PMINSD semantics.
+      void pminsd_s(triton::arch::Instruction& inst);
+
+      //! The PMINSW semantics.
+      void pminsw_s(triton::arch::Instruction& inst);
+
+      //! The PMINUB semantics.
+      void pminub_s(triton::arch::Instruction& inst);
+
+      //! The PMINUD semantics.
+      void pminud_s(triton::arch::Instruction& inst);
+
+      //! The PMINUW semantics.
+      void pminuw_s(triton::arch::Instruction& inst);
+
       //! The PMOVMSKB semantics.
       void pmovmskb_s(triton::arch::Instruction& inst);
 
       //! The POP semantics.
       void pop_s(triton::arch::Instruction& inst);
 
+      //! The POPAL semantics.
+      void popal_s(triton::arch::Instruction& inst);
+
+      //! The POPFD semantics.
+      void popfd_s(triton::arch::Instruction& inst);
+
+      //! The POPFQ semantics.
+      void popfq_s(triton::arch::Instruction& inst);
+
+      //! The POR semantics.
+      void por_s(triton::arch::Instruction& inst);
+
+      //! The PREFETCHx semantics.
+      void prefetchx_s(triton::arch::Instruction& inst);
+
+      //! The PSHUFD semantics.
+      void pshufd_s(triton::arch::Instruction& inst);
+
+      //! The PSHUFHW semantics.
+      void pshufhw_s(triton::arch::Instruction& inst);
+
+      //! The PSHUFLW semantics.
+      void pshuflw_s(triton::arch::Instruction& inst);
+
+      //! The PSHUFW semantics.
+      void pshufw_s(triton::arch::Instruction& inst);
+
+      //! The PSLLDQ semantics.
+      void pslldq_s(triton::arch::Instruction& inst);
+
+      //! The PSRLDQ semantics.
+      void psrldq_s(triton::arch::Instruction& inst);
+
+      //! The PSUBB semantics.
+      void psubb_s(triton::arch::Instruction& inst);
+
+      //! The PSUBD semantics.
+      void psubd_s(triton::arch::Instruction& inst);
+
+      //! The PSUBQ semantics.
+      void psubq_s(triton::arch::Instruction& inst);
+
+      //! The PSUBW semantics.
+      void psubw_s(triton::arch::Instruction& inst);
+
+      //! The PTEST semantics.
+      void ptest_s(triton::arch::Instruction& inst);
+
+      //! The PUNPCKHBW semantics.
+      void punpckhbw_s(triton::arch::Instruction& inst);
+
+      //! The PUNPCKHDQ semantics.
+      void punpckhdq_s(triton::arch::Instruction& inst);
+
+      //! The PUNPCKHQDQ semantics.
+      void punpckhqdq_s(triton::arch::Instruction& inst);
+
+      //! The PUNPCKHWD semantics.
+      void punpckhwd_s(triton::arch::Instruction& inst);
+
+      //! The PUNPCKLBW semantics.
+      void punpcklbw_s(triton::arch::Instruction& inst);
+
+      //! The PUNPCKLDQ semantics.
+      void punpckldq_s(triton::arch::Instruction& inst);
+
+      //! The PUNPCKLQDQ semantics.
+      void punpcklqdq_s(triton::arch::Instruction& inst);
+
+      //! The PUNPCKLWD semantics.
+      void punpcklwd_s(triton::arch::Instruction& inst);
+
       //! The PUSH semantics.
       void push_s(triton::arch::Instruction& inst);
+
+      //! The PUSHAL semantics.
+      void pushal_s(triton::arch::Instruction& inst);
+
+      //! The PUSHFD semantics.
+      void pushfd_s(triton::arch::Instruction& inst);
+
+      //! The PUSHFQ semantics.
+      void pushfq_s(triton::arch::Instruction& inst);
 
       //! The PXOR semantics.
       void pxor_s(triton::arch::Instruction& inst);
@@ -419,6 +686,9 @@ namespace triton {
 
       //! The RCR semantics.
       void rcr_s(triton::arch::Instruction& inst);
+
+      //! The RDTSC semantics.
+      void rdtsc_s(triton::arch::Instruction& inst);
 
       //! The RET semantics.
       void ret_s(triton::arch::Instruction& inst);
@@ -434,6 +704,18 @@ namespace triton {
 
       //! The SBB semantics.
       void sbb_s(triton::arch::Instruction& inst);
+
+      //! The SCASB semantics.
+      void scasb_s(triton::arch::Instruction& inst);
+
+      //! The SCASD semantics.
+      void scasd_s(triton::arch::Instruction& inst);
+
+      //! The SCASQ semantics.
+      void scasq_s(triton::arch::Instruction& inst);
+
+      //! The SCASW semantics.
+      void scasw_s(triton::arch::Instruction& inst);
 
       //! The SETA semantics.
       void seta_s(triton::arch::Instruction& inst);
@@ -495,11 +777,44 @@ namespace triton {
       //! The STD semantics.
       void std_s(triton::arch::Instruction& inst);
 
+      //! The STMXCSR semantics.
+      void stmxcsr_s(triton::arch::Instruction& inst);
+
+      //! The STOSB semantics.
+      void stosb_s(triton::arch::Instruction& inst);
+
+      //! The STOSD semantics.
+      void stosd_s(triton::arch::Instruction& inst);
+
+      //! The STOSQ semantics.
+      void stosq_s(triton::arch::Instruction& inst);
+
+      //! The STOSW semantics.
+      void stosw_s(triton::arch::Instruction& inst);
+
       //! The SUB semantics.
       void sub_s(triton::arch::Instruction& inst);
 
       //! The TEST semantics.
       void test_s(triton::arch::Instruction& inst);
+
+      //! The UNPCKHPD semantics.
+      void unpckhpd_s(triton::arch::Instruction& inst);
+
+      //! The UNPCKHPS semantics.
+      void unpckhps_s(triton::arch::Instruction& inst);
+
+      //! The UNPCKLPD semantics.
+      void unpcklpd_s(triton::arch::Instruction& inst);
+
+      //! The UNPCKLPS semantics.
+      void unpcklps_s(triton::arch::Instruction& inst);
+
+      //! The VPTEST semantics.
+      void vptest_s(triton::arch::Instruction& inst);
+
+      //! The VMOVDQA semantics.
+      void vmovdqa_s(triton::arch::Instruction& inst);
 
       //! The XADD semantics.
       void xadd_s(triton::arch::Instruction& inst);

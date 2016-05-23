@@ -23,9 +23,9 @@ namespace triton {
       }
 
 
-      SolverModel::SolverModel(std::string name, triton::uint512 value) {
+      SolverModel::SolverModel(const std::string& name, triton::uint512 value) {
         this->name  = name;
-        this->id    = std::atoi(name.c_str() + SYMVAR_NAME_SIZE);
+        this->id    = std::atoi(name.c_str() + TRITON_SYMVAR_NAME_SIZE);
         this->value = value;
       }
 
@@ -46,17 +46,17 @@ namespace triton {
       }
 
 
-      std::string SolverModel::getName(void) {
+      const std::string& SolverModel::getName(void) const {
         return this->name;
       }
 
 
-      triton::uint32 SolverModel::getId(void) {
+      triton::uint32 SolverModel::getId(void) const {
         return this->id;
       }
 
 
-      triton::uint512 SolverModel::getValue(void) {
+      triton::uint512 SolverModel::getValue(void) const {
         return this->value;
       }
 
@@ -66,8 +66,14 @@ namespace triton {
       }
 
 
-      std::ostream &operator<<(std::ostream &stream, SolverModel model) {
+      std::ostream& operator<<(std::ostream& stream, const SolverModel& model) {
         stream << model.getName() << " = " << std::hex << model.getValue() << std::dec;
+        return stream;
+      }
+
+
+      std::ostream& operator<<(std::ostream& stream, const SolverModel* model) {
+        stream << *model;
         return stream;
       }
 

@@ -22,8 +22,8 @@
 \section description_sec Description
 
 Triton is a dynamic binary analysis (DBA) framework. It provides internal components
-like a \ref engine_DSE_page (DSE) engine, a \ref engine_Taint_page, an intermediate representation based on \ref py_smt2lib_page of the x86 and x86-64
-instructions set, \ref SMT_simplification_page, an \ref solver_interface_page and, the last but not least,
+like a \ref engine_DSE_page (DSE) engine, a \ref engine_Taint_page, \ref py_ast_page of the x86 and the x86-64
+instruction set semantics, \ref SMT_simplification_page, a \ref solver_interface_page and, the last but not least,
 \ref py_triton_page. Based on these components, you are able to build program analysis tools,
 automate reverse engineering and perform software verification.
 
@@ -33,6 +33,16 @@ automate reverse engineering and perform software verification.
 \section publications_sec Presentations and Publications
 
 <ul>
+  <li><b>Dynamic Binary Analysis and Obfuscated Codes </b><br>
+  Talk at St'Hack, Bordeaux, 2016.
+  [<a href="http://triton.quarkslab.com/files/sthack2016-rthomas-jsalwan.pdf">slide</a>]<br>
+  Abstract: <i>At this presentation we will talk about how a DBA (Dynamic Binary Analysis) may
+  help a reverse engineer to reverse obfuscated code. We will first introduce some basic obfuscation
+  techniques and then expose how it's possible to break some stuffs (using our open-source DBA framework - Triton) like
+  detect opaque predicates, reconstruct CFG, find the original algorithm, isolate sensible
+  data and many more... Then, we will conclude with a demo and few words about our future work.
+  </i></li>
+
   <li><b>How Triton may help to analyse obfuscated binaries</b><br>
   MISC magazine 82, 2015.
   [<a href="http://triton.quarkslab.com/files/misc82-triton.pdf">french article</a>]<br>
@@ -87,9 +97,9 @@ To be able to compile Triton, you must install these libraries before:
 
  lib name                                                                      | version
 -------------------------------------------------------------------------------|---------
- [libboost](http://www.boost.org/)                                             | >= 1.58
+ [libboost](http://www.boost.org/)                                             | >= 1.55
  [libpython](https://www.python.org/)                                          | 2.7.x
- [libz3](https://github.com/Z3Prover/z3)                                       | n/a
+ [libz3](https://github.com/Z3Prover/z3)                                       | >= 4.4.1
  [libcapstone](http://www.capstone-engine.org/)                                | >= 3.0
  [Pin](https://software.intel.com/en-us/articles/pintool-downloads) (optional) | 71313
 
@@ -115,16 +125,16 @@ $ git clone https://github.com/JonathanSalwan/Triton.git
 $ cd Triton
 $ mkdir build
 $ cd build
-$ cmake -DPINTOOL=yes ..
+$ cmake -DPINTOOL=on ..
 $ make
 $ cd ..
 $ ./triton ./src/examples/pin/ir.py /usr/bin/id
 ~~~~~~~~~~~~~
 
-It's not recommended to use the pintool on a kernel `4.x`. The last version of Pin doesn't support very well this branch (`4.x`). Anyway, if you feel lucky, you can compile the Triton pintool with the `-DKERNEL4=yes` flag.
+It's not recommended to use the pintool on a kernel `4.x`. The last version of Pin doesn't support very well this branch (`4.x`). Anyway, if you feel lucky, you can compile the Triton pintool with the `-DKERNEL4=on` flag.
 
 ~~~~~~~~~~~~~{.sh}
-$ cmake -DPINTOOL=yes -DKERNEL4=yes ..
+$ cmake -DPINTOOL=on -DKERNEL4=on ..
 $ make
 ~~~~~~~~~~~~~
 
@@ -139,11 +149,13 @@ namespace triton {
 
 
   API::API() {
-    this->arch      = arch::Architecture();
-    this->taint     = nullptr;
-    this->sym       = nullptr;
-    this->symBackup = nullptr;
-    this->solver    = nullptr;
+    this->arch                = arch::Architecture();
+    this->astGarbageCollector = nullptr;
+    this->astRepresentation   = nullptr;
+    this->solver              = nullptr;
+    this->sym                 = nullptr;
+    this->symBackup           = nullptr;
+    this->taint               = nullptr;
   }
 
 
@@ -155,7 +167,7 @@ namespace triton {
 
   /* Architecture API ============================================================================== */
 
-  bool API::isArchitectureValid(void) {
+  bool API::isArchitectureValid(void) const {
     return this->arch.isValid();
   }
 
@@ -165,22 +177,25 @@ namespace triton {
   }
 
 
-  void API::checkArchitecture(void) {
+  void API::checkArchitecture(void) const {
     if (!this->isArchitectureValid())
       throw std::runtime_error("API::checkArchitecture(): You must define an architecture.");
   }
 
 
-  triton::arch::AbstractCpu* API::getCpu(void) {
+  triton::arch::cpuInterface* API::getCpu(void) {
     if (!this->isArchitectureValid())
       throw std::runtime_error("API::checkArchitecture(): You must define an architecture.");
     return this->arch.getCpu();
   }
 
 
-  void API::setArchitecture(uint32 arch) {
-    /* Setup and init the targetd architecture */
+  void API::setArchitecture(triton::uint32 arch) {
+    /* Setup and init the targeted architecture */
     this->arch.setArchitecture(arch);
+
+    /* remove and re-init previous engines (when setArchitecture() has been called twice) */
+    this->removeEngines();
     this->initEngines();
   }
 
@@ -191,63 +206,74 @@ namespace triton {
   }
 
 
-  bool API::isCpuFlag(triton::uint32 regId) {
+  bool API::isCpuFlag(triton::uint32 regId) const {
     return this->arch.isFlag(regId);
   }
 
 
-  bool API::isCpuReg(triton::uint32 regId) {
-    return this->arch.isReg(regId);
+  bool API::isCpuRegister(triton::uint32 regId) const {
+    return this->arch.isRegister(regId);
   }
 
 
-  bool API::isCpuRegValid(triton::uint32 regId) {
-    return this->arch.isRegValid(regId);
+  bool API::isCpuRegisterValid(triton::uint32 regId) const {
+    return this->arch.isRegisterValid(regId);
   }
 
 
-  triton::uint32 API::cpuRegSize(void) {
-    return this->arch.regSize();
+  triton::uint32 API::cpuRegisterSize(void) const {
+    return this->arch.registerSize();
   }
 
 
-  triton::uint32 API::cpuRegBitSize(void) {
-    return this->arch.regBitSize();
+  triton::uint32 API::cpuRegisterBitSize(void) const {
+    return this->arch.registerBitSize();
   }
 
 
-  triton::uint32 API::cpuInvalidReg(void) {
-    return this->arch.invalidReg();
+  triton::uint32 API::cpuInvalidRegister(void) const {
+    return this->arch.invalidRegister();
   }
 
 
-  triton::uint32 API::cpuNumberOfReg(void) {
-    return this->arch.numberOfReg();
+  triton::uint32 API::cpuNumberOfRegisters(void) const {
+    return this->arch.numberOfRegisters();
   }
 
 
-  std::tuple<std::string, triton::uint32, triton::uint32, triton::uint32> API::getCpuRegInformation(triton::uint32 reg) {
-    return this->arch.getRegInfo(reg);
+  std::tuple<std::string, triton::uint32, triton::uint32, triton::uint32> API::getCpuRegInformation(triton::uint32 reg) const {
+    return this->arch.getRegisterInformation(reg);
   }
 
 
-  std::set<triton::arch::RegisterOperand*> API::getParentRegister(void) {
+  std::set<triton::arch::RegisterOperand*> API::getAllRegisters(void) const {
     this->checkArchitecture();
-    return this->arch.getParentRegister();
+    return this->arch.getAllRegisters();
   }
 
 
-  triton::uint8 API::getLastMemoryValue(triton::__uint addr) {
+  std::set<triton::arch::RegisterOperand*> API::getParentRegisters(void) const {
+    this->checkArchitecture();
+    return this->arch.getParentRegisters();
+  }
+
+
+  triton::uint8 API::getLastMemoryValue(triton::__uint addr) const {
     return this->arch.getLastMemoryValue(addr);
   }
 
 
-  triton::uint128 API::getLastMemoryValue(triton::arch::MemoryOperand& mem) {
+  triton::uint512 API::getLastMemoryValue(const triton::arch::MemoryOperand& mem) const {
     return this->arch.getLastMemoryValue(mem);
   }
 
 
-  triton::uint128 API::getLastRegisterValue(triton::arch::RegisterOperand& reg) {
+  std::vector<triton::uint8> API::getLastMemoryAreaValue(triton::__uint baseAddr, triton::uint32 size) const {
+    return this->arch.getLastMemoryAreaValue(baseAddr, size);
+  }
+
+
+  triton::uint512 API::getLastRegisterValue(const triton::arch::RegisterOperand& reg) const {
     return this->arch.getLastRegisterValue(reg);
   }
 
@@ -257,17 +283,22 @@ namespace triton {
   }
 
 
-  void API::setLastMemoryValue(triton::arch::MemoryOperand& mem) {
+  void API::setLastMemoryValue(const triton::arch::MemoryOperand& mem) {
     this->arch.setLastMemoryValue(mem);
   }
 
 
-  void API::setLastRegisterValue(triton::arch::RegisterOperand& reg) {
+  void API::setLastMemoryAreaValue(triton::__uint baseAddr, const std::vector<triton::uint8>& values) {
+    this->arch.setLastMemoryAreaValue(baseAddr, values);
+  }
+
+
+  void API::setLastRegisterValue(const triton::arch::RegisterOperand& reg) {
     this->arch.setLastRegisterValue(reg);
   }
 
 
-  void API::disassembly(triton::arch::Instruction& inst) {
+  void API::disassembly(triton::arch::Instruction& inst) const {
     this->checkArchitecture();
     this->arch.disassembly(inst);
   }
@@ -288,7 +319,15 @@ namespace triton {
       this->setLastRegisterValue(it2->second);
     }
 
-    /* Stage 3 - Process the IR */
+    /* Stage 3 - Initialize the target address of memory operands */
+    std::vector<triton::arch::OperandWrapper>::iterator it3;
+    for (it3 = inst.operands.begin(); it3 != inst.operands.end(); it3++) {
+      if (it3->getType() == triton::arch::OP_MEM) {
+        it3->getMemory().initAddress();
+      }
+    }
+
+    /* Stage 4 - Process the IR */
     this->arch.buildSemantics(inst);
   }
 
@@ -314,15 +353,32 @@ namespace triton {
     this->solver = new triton::engines::solver::SolverEngine();
     if (!this->solver)
       throw std::invalid_argument("API::initEngines(): No enough memory.");
+
+    this->astGarbageCollector = new triton::ast::AstGarbageCollector();
+    if (!this->astGarbageCollector)
+      throw std::invalid_argument("API::initEngines(): No enough memory.");
+
+    this->astRepresentation = new triton::ast::representations::AstRepresentation();
+    if (!this->astRepresentation)
+      throw std::invalid_argument("API::initEngines(): No enough memory.");
   }
 
 
   void API::removeEngines(void) {
     if(this->isArchitectureValid()) {
-      delete this->taint;
+      delete this->astGarbageCollector;
+      delete this->astRepresentation;
+      delete this->solver;
       delete this->sym;
       delete this->symBackup;
-      delete this->solver;
+      delete this->taint;
+
+      this->astGarbageCollector = nullptr;
+      this->astRepresentation   = nullptr;
+      this->solver              = nullptr;
+      this->sym                 = nullptr;
+      this->symBackup           = nullptr;
+      this->taint               = nullptr;
     }
   }
 
@@ -332,7 +388,6 @@ namespace triton {
       this->removeEngines();
       this->initEngines();
       this->clearArchitecture();
-      smt2lib::freeAllAstNodes();
     }
   }
 
@@ -345,9 +400,105 @@ namespace triton {
 
 
 
+  /* AST garbage collector API ====================================================================== */
+
+  void API::checkAstGarbageCollector(void) const {
+    if (!this->astGarbageCollector)
+      throw std::runtime_error("API::checkAstGarbageCollector(): AST garbage collector is undefined.");
+  }
+
+
+  void API::freeAllAstNodes(void) {
+    this->checkAstGarbageCollector();
+    this->astGarbageCollector->freeAllAstNodes();
+  }
+
+
+  void API::freeAstNodes(std::set<triton::ast::AbstractNode*>& nodes) {
+    this->checkAstGarbageCollector();
+    this->astGarbageCollector->freeAstNodes(nodes);
+  }
+
+
+  void API::extractUniqueAstNodes(std::set<triton::ast::AbstractNode*>& uniqueNodes, triton::ast::AbstractNode* root) const {
+    this->checkAstGarbageCollector();
+    this->astGarbageCollector->extractUniqueAstNodes(uniqueNodes, root);
+  }
+
+
+  triton::ast::AbstractNode* API::recordAstNode(triton::ast::AbstractNode* node) {
+    this->checkAstGarbageCollector();
+    return this->astGarbageCollector->recordAstNode(node);
+  }
+
+
+  void API::recordVariableAstNode(const std::string& name, triton::ast::AbstractNode* node) {
+    this->checkAstGarbageCollector();
+    this->astGarbageCollector->recordVariableAstNode(name, node);
+  }
+
+
+  const std::set<triton::ast::AbstractNode*>& API::getAllocatedAstNodes(void) const {
+    this->checkAstGarbageCollector();
+    return this->astGarbageCollector->getAllocatedAstNodes();
+  }
+
+
+  const std::map<std::string, triton::ast::AbstractNode*>& API::getAstVariableNodes(void) const {
+    this->checkAstGarbageCollector();
+    return this->astGarbageCollector->getAstVariableNodes();
+  }
+
+
+  triton::ast::AbstractNode* API::getAstVariableNode(const std::string& name) const {
+    this->checkAstGarbageCollector();
+    return this->astGarbageCollector->getAstVariableNode(name);
+  }
+
+
+  void API::setAllocatedAstNodes(const std::set<triton::ast::AbstractNode*>& nodes) {
+    this->checkAstGarbageCollector();
+    this->astGarbageCollector->setAllocatedAstNodes(nodes);
+  }
+
+
+  void API::setAstVariableNodes(const std::map<std::string, triton::ast::AbstractNode*>& nodes) {
+    this->checkAstGarbageCollector();
+    this->astGarbageCollector->setAstVariableNodes(nodes);
+  }
+
+
+
+  /* AST representation API ========================================================================= */
+
+  void API::checkAstRepresentation(void) const {
+    if (!this->astRepresentation)
+      throw std::runtime_error("API::checkAstRepresentation(): AST representation interface is undefined.");
+  }
+
+
+  std::ostream& API::printAstRepresentation(std::ostream& stream, triton::ast::AbstractNode* node) {
+    this->checkAstRepresentation();
+    return this->astRepresentation->print(stream, node);
+  }
+
+
+  triton::uint32 API::getAstRepresentationMode(void) const {
+    this->checkAstRepresentation();
+    return this->astRepresentation->getMode();
+  }
+
+
+  void API::setAstRepresentationMode(triton::uint32 mode) {
+    this->checkAstRepresentation();
+    this->astRepresentation->setMode(mode);
+  }
+
+
+
   /* Symbolic Engine API ============================================================================ */
 
-  void API::checkSymbolic(void) {
+  void API::checkSymbolic(void) const {
     if (!this->sym || !this->symBackup)
       throw std::runtime_error("API::checkSymbolic(): Symbolic engine is undefined.");
   }
@@ -369,61 +520,91 @@ namespace triton {
   }
 
 
-  triton::engines::symbolic::SymbolicVariable* API::convertExprToSymVar(triton::__uint exprId, triton::uint32 symVarSize, std::string symVarComment) {
+  triton::engines::symbolic::SymbolicVariable* API::convertExpressionToSymbolicVariable(triton::__uint exprId, triton::uint32 symVarSize, const std::string& symVarComment) {
     this->checkSymbolic();
-    return this->sym->convertExprToSymVar(exprId, symVarSize, symVarComment);
+    return this->sym->convertExpressionToSymbolicVariable(exprId, symVarSize, symVarComment);
   }
 
 
-  triton::engines::symbolic::SymbolicVariable* API::convertMemToSymVar(triton::arch::MemoryOperand mem, std::string symVarComment) {
+  triton::engines::symbolic::SymbolicVariable* API::convertMemoryToSymbolicVariable(const triton::arch::MemoryOperand& mem, const std::string& symVarComment) {
     this->checkSymbolic();
-    return this->sym->convertMemToSymVar(mem, symVarComment);
+    return this->sym->convertMemoryToSymbolicVariable(mem, symVarComment);
   }
 
 
-  triton::engines::symbolic::SymbolicVariable* API::convertRegToSymVar(triton::arch::RegisterOperand reg, std::string symVarComment) {
+  triton::engines::symbolic::SymbolicVariable* API::convertRegisterToSymbolicVariable(const triton::arch::RegisterOperand& reg, const std::string& symVarComment) {
     this->checkSymbolic();
-    return this->sym->convertRegToSymVar(reg, symVarComment);
+    return this->sym->convertRegisterToSymbolicVariable(reg, symVarComment);
   }
 
 
-  smt2lib::smtAstAbstractNode* API::buildSymbolicOperand(triton::arch::OperandWrapper& op) {
+  triton::ast::AbstractNode* API::buildSymbolicOperand(triton::arch::OperandWrapper& op) {
     this->checkSymbolic();
     switch (op.getType()) {
-      case triton::arch::OP_IMM: return this->buildSymbolicImmediateOperand(op.getImm());
-      case triton::arch::OP_MEM: return this->buildSymbolicMemoryOperand(op.getMem());
-      case triton::arch::OP_REG: return this->buildSymbolicRegisterOperand(op.getReg());
+      case triton::arch::OP_IMM: return this->buildSymbolicImmediateOperand(op.getImmediate());
+      case triton::arch::OP_MEM: return this->buildSymbolicMemoryOperand(op.getMemory());
+      case triton::arch::OP_REG: return this->buildSymbolicRegisterOperand(op.getRegister());
       default:
         throw std::runtime_error("API::buildSymbolicOperand(): Invalid operand.");
     }
   }
 
 
-  smt2lib::smtAstAbstractNode* API::buildSymbolicImmediateOperand(triton::arch::ImmediateOperand& imm) {
+  triton::ast::AbstractNode* API::buildSymbolicOperand(triton::arch::Instruction& inst, triton::arch::OperandWrapper& op) {
+    this->checkSymbolic();
+    switch (op.getType()) {
+      case triton::arch::OP_IMM: return this->buildSymbolicImmediateOperand(inst, op.getImmediate());
+      case triton::arch::OP_MEM: return this->buildSymbolicMemoryOperand(inst, op.getMemory());
+      case triton::arch::OP_REG: return this->buildSymbolicRegisterOperand(inst, op.getRegister());
+      default:
+        throw std::runtime_error("API::buildSymbolicOperand(): Invalid operand.");
+    }
+  }
+
+
+  triton::ast::AbstractNode* API::buildSymbolicImmediateOperand(const triton::arch::ImmediateOperand& imm) {
     this->checkSymbolic();
     return this->sym->buildSymbolicImmediateOperand(imm);
   }
 
 
-  smt2lib::smtAstAbstractNode* API::buildSymbolicMemoryOperand(triton::arch::MemoryOperand& mem) {
+  triton::ast::AbstractNode* API::buildSymbolicImmediateOperand(triton::arch::Instruction& inst, triton::arch::ImmediateOperand& imm) {
+    this->checkSymbolic();
+    return this->sym->buildSymbolicImmediateOperand(inst, imm);
+  }
+
+
+  triton::ast::AbstractNode* API::buildSymbolicMemoryOperand(const triton::arch::MemoryOperand& mem) {
     this->checkSymbolic();
     return this->sym->buildSymbolicMemoryOperand(mem);
   }
 
 
-  smt2lib::smtAstAbstractNode* API::buildSymbolicRegisterOperand(triton::arch::RegisterOperand& reg) {
+  triton::ast::AbstractNode* API::buildSymbolicMemoryOperand(triton::arch::Instruction& inst, triton::arch::MemoryOperand& mem) {
+    this->checkSymbolic();
+    return this->sym->buildSymbolicMemoryOperand(inst, mem);
+  }
+
+
+  triton::ast::AbstractNode* API::buildSymbolicRegisterOperand(const triton::arch::RegisterOperand& reg) {
     this->checkSymbolic();
     return this->sym->buildSymbolicRegisterOperand(reg);
   }
 
 
-  triton::engines::symbolic::SymbolicExpression* API::newSymbolicExpression(smt2lib::smtAstAbstractNode* node, std::string comment) {
+  triton::ast::AbstractNode* API::buildSymbolicRegisterOperand(triton::arch::Instruction& inst, triton::arch::RegisterOperand& reg) {
+    this->checkSymbolic();
+    return this->sym->buildSymbolicRegisterOperand(inst, reg);
+  }
+
+
+  triton::engines::symbolic::SymbolicExpression* API::newSymbolicExpression(triton::ast::AbstractNode* node, const std::string& comment) {
     this->checkSymbolic();
     return this->sym->newSymbolicExpression(node, triton::engines::symbolic::UNDEF, comment);
   }
 
 
-  triton::engines::symbolic::SymbolicVariable* API::newSymbolicVariable(triton::uint32 varSize, std::string comment) {
+  triton::engines::symbolic::SymbolicVariable* API::newSymbolicVariable(triton::uint32 varSize, const std::string& comment) {
     this->checkSymbolic();
     return this->sym->newSymbolicVariable(triton::engines::symbolic::UNDEF, 0, varSize, comment);
   }
@@ -435,11 +616,11 @@ namespace triton {
   }
 
 
-  triton::engines::symbolic::SymbolicExpression* API::createSymbolicExpression(triton::arch::Instruction& inst, smt2lib::smtAstAbstractNode* node, triton::arch::OperandWrapper& dst, std::string comment) {
+  triton::engines::symbolic::SymbolicExpression* API::createSymbolicExpression(triton::arch::Instruction& inst, triton::ast::AbstractNode* node, triton::arch::OperandWrapper& dst, const std::string& comment) {
     this->checkSymbolic();
     switch (dst.getType()) {
-      case triton::arch::OP_MEM: return this->createSymbolicMemoryExpression(inst, node, dst.getMem(), comment);
-      case triton::arch::OP_REG: return this->createSymbolicRegisterExpression(inst, node, dst.getReg(), comment);
+      case triton::arch::OP_MEM: return this->createSymbolicMemoryExpression(inst, node, dst.getMemory(), comment);
+      case triton::arch::OP_REG: return this->createSymbolicRegisterExpression(inst, node, dst.getRegister(), comment);
       default:
         throw std::runtime_error("API::buildSymbolicOperand(): Invalid operand.");
     }
@@ -447,55 +628,61 @@ namespace triton {
   }
 
 
-  triton::engines::symbolic::SymbolicExpression* API::createSymbolicMemoryExpression(triton::arch::Instruction& inst, smt2lib::smtAstAbstractNode* node, triton::arch::MemoryOperand& mem, std::string comment) {
+  triton::engines::symbolic::SymbolicExpression* API::createSymbolicMemoryExpression(triton::arch::Instruction& inst, triton::ast::AbstractNode* node, triton::arch::MemoryOperand& mem, const std::string& comment) {
     this->checkSymbolic();
     return this->sym->createSymbolicMemoryExpression(inst, node, mem, comment);
   }
 
 
-  triton::engines::symbolic::SymbolicExpression* API::createSymbolicRegisterExpression(triton::arch::Instruction& inst, smt2lib::smtAstAbstractNode* node, triton::arch::RegisterOperand& reg, std::string comment) {
+  triton::engines::symbolic::SymbolicExpression* API::createSymbolicRegisterExpression(triton::arch::Instruction& inst, triton::ast::AbstractNode* node, triton::arch::RegisterOperand& reg, const std::string& comment) {
     this->checkSymbolic();
     return this->sym->createSymbolicRegisterExpression(inst, node, reg, comment);
   }
 
 
-  triton::engines::symbolic::SymbolicExpression* API::createSymbolicFlagExpression(triton::arch::Instruction& inst, smt2lib::smtAstAbstractNode* node, triton::arch::RegisterOperand& flag, std::string comment) {
+  triton::engines::symbolic::SymbolicExpression* API::createSymbolicFlagExpression(triton::arch::Instruction& inst, triton::ast::AbstractNode* node, triton::arch::RegisterOperand& flag, const std::string& comment) {
     this->checkSymbolic();
     return this->sym->createSymbolicFlagExpression(inst, node, flag, comment);
   }
 
 
-  triton::engines::symbolic::SymbolicExpression* API::createSymbolicVolatileExpression(triton::arch::Instruction& inst, smt2lib::smtAstAbstractNode* node, std::string comment) {
+  triton::engines::symbolic::SymbolicExpression* API::createSymbolicVolatileExpression(triton::arch::Instruction& inst, triton::ast::AbstractNode* node, const std::string& comment) {
     this->checkSymbolic();
     return this->sym->createSymbolicVolatileExpression(inst, node, comment);
   }
 
 
-  void API::assignSymbolicExpressionToRegister(triton::engines::symbolic::SymbolicExpression* se, triton::arch::RegisterOperand& reg) {
+  void API::assignSymbolicExpressionToMemory(triton::engines::symbolic::SymbolicExpression* se, const triton::arch::MemoryOperand& mem) {
+    this->checkSymbolic();
+    this->sym->assignSymbolicExpressionToMemory(se, mem);
+  }
+
+
+  void API::assignSymbolicExpressionToRegister(triton::engines::symbolic::SymbolicExpression* se, const triton::arch::RegisterOperand& reg) {
     this->checkSymbolic();
     this->sym->assignSymbolicExpressionToRegister(se, reg);
   }
 
 
-  triton::__uint API::getSymbolicMemoryId(triton::__uint addr) {
+  triton::__uint API::getSymbolicMemoryId(triton::__uint addr) const {
     this->checkSymbolic();
     return this->sym->getSymbolicMemoryId(addr);
   }
 
 
-  std::map<triton::arch::RegisterOperand, triton::engines::symbolic::SymbolicExpression*> API::getSymbolicRegister(void) {
+  std::map<triton::arch::RegisterOperand, triton::engines::symbolic::SymbolicExpression*> API::getSymbolicRegisters(void) const {
     this->checkSymbolic();
-    return this->sym->getSymbolicRegister();
+    return this->sym->getSymbolicRegisters();
   }
 
 
-  std::map<triton::__uint, triton::engines::symbolic::SymbolicExpression*> API::getSymbolicMemory(void) {
+  std::map<triton::__uint, triton::engines::symbolic::SymbolicExpression*> API::getSymbolicMemory(void) const {
     this->checkSymbolic();
     return this->sym->getSymbolicMemory();
   }
 
 
-  triton::__uint API::getSymbolicRegisterId(triton::arch::RegisterOperand& reg) {
+  triton::__uint API::getSymbolicRegisterId(const triton::arch::RegisterOperand& reg) const {
     this->checkSymbolic();
     return this->sym->getSymbolicRegisterId(reg);
   }
@@ -507,9 +694,15 @@ namespace triton {
   }
 
 
-  triton::uint128 API::getSymbolicMemoryValue(triton::arch::MemoryOperand& mem) {
+  triton::uint512 API::getSymbolicMemoryValue(const triton::arch::MemoryOperand& mem) {
     this->checkSymbolic();
     return this->sym->getSymbolicMemoryValue(mem);
+  }
+
+
+  std::vector<triton::uint8> API::getSymbolicMemoryAreaValue(triton::__uint baseAddr, triton::uint32 size) {
+    this->checkSymbolic();
+    return this->sym->getSymbolicMemoryAreaValue(baseAddr, size);
   }
 
 
@@ -521,7 +714,7 @@ namespace triton {
   }
 
 
-  triton::uint128 API::getMemoryValue(triton::arch::MemoryOperand& mem) {
+  triton::uint512 API::getMemoryValue(const triton::arch::MemoryOperand& mem) {
     this->checkSymbolic();
     if (this->isSymbolicEmulationEnabled())
       return this->getSymbolicMemoryValue(mem);
@@ -529,7 +722,15 @@ namespace triton {
   }
 
 
-  triton::uint128 API::getRegisterValue(triton::arch::RegisterOperand& reg) {
+  std::vector<triton::uint8> API::getMemoryAreaValue(triton::__uint baseAddr, triton::uint32 size) {
+    this->checkSymbolic();
+    if (this->isSymbolicEmulationEnabled())
+      return this->getSymbolicMemoryAreaValue(baseAddr, size);
+    return this->getLastMemoryAreaValue(baseAddr, size);
+  }
+
+
+  triton::uint512 API::getRegisterValue(const triton::arch::RegisterOperand& reg) {
     this->checkSymbolic();
     if (this->isSymbolicEmulationEnabled())
       return this->getSymbolicRegisterValue(reg);
@@ -537,7 +738,7 @@ namespace triton {
   }
 
 
-  triton::uint128 API::getSymbolicRegisterValue(triton::arch::RegisterOperand& reg) {
+  triton::uint512 API::getSymbolicRegisterValue(const triton::arch::RegisterOperand& reg) {
     this->checkSymbolic();
     return this->sym->getSymbolicRegisterValue(reg);
   }
@@ -571,39 +772,63 @@ namespace triton {
   #endif
 
 
-  smt2lib::smtAstAbstractNode* API::browseAstSummaries(smt2lib::smtAstAbstractNode* node) {
+  triton::ast::AbstractNode* API::browseAstDictionaries(triton::ast::AbstractNode* node) {
     this->checkSymbolic();
-    return this->sym->browseAstSummaries(node);
+    return this->sym->browseAstDictionaries(node);
   }
 
 
-  std::map<std::string, triton::uint32> API::getAstSummariesStats(void) {
+  std::map<std::string, triton::uint32> API::getAstDictionariesStats(void) {
     this->checkSymbolic();
-    return this->sym->getAstSummariesStats();
+    return this->sym->getAstDictionariesStats();
   }
 
 
-  smt2lib::smtAstAbstractNode* API::processSimplification(smt2lib::smtAstAbstractNode* node) {
+  triton::ast::AbstractNode* API::processSimplification(triton::ast::AbstractNode* node, bool z3) const {
     this->checkSymbolic();
-    return this->sym->processSimplification(node);
+    return this->sym->processSimplification(node, z3);
   }
 
 
-  triton::engines::symbolic::SymbolicExpression* API::getSymbolicExpressionFromId(triton::__uint symExprId) {
+  triton::engines::symbolic::SymbolicExpression* API::getSymbolicExpressionFromId(triton::__uint symExprId) const {
     this->checkSymbolic();
     return this->sym->getSymbolicExpressionFromId(symExprId);
   }
 
 
-  triton::engines::symbolic::SymbolicVariable* API::getSymbolicVariableFromId(triton::__uint symVarId) {
+  triton::engines::symbolic::SymbolicVariable* API::getSymbolicVariableFromId(triton::__uint symVarId) const {
     this->checkSymbolic();
     return this->sym->getSymbolicVariableFromId(symVarId);
   }
 
 
-  triton::engines::symbolic::SymbolicVariable* API::getSymbolicVariableFromName(std::string& symVarName) {
+  triton::engines::symbolic::SymbolicVariable* API::getSymbolicVariableFromName(const std::string& symVarName) const {
     this->checkSymbolic();
     return this->sym->getSymbolicVariableFromName(symVarName);
+  }
+
+
+  const std::vector<triton::engines::symbolic::PathConstraint>& API::getPathConstraints(void) const {
+    this->checkSymbolic();
+    return this->sym->getPathConstraints();
+  }
+
+
+  triton::ast::AbstractNode* API::getPathConstraintsAst(void) {
+    this->checkSymbolic();
+    return this->sym->getPathConstraintsAst();
+  }
+
+
+  void API::addPathConstraint(triton::engines::symbolic::SymbolicExpression* expr) {
+    this->checkSymbolic();
+    this->sym->addPathConstraint(expr);
+  }
+
+
+  void API::clearPathConstraints(void) {
+    this->checkSymbolic();
+    this->sym->clearPathConstraints();
   }
 
 
@@ -619,31 +844,37 @@ namespace triton {
   }
 
 
-  void API::enableSymbolicOptimization(enum triton::engines::symbolic::optimization_e opti) {
+  void API::enableSymbolicZ3Simplification(bool flag) {
     this->checkSymbolic();
-    this->sym->enableOptimization(opti);
+    this->sym->enableZ3Simplification(flag);
   }
 
 
-  void API::disableSymbolicOptimization(enum triton::engines::symbolic::optimization_e opti) {
+  void API::enableSymbolicOptimization(enum triton::engines::symbolic::optimization_e opti, bool flag) {
     this->checkSymbolic();
-    this->sym->disableOptimization(opti);
+    this->sym->enableOptimization(opti, flag);
   }
 
 
-  bool API::isSymbolicEmulationEnabled(void) {
+  bool API::isSymbolicEmulationEnabled(void) const {
     this->checkSymbolic();
     return this->sym->isEmulationEnabled();
   }
 
 
-  bool API::isSymbolicEngineEnabled(void) {
+  bool API::isSymbolicEngineEnabled(void) const {
     this->checkSymbolic();
     return this->sym->isEnabled();
   }
 
 
-  bool API::isSymbolicExpressionIdExists(triton::__uint symExprId) {
+  bool API::isSymbolicZ3SimplificationEnabled(void) const {
+    this->checkSymbolic();
+    return this->sym->isZ3SimplificationEnabled();
+  }
+
+
+  bool API::isSymbolicExpressionIdExists(triton::__uint symExprId) const {
     this->checkSymbolic();
     return this->sym->isSymbolicExpressionIdExists(symExprId);
   }
@@ -655,75 +886,75 @@ namespace triton {
   }
 
 
-  void API::concretizeAllMem(void) {
+  void API::concretizeAllMemory(void) {
     this->checkSymbolic();
-    this->sym->concretizeAllMem();
+    this->sym->concretizeAllMemory();
   }
 
 
-  void API::concretizeAllReg(void) {
+  void API::concretizeAllRegister(void) {
     this->checkSymbolic();
-    this->sym->concretizeAllReg();
+    this->sym->concretizeAllRegister();
   }
 
 
-  void API::concretizeMem(triton::arch::MemoryOperand& mem) {
+  void API::concretizeMemory(const triton::arch::MemoryOperand& mem) {
     this->checkSymbolic();
-    this->sym->concretizeMem(mem);
+    this->sym->concretizeMemory(mem);
   }
 
 
-  void API::concretizeMem(triton::__uint addr) {
+  void API::concretizeMemory(triton::__uint addr) {
     this->checkSymbolic();
-    this->sym->concretizeMem(addr);
+    this->sym->concretizeMemory(addr);
   }
 
 
-  void API::concretizeReg(triton::arch::RegisterOperand& reg) {
+  void API::concretizeRegister(const triton::arch::RegisterOperand& reg) {
     this->checkSymbolic();
-    this->sym->concretizeReg(reg);
+    this->sym->concretizeRegister(reg);
   }
 
 
-  smt2lib::smtAstAbstractNode* API::getFullAst(smt2lib::smtAstAbstractNode* node) {
+  triton::ast::AbstractNode* API::getFullAst(triton::ast::AbstractNode* node) {
     this->checkSymbolic();
     return this->sym->getFullAst(node);
   }
 
 
-  smt2lib::smtAstAbstractNode* API::getAstFromId(triton::__uint symExprId) {
+  triton::ast::AbstractNode* API::getAstFromId(triton::__uint symExprId) {
     this->checkSymbolic();
     triton::engines::symbolic::SymbolicExpression* symExpr = this->getSymbolicExpressionFromId(symExprId);
     return symExpr->getAst();
   }
 
 
-  smt2lib::smtAstAbstractNode* API::getFullAstFromId(triton::__uint symExprId) {
+  triton::ast::AbstractNode* API::getFullAstFromId(triton::__uint symExprId) {
     this->checkSymbolic();
-    smt2lib::smtAstAbstractNode* partialAst = this->getAstFromId(symExprId);
+    triton::ast::AbstractNode* partialAst = this->getAstFromId(symExprId);
     return this->getFullAst(partialAst);
   }
 
 
-  std::list<triton::engines::symbolic::SymbolicExpression*> API::getTaintedSymbolicExpressions(void) {
+  std::list<triton::engines::symbolic::SymbolicExpression*> API::getTaintedSymbolicExpressions(void) const {
     this->checkSymbolic();
     return this->sym->getTaintedSymbolicExpressions();
   }
 
 
-  std::map<triton::__uint, triton::engines::symbolic::SymbolicExpression*>& API::getSymbolicExpressions(void) {
+  const std::map<triton::__uint, triton::engines::symbolic::SymbolicExpression*>& API::getSymbolicExpressions(void) const {
     this->checkSymbolic();
     return this->sym->getSymbolicExpressions();
   }
 
 
-  std::map<triton::__uint, triton::engines::symbolic::SymbolicVariable*>& API::getSymbolicVariables(void) {
+  const std::map<triton::__uint, triton::engines::symbolic::SymbolicVariable*>& API::getSymbolicVariables(void) const {
     this->checkSymbolic();
     return this->sym->getSymbolicVariables();
   }
 
 
-  std::string API::getVariablesDeclaration(void) {
+  std::string API::getVariablesDeclaration(void) const {
     this->checkSymbolic();
     return this->sym->getVariablesDeclaration();
   }
@@ -732,34 +963,34 @@ namespace triton {
 
   /* Solver Engine API ============================================================================= */
 
-  void API::checkSolver(void) {
+  void API::checkSolver(void) const {
     if (!this->solver)
       throw std::runtime_error("API::checkSolver(): Solver engine is undefined.");
   }
 
 
-  std::map<triton::uint32, triton::engines::solver::SolverModel> API::getModel(smt2lib::smtAstAbstractNode *node) {
+  std::map<triton::uint32, triton::engines::solver::SolverModel> API::getModel(triton::ast::AbstractNode *node) const {
     this->checkSolver();
     return this->solver->getModel(node);
   }
 
 
-  std::list<std::map<triton::uint32, triton::engines::solver::SolverModel>> API::getModels(smt2lib::smtAstAbstractNode *node, triton::uint32 limit) {
+  std::list<std::map<triton::uint32, triton::engines::solver::SolverModel>> API::getModels(triton::ast::AbstractNode *node, triton::uint32 limit) const {
     this->checkSolver();
     return this->solver->getModels(node, limit);
   }
 
 
-  triton::uint512 API::evaluateAst(smt2lib::smtAstAbstractNode *node) {
+  triton::uint512 API::evaluateAstViaZ3(triton::ast::AbstractNode *node) const {
     this->checkSolver();
-    return this->solver->evaluateAst(node);
+    return this->solver->evaluateAstViaZ3(node);
   }
 
 
 
   /* Taint engine API ============================================================================== */
 
-  void API::checkTaint(void) {
+  void API::checkTaint(void) const {
     if (!this->taint)
       throw std::runtime_error("API::checkTaint(): Taint engine is undefined.");
   }
@@ -777,164 +1008,164 @@ namespace triton {
   }
 
 
-  bool API::isTaintEngineEnabled(void) {
+  bool API::isTaintEngineEnabled(void) const {
     this->checkTaint();
     return this->taint->isEnabled();
   }
 
 
-  bool API::isAddrTainted(__uint addr, uint32 size) {
-    this->checkTaint();
-    return this->taint->isAddrTainted(addr, size);
-  }
-
-
-  bool API::isTainted(arch::OperandWrapper& op) {
+  bool API::isTainted(const triton::arch::OperandWrapper& op) const {
     this->checkTaint();
     switch (op.getType()) {
       case triton::arch::OP_IMM: return triton::engines::taint::UNTAINTED;
-      case triton::arch::OP_MEM: return this->isMemTainted(op.getMem());
-      case triton::arch::OP_REG: return this->isRegTainted(op.getReg());
+      case triton::arch::OP_MEM: return this->isMemoryTainted(op.getConstMemory());
+      case triton::arch::OP_REG: return this->isRegisterTainted(op.getConstRegister());
       default:
         throw std::runtime_error("API::isTainted(): Invalid operand.");
     }
   }
 
 
-  bool API::isMemTainted(arch::MemoryOperand& mem) {
+  bool API::isMemoryTainted(__uint addr, uint32 size) const {
     this->checkTaint();
-    return this->taint->isMemTainted(mem);
+    return this->taint->isMemoryTainted(addr, size);
   }
 
 
-  bool API::isRegTainted(arch::RegisterOperand& reg) {
+  bool API::isMemoryTainted(const triton::arch::MemoryOperand& mem) const {
     this->checkTaint();
-    return this->taint->isRegTainted(reg);
+    return this->taint->isMemoryTainted(mem);
   }
 
 
-  bool API::setTaint(arch::OperandWrapper& op, bool flag) {
+  bool API::isRegisterTainted(const triton::arch::RegisterOperand& reg) const {
+    this->checkTaint();
+    return this->taint->isRegisterTainted(reg);
+  }
+
+
+  bool API::setTaint(const triton::arch::OperandWrapper& op, bool flag) {
     this->checkTaint();
     switch (op.getType()) {
       case triton::arch::OP_IMM: return triton::engines::taint::UNTAINTED;
-      case triton::arch::OP_MEM: return this->setTaintMem(op.getMem(), flag);
-      case triton::arch::OP_REG: return this->setTaintReg(op.getReg(), flag);
+      case triton::arch::OP_MEM: return this->setTaintMemory(op.getConstMemory(), flag);
+      case triton::arch::OP_REG: return this->setTaintRegister(op.getConstRegister(), flag);
       default:
         throw std::runtime_error("API::setTaint(): Invalid operand.");
     }
   }
 
 
-  bool API::setTaintMem(arch::MemoryOperand& mem, bool flag) {
+  bool API::setTaintMemory(const triton::arch::MemoryOperand& mem, bool flag) {
     this->checkTaint();
-    this->taint->setTaintMem(mem, flag);
+    this->taint->setTaintMemory(mem, flag);
     return flag;
   }
 
 
-  bool API::setTaintReg(arch::RegisterOperand& reg, bool flag) {
+  bool API::setTaintRegister(const triton::arch::RegisterOperand& reg, bool flag) {
     this->checkTaint();
-    this->taint->setTaintReg(reg, flag);
+    this->taint->setTaintRegister(reg, flag);
     return flag;
   }
 
 
-  bool API::taintAddr(__uint addr) {
+  bool API::taintMemory(__uint addr) {
     this->checkTaint();
-    return this->taint->taintAddr(addr);
+    return this->taint->taintMemory(addr);
   }
 
 
-  bool API::taintMem(arch::MemoryOperand& mem) {
+  bool API::taintMemory(const triton::arch::MemoryOperand& mem) {
     this->checkTaint();
-    return this->taint->taintMem(mem);
+    return this->taint->taintMemory(mem);
   }
 
 
-  bool API::taintReg(arch::RegisterOperand& reg) {
+  bool API::taintRegister(const triton::arch::RegisterOperand& reg) {
     this->checkTaint();
-    return this->taint->taintReg(reg);
+    return this->taint->taintRegister(reg);
   }
 
 
-  bool API::untaintAddr(__uint addr) {
+  bool API::untaintMemory(__uint addr) {
     this->checkTaint();
-    return this->taint->untaintAddr(addr);
+    return this->taint->untaintMemory(addr);
   }
 
 
-  bool API::untaintMem(arch::MemoryOperand& mem) {
+  bool API::untaintMemory(const triton::arch::MemoryOperand& mem) {
     this->checkTaint();
-    return this->taint->untaintMem(mem);
+    return this->taint->untaintMemory(mem);
   }
 
 
-  bool API::untaintReg(arch::RegisterOperand& reg) {
+  bool API::untaintRegister(const triton::arch::RegisterOperand& reg) {
     this->checkTaint();
-    return this->taint->untaintReg(reg);
+    return this->taint->untaintRegister(reg);
   }
 
 
-  bool API::taintUnion(triton::arch::OperandWrapper& op1, triton::arch::OperandWrapper& op2) {
+  bool API::taintUnion(const triton::arch::OperandWrapper& op1, const triton::arch::OperandWrapper& op2) {
     triton::uint32 t1 = op1.getType();
     triton::uint32 t2 = op2.getType();
 
     if (t1 == triton::arch::OP_MEM && t2 == triton::arch::OP_IMM)
-      return this->taintUnionMemImm(op1.getMem());
+      return this->taintUnionMemoryImmediate(op1.getConstMemory());
 
     if (t1 == triton::arch::OP_MEM && t2 == triton::arch::OP_MEM)
-      return this->taintUnionMemMem(op1.getMem(), op2.getMem());
+      return this->taintUnionMemoryMemory(op1.getConstMemory(), op2.getConstMemory());
 
     if (t1 == triton::arch::OP_MEM && t2 == triton::arch::OP_REG)
-      return this->taintUnionMemReg(op1.getMem(), op2.getReg());
+      return this->taintUnionMemoryRegister(op1.getConstMemory(), op2.getConstRegister());
 
     if (t1 == triton::arch::OP_REG && t2 == triton::arch::OP_IMM)
-      return this->taintUnionRegImm(op1.getReg());
+      return this->taintUnionRegisterImmediate(op1.getConstRegister());
 
     if (t1 == triton::arch::OP_REG && t2 == triton::arch::OP_MEM)
-      return this->taintUnionRegMem(op1.getReg(), op2.getMem());
+      return this->taintUnionRegisterMemory(op1.getConstRegister(), op2.getConstMemory());
 
     if (t1 == triton::arch::OP_REG && t2 == triton::arch::OP_REG)
-      return this->taintUnionRegReg(op1.getReg(), op2.getReg());
+      return this->taintUnionRegisterRegister(op1.getConstRegister(), op2.getConstRegister());
 
     throw std::runtime_error("API::taintUnion(): Invalid operands.");
   }
 
 
-  bool API::taintAssignment(triton::arch::OperandWrapper& op1, triton::arch::OperandWrapper& op2) {
+  bool API::taintAssignment(const triton::arch::OperandWrapper& op1, const triton::arch::OperandWrapper& op2) {
     triton::uint32 t1 = op1.getType();
     triton::uint32 t2 = op2.getType();
 
     if (t1 == triton::arch::OP_MEM && t2 == triton::arch::OP_IMM)
-      return this->taintAssignmentMemImm(op1.getMem());
+      return this->taintAssignmentMemoryImmediate(op1.getConstMemory());
 
     if (t1 == triton::arch::OP_MEM && t2 == triton::arch::OP_MEM)
-      return this->taintAssignmentMemMem(op1.getMem(), op2.getMem());
+      return this->taintAssignmentMemoryMemory(op1.getConstMemory(), op2.getConstMemory());
 
     if (t1 == triton::arch::OP_MEM && t2 == triton::arch::OP_REG)
-      return this->taintAssignmentMemReg(op1.getMem(), op2.getReg());
+      return this->taintAssignmentMemoryRegister(op1.getConstMemory(), op2.getConstRegister());
 
     if (t1 == triton::arch::OP_REG && t2 == triton::arch::OP_IMM)
-      return this->taintAssignmentRegImm(op1.getReg());
+      return this->taintAssignmentRegisterImmediate(op1.getConstRegister());
 
     if (t1 == triton::arch::OP_REG && t2 == triton::arch::OP_MEM)
-      return this->taintAssignmentRegMem(op1.getReg(), op2.getMem());
+      return this->taintAssignmentRegisterMemory(op1.getConstRegister(), op2.getConstMemory());
 
     if (t1 == triton::arch::OP_REG && t2 == triton::arch::OP_REG)
-      return this->taintAssignmentRegReg(op1.getReg(), op2.getReg());
+      return this->taintAssignmentRegisterRegister(op1.getConstRegister(), op2.getConstRegister());
 
     throw std::runtime_error("API::taintAssignment(): Invalid operands.");
   }
 
 
-  bool API::taintUnionMemImm(arch::MemoryOperand& memDst) {
+  bool API::taintUnionMemoryImmediate(const triton::arch::MemoryOperand& memDst) {
     this->checkTaint();
 
     bool flag = triton::engines::taint::UNTAINTED;
     triton::__uint memAddrDst = memDst.getAddress();
     triton::uint32 writeSize  = memDst.getSize();
 
-    flag = this->taint->unionMemImm(memDst);
+    flag = this->taint->unionMemoryImmediate(memDst);
 
     /* Taint each byte of reference expression */
     for (triton::uint32 i = 0; i != writeSize; i++) {
@@ -949,7 +1180,7 @@ namespace triton {
   }
 
 
-  bool API::taintUnionMemMem(arch::MemoryOperand& memDst, arch::MemoryOperand& memSrc) {
+  bool API::taintUnionMemoryMemory(const triton::arch::MemoryOperand& memDst, const triton::arch::MemoryOperand& memSrc) {
     this->checkTaint();
 
     bool flag = triton::engines::taint::UNTAINTED;
@@ -957,7 +1188,7 @@ namespace triton {
     triton::__uint memAddrSrc = memSrc.getAddress();
     triton::uint32 writeSize  = memDst.getSize();
 
-    flag = this->taint->unionMemMem(memDst, memSrc);
+    flag = this->taint->unionMemoryMemory(memDst, memSrc);
 
     /* Taint each byte of reference expression */
     for (triton::uint32 i = 0; i != writeSize; i++) {
@@ -965,21 +1196,21 @@ namespace triton {
       if (byteId == triton::engines::symbolic::UNSET)
         continue;
       triton::engines::symbolic::SymbolicExpression* byte = this->getSymbolicExpressionFromId(byteId);
-      byte->isTainted = this->isAddrTainted(memAddrDst + i) | this->isAddrTainted(memAddrSrc + i);
+      byte->isTainted = this->isMemoryTainted(memAddrDst + i) | this->isMemoryTainted(memAddrSrc + i);
     }
 
     return flag;
   }
 
 
-  bool API::taintUnionMemReg(arch::MemoryOperand& memDst, arch::RegisterOperand& regSrc) {
+  bool API::taintUnionMemoryRegister(const triton::arch::MemoryOperand& memDst, const triton::arch::RegisterOperand& regSrc) {
     this->checkTaint();
 
     bool flag = triton::engines::taint::UNTAINTED;
     triton::__uint memAddrDst = memDst.getAddress();
     triton::uint32 writeSize  = memDst.getSize();
 
-    flag = this->taint->unionMemReg(memDst, regSrc);
+    flag = this->taint->unionMemoryRegister(memDst, regSrc);
 
     /* Taint each byte of reference expression */
     for (triton::uint32 i = 0; i != writeSize; i++) {
@@ -994,32 +1225,32 @@ namespace triton {
   }
 
 
-  bool API::taintUnionRegImm(arch::RegisterOperand& regDst) {
+  bool API::taintUnionRegisterImmediate(const triton::arch::RegisterOperand& regDst) {
     this->checkTaint();
-    return this->taint->unionRegImm(regDst);
+    return this->taint->unionRegisterImmediate(regDst);
   }
 
 
-  bool API::taintUnionRegMem(arch::RegisterOperand& regDst, arch::MemoryOperand& memSrc) {
+  bool API::taintUnionRegisterMemory(const triton::arch::RegisterOperand& regDst, const triton::arch::MemoryOperand& memSrc) {
     this->checkTaint();
-    return this->taint->unionRegMem(regDst, memSrc);
+    return this->taint->unionRegisterMemory(regDst, memSrc);
   }
 
 
-  bool API::taintUnionRegReg(arch::RegisterOperand& regDst, arch::RegisterOperand& regSrc) {
+  bool API::taintUnionRegisterRegister(const triton::arch::RegisterOperand& regDst, const triton::arch::RegisterOperand& regSrc) {
     this->checkTaint();
-    return this->taint->unionRegReg(regDst, regSrc);
+    return this->taint->unionRegisterRegister(regDst, regSrc);
   }
 
 
-  bool API::taintAssignmentMemImm(arch::MemoryOperand& memDst) {
+  bool API::taintAssignmentMemoryImmediate(const triton::arch::MemoryOperand& memDst) {
     this->checkTaint();
 
     bool flag = triton::engines::taint::UNTAINTED;
     triton::__uint memAddrDst = memDst.getAddress();
     triton::uint32 writeSize  = memDst.getSize();
 
-    flag = this->taint->assignmentMemImm(memDst);
+    flag = this->taint->assignmentMemoryImmediate(memDst);
 
     /* Taint each byte of reference expression */
     for (triton::uint32 i = 0; i != writeSize; i++) {
@@ -1034,7 +1265,7 @@ namespace triton {
   }
 
 
-  bool API::taintAssignmentMemMem(arch::MemoryOperand& memDst, arch::MemoryOperand& memSrc) {
+  bool API::taintAssignmentMemoryMemory(const triton::arch::MemoryOperand& memDst, const triton::arch::MemoryOperand& memSrc) {
     this->checkTaint();
 
     bool flag = triton::engines::taint::UNTAINTED;
@@ -1042,7 +1273,7 @@ namespace triton {
     triton::__uint memAddrSrc = memSrc.getAddress();
     triton::uint32 writeSize  = memDst.getSize();
 
-    flag = this->taint->assignmentMemMem(memDst, memSrc);
+    flag = this->taint->assignmentMemoryMemory(memDst, memSrc);
 
     /* Taint each byte of reference expression */
     for (triton::uint32 i = 0; i != writeSize; i++) {
@@ -1050,21 +1281,21 @@ namespace triton {
       if (byteId == triton::engines::symbolic::UNSET)
         continue;
       triton::engines::symbolic::SymbolicExpression* byte = this->getSymbolicExpressionFromId(byteId);
-      byte->isTainted = this->isAddrTainted(memAddrSrc + i);
+      byte->isTainted = this->isMemoryTainted(memAddrSrc + i);
     }
 
     return flag;
   }
 
 
-  bool API::taintAssignmentMemReg(arch::MemoryOperand& memDst, arch::RegisterOperand& regSrc) {
+  bool API::taintAssignmentMemoryRegister(const triton::arch::MemoryOperand& memDst, const triton::arch::RegisterOperand& regSrc) {
     this->checkTaint();
 
     bool flag = triton::engines::taint::UNTAINTED;
     triton::__uint memAddrDst = memDst.getAddress();
     triton::uint32 writeSize  = memDst.getSize();
 
-    flag = this->taint->assignmentMemReg(memDst, regSrc);
+    flag = this->taint->assignmentMemoryRegister(memDst, regSrc);
 
     /* Taint each byte of reference expression */
     for (triton::uint32 i = 0; i != writeSize; i++) {
@@ -1079,21 +1310,21 @@ namespace triton {
   }
 
 
-  bool API::taintAssignmentRegImm(arch::RegisterOperand& regDst) {
+  bool API::taintAssignmentRegisterImmediate(const triton::arch::RegisterOperand& regDst) {
     this->checkTaint();
-    return this->taint->assignmentRegImm(regDst);
+    return this->taint->assignmentRegisterImmediate(regDst);
   }
 
 
-  bool API::taintAssignmentRegMem(arch::RegisterOperand& regDst, arch::MemoryOperand& memSrc) {
+  bool API::taintAssignmentRegisterMemory(const triton::arch::RegisterOperand& regDst, const triton::arch::MemoryOperand& memSrc) {
     this->checkTaint();
-    return this->taint->assignmentRegMem(regDst, memSrc);
+    return this->taint->assignmentRegisterMemory(regDst, memSrc);
   }
 
 
-  bool API::taintAssignmentRegReg(arch::RegisterOperand& regDst, arch::RegisterOperand& regSrc) {
+  bool API::taintAssignmentRegisterRegister(const triton::arch::RegisterOperand& regDst, const triton::arch::RegisterOperand& regSrc) {
     this->checkTaint();
-    return this->taint->assignmentRegReg(regDst, regSrc);
+    return this->taint->assignmentRegisterRegister(regDst, regSrc);
   }
 
 }; /* triton namespace */

@@ -12,12 +12,6 @@
 #include <pythonUtils.hpp>
 #include <x86Specifications.hpp>
 
-#ifdef __unix__
-  #include <python2.7/Python.h>
-#elif _WIN32
-  #include <Python.h>
-#endif
-
 
 
 /*! \page py_OPCODE_page OPCODE
@@ -1339,9 +1333,10 @@ namespace triton {
     namespace python {
 
       void initX86OpcodesNamespace(void) {
-
         if (!triton::bindings::python::initialized)
           return;
+
+        PyDict_Clear(triton::bindings::python::opcodesDict);
 
         PyDict_SetItemString(triton::bindings::python::opcodesDict, "INVALID", PyLong_FromUint(triton::arch::x86::ID_INST_INVALID));
         PyDict_SetItemString(triton::bindings::python::opcodesDict, "AAA", PyLong_FromUint(triton::arch::x86::ID_INS_AAA));
@@ -2638,7 +2633,6 @@ namespace triton {
         PyDict_SetItemString(triton::bindings::python::opcodesDict, "XSHA256", PyLong_FromUint(triton::arch::x86::ID_INS_XSHA256));
         PyDict_SetItemString(triton::bindings::python::opcodesDict, "XSTORE", PyLong_FromUint(triton::arch::x86::ID_INS_XSTORE));
         PyDict_SetItemString(triton::bindings::python::opcodesDict, "XTEST", PyLong_FromUint(triton::arch::x86::ID_INS_XTEST));
-
       }
 
     }; /* python namespace */

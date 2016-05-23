@@ -9,15 +9,12 @@
 #define TRITON_SYMBOLICSIMPLIFICATION_H
 
 #include <list>
+
+#include "ast.hpp"
 #include "tritonTypes.hpp"
-#include "smt2lib.hpp"
 
 #ifdef TRITON_PYTHON_BINDINGS
-  #ifdef __unix__
-    #include <python2.7/Python.h>
-  #elif _WIN32
-    #include <Python.h>
-  #endif
+  #include "pythonBindings.hpp"
 #endif
 
 
@@ -45,13 +42,16 @@ namespace triton {
      *  @{
      */
 
-      typedef smt2lib::smtAstAbstractNode* (*sfp)(smt2lib::smtAstAbstractNode*);
+      typedef triton::ast::AbstractNode* (*sfp)(triton::ast::AbstractNode*);
 
       //! \class SymbolicSimplification
       /*! \brief The symbolic simplification class */
       class SymbolicSimplification {
 
         protected:
+          //! Flag to define if we can use z3 to simplify expressions. Default: false.
+          bool z3Enabled;
+
           //! List of simplification callbacks. These callbacks will be called before assigning a symbolic expression to a register or part of memory.
           std::list<triton::engines::symbolic::sfp> simplificationCallbacks;
 
@@ -66,6 +66,12 @@ namespace triton {
 
           //! Destructor.
           ~SymbolicSimplification();
+
+          //! Returns true if Triton can use the simplification passes of z3.
+          bool isZ3SimplificationEnabled(void) const;
+
+          //! Enabled, Triton will use the simplification passes of z3 before to call its recorded simplification passes.
+          void enableZ3Simplification(bool flag);
 
           //! Records a simplification callback.
           void recordSimplificationCallback(triton::engines::symbolic::sfp cb);
@@ -84,7 +90,7 @@ namespace triton {
           #endif
 
           //! Processes all recorded simplifications. Returns the simplified node.
-          smt2lib::smtAstAbstractNode* processSimplification(smt2lib::smtAstAbstractNode* node);
+          triton::ast::AbstractNode* processSimplification(triton::ast::AbstractNode* node, bool z3=false) const;
       };
 
     /*! @} End of symbolic namespace */

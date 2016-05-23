@@ -61,13 +61,13 @@ namespace tracer {
       else if (triton::bindings::python::PyLong_AsUint(flag) == tracer::pintool::options::CB_IMAGE_LOAD)
         tracer::pintool::options::callbackImageLoad = function;
 
-      else if ((triton::bindings::python::PyLong_AsUint(flag) == tracer::pintool::options::CB_ROUTINE_ENTRY)){
+      else if ((triton::bindings::python::PyLong_AsUint(flag) == tracer::pintool::options::CB_ROUTINE_ENTRY)) {
         if (routine == nullptr || !PyString_Check(routine))
           return PyErr_Format(PyExc_TypeError, "tracer::pintool::addCallback(): Expected a routine name (string) as third argument.");
         tracer::pintool::options::callbackRoutineEntry.insert(std::pair<const char*,PyObject*>(PyString_AsString(routine), function));
       }
 
-      else if ((triton::bindings::python::PyLong_AsUint(flag) == tracer::pintool::options::CB_ROUTINE_EXIT)){
+      else if ((triton::bindings::python::PyLong_AsUint(flag) == tracer::pintool::options::CB_ROUTINE_EXIT)) {
         if (routine == nullptr || !PyString_Check(routine))
           return PyErr_Format(PyExc_TypeError, "tracer::pintool::addCallback(): Expected a routine name (string) as third argument.");
         tracer::pintool::options::callbackRoutineExit.insert(std::pair<const char*,PyObject*>(PyString_AsString(routine), function));
@@ -83,7 +83,7 @@ namespace tracer {
 
     static PyObject* pintool_checkReadAccess(PyObject* self, PyObject* addr) {
       if (!PyLong_Check(addr) && !PyInt_Check(addr))
-        return PyErr_Format(PyExc_TypeError, "tracer::pintool::checkReadAccess(): Expected an address (integer) as argument");
+        return PyErr_Format(PyExc_TypeError, "tracer::pintool::checkReadAccess(): Expected an address (integer) as argument.");
 
       if (PIN_CheckReadAccess(reinterpret_cast<void*>(triton::bindings::python::PyLong_AsUint(addr))) == true)
         Py_RETURN_TRUE;
@@ -94,7 +94,7 @@ namespace tracer {
 
     static PyObject* pintool_checkWriteAccess(PyObject* self, PyObject* addr) {
       if (!PyLong_Check(addr) && !PyInt_Check(addr))
-        return PyErr_Format(PyExc_TypeError, "tracer::pintool::checkWriteAccess(): Expected an address (integer) as argument");
+        return PyErr_Format(PyExc_TypeError, "tracer::pintool::checkWriteAccess(): Expected an address (integer) as argument.");
 
       if (PIN_CheckWriteAccess(reinterpret_cast<void*>(triton::bindings::python::PyLong_AsUint(addr))) == true)
         Py_RETURN_TRUE;
@@ -132,20 +132,20 @@ namespace tracer {
 
         try {
           if (PyMemoryOperand_Check(mem))
-            triton::bindings::python::PyLong_FromUint128(tracer::pintool::context::getCurrentMemoryValue(*PyMemoryOperand_AsMemoryOperand(mem)));
+            return triton::bindings::python::PyLong_FromUint512(tracer::pintool::context::getCurrentMemoryValue(*PyMemoryOperand_AsMemoryOperand(mem)));
           else if (size != nullptr) {
-            triton::bindings::python::PyLong_FromUint128(tracer::pintool::context::getCurrentMemoryValue(triton::bindings::python::PyLong_AsUint(mem), triton::bindings::python::PyLong_AsUint(size)));
+            return triton::bindings::python::PyLong_FromUint512(tracer::pintool::context::getCurrentMemoryValue(triton::bindings::python::PyLong_AsUint(mem), triton::bindings::python::PyLong_AsUint(size)));
           }
           else
-            triton::bindings::python::PyLong_FromUint128(tracer::pintool::context::getCurrentMemoryValue(triton::bindings::python::PyLong_AsUint(mem)));
+            return triton::bindings::python::PyLong_FromUint512(tracer::pintool::context::getCurrentMemoryValue(triton::bindings::python::PyLong_AsUint(mem)));
         }
         catch (const std::exception& e) {
           return PyErr_Format(PyExc_TypeError, "%s", e.what());
         }
 
       }
-      else
-        return PyErr_Format(PyExc_TypeError, "tracer::pintool::getCurrentMemoryValue(): Expected a Memory as first argument.");
+
+      return PyErr_Format(PyExc_TypeError, "tracer::pintool::getCurrentMemoryValue(): Expected a Memory as first argument.");
     }
 
 
@@ -153,7 +153,7 @@ namespace tracer {
       if (!PyRegisterOperand_Check(reg))
         return PyErr_Format(PyExc_TypeError, "tracer::pintool::getCurrentRegisterValue(): Expected a REG as argument.");
       try {
-        return triton::bindings::python::PyLong_FromUint128(tracer::pintool::context::getCurrentRegisterValue(*PyRegisterOperand_AsRegisterOperand(reg)));
+        return triton::bindings::python::PyLong_FromUint512(tracer::pintool::context::getCurrentRegisterValue(*PyRegisterOperand_AsRegisterOperand(reg)));
       }
       catch (const std::exception& e) {
         return PyErr_Format(PyExc_TypeError, "%s", e.what());
@@ -163,7 +163,7 @@ namespace tracer {
 
     static PyObject* pintool_getImageName(PyObject* self, PyObject* addr) {
       if (!PyLong_Check(addr) && !PyInt_Check(addr))
-        return PyErr_Format(PyExc_TypeError, "tracer::pintool::getImageName(): Expected an address (integer) as argument");
+        return PyErr_Format(PyExc_TypeError, "tracer::pintool::getImageName(): Expected an address (integer) as argument.");
 
       std::string imageName = tracer::pintool::getImageName(triton::bindings::python::PyLong_AsUint(addr));
       return PyString_FromFormat("%s", imageName.c_str());;
@@ -172,7 +172,7 @@ namespace tracer {
 
     static PyObject* pintool_getRoutineName(PyObject* self, PyObject* addr) {
       if (!PyLong_Check(addr) && !PyInt_Check(addr))
-        return PyErr_Format(PyExc_TypeError, "tracer::pintool::getImageName(): Expected an address (integer) as argument");
+        return PyErr_Format(PyExc_TypeError, "tracer::pintool::getImageName(): Expected an address (integer) as argument.");
 
       std::string routineName = tracer::pintool::getRoutineName(triton::bindings::python::PyLong_AsUint(addr));
       return PyString_FromFormat("%s", routineName.c_str());;
@@ -191,12 +191,12 @@ namespace tracer {
       PyArg_ParseTuple(args, "|OO", &std, &num);
 
       if (std == nullptr || (!PyLong_Check(std) && !PyInt_Check(std)))
-        return PyErr_Format(PyExc_TypeError, "tracer::pintool::getSyscallArgument(): Expected an id (integer) as first argument");
+        return PyErr_Format(PyExc_TypeError, "tracer::pintool::getSyscallArgument(): Expected an id (integer) as first argument.");
 
       if (num == nullptr || (!PyLong_Check(num) && !PyInt_Check(num)))
-        return PyErr_Format(PyExc_TypeError, "tracer::pintool::getSyscallArgument(): Expected an id (integer) as second argument");
+        return PyErr_Format(PyExc_TypeError, "tracer::pintool::getSyscallArgument(): Expected an id (integer) as second argument.");
 
-      LEVEL_CORE::SYSCALL_STANDARD standard = static_cast<LEVEL_CORE::SYSCALL_STANDARD>(triton::bindings::python::PyLong_AsUint(std));;
+      LEVEL_CORE::SYSCALL_STANDARD standard = static_cast<LEVEL_CORE::SYSCALL_STANDARD>(triton::bindings::python::PyLong_AsUint(std));
       ret = PIN_GetSyscallArgument(tracer::pintool::context::lastContext, standard, triton::bindings::python::PyLong_AsUint(num));
 
       return triton::bindings::python::PyLong_FromUint(ret);
@@ -207,9 +207,9 @@ namespace tracer {
       triton::__uint syscallNumber;
 
       if (!PyLong_Check(std) && !PyInt_Check(std))
-        return PyErr_Format(PyExc_TypeError, "tracer::pintool::getSyscallNumber(): Expected an id (integer) as argument");
+        return PyErr_Format(PyExc_TypeError, "tracer::pintool::getSyscallNumber(): Expected an id (integer) as argument.");
 
-      LEVEL_CORE::SYSCALL_STANDARD standard = static_cast<LEVEL_CORE::SYSCALL_STANDARD>(triton::bindings::python::PyLong_AsUint(std));;
+      LEVEL_CORE::SYSCALL_STANDARD standard = static_cast<LEVEL_CORE::SYSCALL_STANDARD>(triton::bindings::python::PyLong_AsUint(std));
       syscallNumber = PIN_GetSyscallNumber(tracer::pintool::context::lastContext, standard);
 
       return triton::bindings::python::PyLong_FromUint(syscallNumber);
@@ -220,9 +220,9 @@ namespace tracer {
       triton::__uint ret;
 
       if (!PyLong_Check(std) && !PyInt_Check(std))
-        return PyErr_Format(PyExc_TypeError, "tracer::pintool::getSyscallReturn(): Expected an id (integer) as argument");
+        return PyErr_Format(PyExc_TypeError, "tracer::pintool::getSyscallReturn(): Expected an id (integer) as argument.");
 
-      LEVEL_CORE::SYSCALL_STANDARD standard = static_cast<LEVEL_CORE::SYSCALL_STANDARD>(triton::bindings::python::PyLong_AsUint(std));;
+      LEVEL_CORE::SYSCALL_STANDARD standard = static_cast<LEVEL_CORE::SYSCALL_STANDARD>(triton::bindings::python::PyLong_AsUint(std));
       ret = PIN_GetSyscallReturn(tracer::pintool::context::lastContext, standard);
 
       return triton::bindings::python::PyLong_FromUint(ret);
@@ -273,9 +273,9 @@ namespace tracer {
 
         try {
           if (value != nullptr && PyMemoryOperand_Check(mem))
-            tracer::pintool::context::setCurrentMemoryValue(*PyMemoryOperand_AsMemoryOperand(mem), triton::bindings::python::PyLong_AsUint128(value));
+            tracer::pintool::context::setCurrentMemoryValue(*PyMemoryOperand_AsMemoryOperand(mem), triton::bindings::python::PyLong_AsUint512(value));
           else if (value != nullptr && (PyInt_Check(mem) || PyLong_Check(mem))) {
-            triton::uint8 v = static_cast<triton::uint8>(triton::bindings::python::PyLong_AsUint128(value) & 0xff);
+            triton::uint8 v = (triton::bindings::python::PyLong_AsUint512(value) & 0xff).convert_to<triton::uint8>();
             tracer::pintool::context::setCurrentMemoryValue(triton::bindings::python::PyLong_AsUint(mem), v);
           }
           else
@@ -307,7 +307,7 @@ namespace tracer {
 
         try {
           if (value != nullptr)
-            tracer::pintool::context::setCurrentRegisterValue(*PyRegisterOperand_AsRegisterOperand(reg), triton::bindings::python::PyLong_AsUint128(value));
+            tracer::pintool::context::setCurrentRegisterValue(*PyRegisterOperand_AsRegisterOperand(reg), triton::bindings::python::PyLong_AsUint512(value));
           else
             tracer::pintool::context::setCurrentRegisterValue(*PyRegisterOperand_AsRegisterOperand(reg));
         }
@@ -327,14 +327,14 @@ namespace tracer {
     static PyObject* pintool_setupImageBlacklist(PyObject* self, PyObject* arg) {
       /* Check if the arg is a list */
       if (!PyList_Check(arg))
-        return PyErr_Format(PyExc_TypeError, "tracer::pintool::setupImageBlacklist(): Expected a list as first argument");
+        return PyErr_Format(PyExc_TypeError, "tracer::pintool::setupImageBlacklist(): Expected a list as first argument.");
 
       /* Check if the arg list contains only string item and insert them in the internal list */
-      for (Py_ssize_t i = 0; i < PyList_Size(arg); i++){
-        PyObject *item = PyList_GetItem(arg, i);
+      for (Py_ssize_t i = 0; i < PyList_Size(arg); i++) {
+        PyObject* item = PyList_GetItem(arg, i);
 
         if (!PyString_Check(item))
-          return PyErr_Format(PyExc_TypeError, "tracer::pintool::setupImageBlacklist(): The first argument must be a list of image name (string)");
+          return PyErr_Format(PyExc_TypeError, "tracer::pintool::setupImageBlacklist(): Each item of the list must be a string.");
 
         tracer::pintool::options::imageBlacklist.push_back(PyString_AsString(item));
       }
@@ -347,14 +347,14 @@ namespace tracer {
     static PyObject* pintool_setupImageWhitelist(PyObject* self, PyObject* arg) {
       /* Check if the arg is a list */
       if (!PyList_Check(arg))
-        return PyErr_Format(PyExc_TypeError, "tracer::pintool::setupImageWhitelist(): Expected a list as first argument");
+        return PyErr_Format(PyExc_TypeError, "tracer::pintool::setupImageWhitelist(): Expected a list as first argument.");
 
       /* Check if the arg list contains only string item and insert them in the internal list */
-      for (Py_ssize_t i = 0; i < PyList_Size(arg); i++){
-        PyObject *item = PyList_GetItem(arg, i);
+      for (Py_ssize_t i = 0; i < PyList_Size(arg); i++) {
+        PyObject* item = PyList_GetItem(arg, i);
 
         if (!PyString_Check(item))
-          return PyErr_Format(PyExc_TypeError, "tracer::pintool::setupImageWhitelist(): The first argument must be a list of image name (string)");
+          return PyErr_Format(PyExc_TypeError, "tracer::pintool::setupImageWhitelist(): Each item of the list must be a string.");
 
         tracer::pintool::options::imageWhitelist.push_back(PyString_AsString(item));
       }
@@ -364,11 +364,11 @@ namespace tracer {
     }
 
 
-    static PyObject* pintool_startAnalysisFromAddr(PyObject* self, PyObject* addr) {
+    static PyObject* pintool_startAnalysisFromAddress(PyObject* self, PyObject* addr) {
       if (!PyLong_Check(addr) && !PyInt_Check(addr))
-        return PyErr_Format(PyExc_TypeError, "tracer::pintool::startAnalysisFromAddr(): Expected an address (integer) as argument");
+        return PyErr_Format(PyExc_TypeError, "tracer::pintool::startAnalysisFromAddress(): Expected an address (integer) as argument.");
 
-      tracer::pintool::options::startAnalysisFromAddr.insert(triton::bindings::python::PyLong_AsUint(addr));
+      tracer::pintool::options::startAnalysisFromAddress.insert(triton::bindings::python::PyLong_AsUint(addr));
       Py_INCREF(Py_None);
       return Py_None;
     }
@@ -383,7 +383,7 @@ namespace tracer {
 
     static PyObject* pintool_startAnalysisFromOffset(PyObject* self, PyObject* offset) {
       if (!PyLong_Check(offset) && !PyInt_Check(offset))
-        return PyErr_Format(PyExc_TypeError, "tracer::pintool::startAnalysisFromOffset(): Expected an offset (integer) as argument");
+        return PyErr_Format(PyExc_TypeError, "tracer::pintool::startAnalysisFromOffset(): Expected an offset (integer) as argument.");
 
       tracer::pintool::options::startAnalysisFromOffset.insert(triton::bindings::python::PyLong_AsUint(offset));
       Py_INCREF(Py_None);
@@ -393,7 +393,7 @@ namespace tracer {
 
     static PyObject* pintool_startAnalysisFromSymbol(PyObject* self, PyObject* name) {
       if (!PyString_Check(name))
-        return PyErr_Format(PyExc_TypeError, "tracer::pintool::startAnalysisFromSymbol(): Expected a string as argument");
+        return PyErr_Format(PyExc_TypeError, "tracer::pintool::startAnalysisFromSymbol(): Expected a string as argument.");
 
       tracer::pintool::options::startAnalysisFromSymbol = PyString_AsString(name);
       Py_INCREF(Py_None);
@@ -401,11 +401,11 @@ namespace tracer {
     }
 
 
-    static PyObject* pintool_stopAnalysisFromAddr(PyObject* self, PyObject* addr) {
+    static PyObject* pintool_stopAnalysisFromAddress(PyObject* self, PyObject* addr) {
       if (!PyLong_Check(addr) && !PyInt_Check(addr))
-        return PyErr_Format(PyExc_TypeError, "tracer::pintool::stopAnalysisFromAddr(): Expected an address (integer) as argument");
+        return PyErr_Format(PyExc_TypeError, "tracer::pintool::stopAnalysisFromAddress(): Expected an address (integer) as argument.");
 
-      tracer::pintool::options::stopAnalysisFromAddr.insert(triton::bindings::python::PyLong_AsUint(addr));
+      tracer::pintool::options::stopAnalysisFromAddress.insert(triton::bindings::python::PyLong_AsUint(addr));
       Py_INCREF(Py_None);
       return Py_None;
     }
@@ -413,7 +413,7 @@ namespace tracer {
 
     static PyObject* pintool_stopAnalysisFromOffset(PyObject* self, PyObject* offset) {
       if (!PyLong_Check(offset) && !PyInt_Check(offset))
-        return PyErr_Format(PyExc_TypeError, "tracer::pintool::stopAnalysisFromOffset(): Expected an offset (integer) as argument");
+        return PyErr_Format(PyExc_TypeError, "tracer::pintool::stopAnalysisFromOffset(): Expected an offset (integer) as argument.");
 
       tracer::pintool::options::stopAnalysisFromOffset.insert(triton::bindings::python::PyLong_AsUint(offset));
       Py_INCREF(Py_None);
@@ -448,11 +448,11 @@ namespace tracer {
       {"setCurrentRegisterValue",   pintool_setCurrentRegisterValue,    METH_VARARGS,   ""},
       {"setupImageBlacklist",       pintool_setupImageBlacklist,        METH_O,         ""},
       {"setupImageWhitelist",       pintool_setupImageWhitelist,        METH_O,         ""},
-      {"startAnalysisFromAddr",     pintool_startAnalysisFromAddr,      METH_O,         ""},
+      {"startAnalysisFromAddress",  pintool_startAnalysisFromAddress,   METH_O,         ""},
       {"startAnalysisFromEntry",    pintool_startAnalysisFromEntry,     METH_NOARGS,    ""},
       {"startAnalysisFromOffset",   pintool_startAnalysisFromOffset,    METH_O,         ""},
       {"startAnalysisFromSymbol",   pintool_startAnalysisFromSymbol,    METH_O,         ""},
-      {"stopAnalysisFromAddr",      pintool_stopAnalysisFromAddr,       METH_O,         ""},
+      {"stopAnalysisFromAddress",   pintool_stopAnalysisFromAddress,    METH_O,         ""},
       {"stopAnalysisFromOffset",    pintool_stopAnalysisFromOffset,     METH_O,         ""},
       {"takeSnapshot",              pintool_takeSnapshot,               METH_NOARGS,    ""},
       {nullptr,                     nullptr,                            0,              nullptr}

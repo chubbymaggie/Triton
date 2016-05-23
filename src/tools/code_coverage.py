@@ -59,7 +59,7 @@
 ## $
 ##
 
-import  smt2lib
+import  ast
 
 from    triton      import *
 from    pintool     import *
@@ -148,14 +148,14 @@ class TritonExecution(object):
                     ripId = TritonExecution.myPC[i][0]
                     symExp = getFullAst(getSymbolicExpressionFromId(ripId).getAst())
                     addr = TritonExecution.myPC[i][1]
-                    expr.append(smt2lib.smtAssert(smt2lib.equal(symExp, smt2lib.bv(addr,  CPUSIZE.QWORD_BIT))))
+                    expr.append(ast.assert_(ast.equal(symExp, ast.bv(addr,  CPUSIZE.QWORD_BIT))))
 
                 ripId = TritonExecution.myPC[j][0]
                 symExp = getFullAst(getSymbolicExpressionFromId(ripId).getAst())
                 addr = TritonExecution.myPC[j][2]
-                expr.append(smt2lib.smtAssert(smt2lib.equal(symExp, smt2lib.bv(addr,  CPUSIZE.QWORD_BIT))))
+                expr.append(ast.assert_(ast.equal(symExp, ast.bv(addr,  CPUSIZE.QWORD_BIT))))
 
-                expr = smt2lib.compound(expr)
+                expr = ast.compound(expr)
                 model = getModel(expr)
 
                 if len(model) > 0:
@@ -206,13 +206,13 @@ class TritonExecution(object):
         for k,v in od.iteritems():
             print "\t[0x%x] = %x %c" % (k, v, v)
             setCurrentMemoryValue(Memory(k, CPUSIZE.BYTE), v)
-            convertMemToSymVar(Memory(k, CPUSIZE.BYTE), "addr_%d" % k)
+            convertMemoryToSymbolicVariable(Memory(k, CPUSIZE.BYTE), "addr_%d" % k)
 
         for idx, byte in enumerate(TritonExecution.input.data):
             if argv1_addr + idx not in TritonExecution.input.dataAddr: # Not overwrite the previous setting
                 print "\t[0x%x] = %x %c" % (argv1_addr + idx, ord(byte), ord(byte))
                 setCurrentMemoryValue(Memory(argv1_addr + idx, CPUSIZE.BYTE), ord(byte))
-                convertMemToSymVar(Memory(argv1_addr + idx, CPUSIZE.BYTE), "addr_%d" % idx)
+                convertMemoryToSymbolicVariable(Memory(argv1_addr + idx, CPUSIZE.BYTE), "addr_%d" % idx)
 
 
     @staticmethod
@@ -224,7 +224,7 @@ class TritonExecution(object):
         TritonExecution.inputTested = []
         TritonExecution.whitelist   = whitelist
 
-        startAnalysisFromAddr(entryPoint)
+        startAnalysisFromAddress(entryPoint)
 
         addCallback(TritonExecution.mainAnalysis,   CALLBACK.ROUTINE_ENTRY, "main") # Called when we are in main's beginning
         addCallback(TritonExecution.cbefore,        CALLBACK.BEFORE)

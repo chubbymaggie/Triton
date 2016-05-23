@@ -11,9 +11,9 @@ from triton  import *
 
 
 def cb_ir(inst):
-    if inst.getAddress() == 0x40058b:
+    if inst.getAddress() == 0x400574:
         rax = getCurrentRegisterValue(REG.RAX)
-        taintAddr(rax)
+        taintMemory(rax)
     return
 
 
@@ -32,7 +32,7 @@ if __name__ == '__main__':
     startAnalysisFromSymbol('check')
 
     # Perform symbolic execution only on tainted instructions
-    enableSymbolicOptimization(OPTIMIZATION.ONLY_ON_TAINTED)
+    enableSymbolicOptimization(OPTIMIZATION.ONLY_ON_TAINTED, True)
 
     # Add callback
     addCallback(cb_ir, CALLBACK.BEFORE_SYMPROC)

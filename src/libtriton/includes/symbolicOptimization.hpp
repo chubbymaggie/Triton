@@ -9,14 +9,12 @@
 #define TRITON_SYMBOLICOPTIMIZATION_H
 
 #include <set>
+
+#include "symbolicEnums.hpp"
 #include "tritonTypes.hpp"
 
 #ifdef TRITON_PYTHON_BINDINGS
-  #ifdef __unix__
-    #include <python2.7/Python.h>
-  #elif _WIN32
-    #include <Python.h>
-  #endif
+  #include "pythonBindings.hpp"
 #endif
 
 
@@ -44,13 +42,6 @@ namespace triton {
      *  @{
      */
 
-      //! Kinds of symbolic optimization.
-      enum optimization_e {
-        ALIGNED_MEMORY,      //!< Keep a map of aligned memory.
-        AST_SUMMARIES,       //!< Abstract Syntax Tree summaries.
-        ONLY_ON_TAINTED = 1, //!< Perform symbolic execution only on tainted instructions.
-      };
-
       //! \class SymbolicOptimization
       /*! \brief The symbolic simplification class */
       class SymbolicOptimization {
@@ -67,13 +58,10 @@ namespace triton {
           ~SymbolicOptimization();
 
           //! Returns true if the symbolic optimization is enabled.
-          bool isOptimizationEnabled(enum optimization_e opti);
+          bool isOptimizationEnabled(enum optimization_e opti) const;
 
-          //! Disables a symbolic optimization.
-          void disableOptimization(enum optimization_e opti);
-
-          //! Enables a symbolic optimization.
-          void enableOptimization(enum optimization_e opti);
+          //! Enables or disables a symbolic optimization.
+          void enableOptimization(enum optimization_e opti, bool flag);
       };
 
     /*! @} End of symbolic namespace */

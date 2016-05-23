@@ -11,12 +11,6 @@
 #include <pythonBindings.hpp>
 #include <pythonUtils.hpp>
 
-#ifdef __unix__
-  #include <python2.7/Python.h>
-#elif _WIN32
-  #include <Python.h>
-#endif
-
 
 
 /*! \page py_ARCH_page ARCH
@@ -44,12 +38,10 @@ namespace triton {
     namespace python {
 
       void initArchNamespace(PyObject* archDict) {
-
         PyDict_SetItemString(archDict, "X86", PyLong_FromUint(triton::arch::ARCH_X86));
         #if defined(__x86_64__) || defined(_M_X64)
         PyDict_SetItemString(archDict, "X86_64", PyLong_FromUint(triton::arch::ARCH_X86_64));
         #endif
-
       }
 
     }; /* python namespace */

@@ -4,13 +4,22 @@
 ##  This program is under the terms of the LGPLv3 License.
 ##
 
+##################################################################################### CMake libtriton
+
 cmake_minimum_required(VERSION 2.8)
 project(triton)
+
+# Define cmake options
+option(PINTOOL "Build Triton with the Pin tool as tracer" OFF)
+option(KERNEL4 "Pin will run on a Linux's kernel v4" OFF)
+option(PYTHON_BINDINGS "Enable Python bindings into the libtriton" ON)
+
 
 # Get and increment the build number
 file(READ ${CMAKE_SOURCE_DIR}/.build_number BUILD_NUMBER)
 math(EXPR NEW_BUILD_NUMBER "${BUILD_NUMBER} + 1")
 file(WRITE ${CMAKE_SOURCE_DIR}/.build_number ${NEW_BUILD_NUMBER})
+
 
 # Get architecture
 if(CMAKE_SIZEOF_VOID_P EQUAL 8)
@@ -23,10 +32,12 @@ if(${TARGET} MATCHES "ia32")
     set(ARCHITECTURE i386)
 endif()
 
+
 # Triton version
 set(VERSION_MAJOR 0)
 set(VERSION_MINOR 3)
 set(VERSION_BUILD ${NEW_BUILD_NUMBER})
+
 
 # Update the PROJECT_NUMBER variable inside the Doxyfile
 file(READ ${CMAKE_SOURCE_DIR}/Doxyfile DOXYFILE)
@@ -39,26 +50,18 @@ list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/CMakeModules/")
 
 
 # Python bindings option
-add_definitions(-DTRITON_PYTHON_BINDINGS)
-if(${TRITON_PYTHON_BINDINGS} MATCHES "no")
-    remove_definitions(-DTRITON_PYTHON_BINDINGS)
-endif()
+if(PYTHON_BINDINGS)
+    add_definitions(-DTRITON_PYTHON_BINDINGS)
+endif(PYTHON_BINDINGS)
 
 
-# Pintool option
-if(${PINTOOL} MATCHES "yes")
-    add_definitions(-DTRITON_PINTOOL)
-    # Root directory of the Pin toolkit
-    set(PIN_ROOT "${CMAKE_SOURCE_DIR}/../../..")
-endif()
-
+# Triton project
 set(CMAKE_BUILD_TYPE Release)
 set(PROJECT_LIBTRITON "triton")
-set(PROJECT_PINTOOL "pintool")
 
 
 # Default flags
-#To fix old python version bug http://bugs.python.org/issue21958
+# To fix old python version bug http://bugs.python.org/issue21958
 if(${CMAKE_SYSTEM_NAME} MATCHES "Windows")
     set(LIBTRITON_CXX_FLAGS "-DHAVE_ROUND /MT")
 endif(${CMAKE_SYSTEM_NAME} MATCHES "Windows")
@@ -75,16 +78,18 @@ if(CMAKE_COMPILER_IS_GNUCXX OR "${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang")
 endif(CMAKE_COMPILER_IS_GNUCXX OR "${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang")
 
 
-# Linux CXX Flags
-if(${CMAKE_SYSTEM_NAME} MATCHES "Linux")
-    set(LIBTRITON_CXX_FLAGS "${LIBTRITON_CXX_FLAGS}")
-endif(${CMAKE_SYSTEM_NAME} MATCHES "Linux")
-
+# 32-bits
 if(${CMAKE_SYSTEM_NAME} MATCHES "Linux" OR ${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
     if(${ARCHITECTURE} STREQUAL "i386")
         set(LIBTRITON_CXX_FLAGS "${LIBTRITON_CXX_FLAGS} -m32")
     endif(${ARCHITECTURE} STREQUAL "i386")
 endif(${CMAKE_SYSTEM_NAME} MATCHES "Linux" OR ${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
+
+
+# Use the same ABI as pin
+if(PINTOOL)
+    set(LIBTRITON_CXX_FLAGS "${LIBTRITON_CXX_FLAGS} -D_GLIBCXX_USE_CXX11_ABI=0")
+endif(PINTOOL)
 
 
 # Specific OSX POLICY
@@ -99,7 +104,7 @@ endif(${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
 
 
 # Find boost
-find_package(Boost 1.53.0 REQUIRED)
+find_package(Boost 1.55.0 REQUIRED)
 include_directories(${Boost_INCLUDE_DIRS})
 
 
@@ -124,107 +129,11 @@ if (NOT CAPSTONE_FOUND)
 endif()
 
 
-# Pin stuffs
-if(${PINTOOL} MATCHES "yes")
-
-    # Use the same ABI as pin
-    set(LIBTRITON_CXX_FLAGS "${LIBTRITON_CXX_FLAGS} -D_GLIBCXX_USE_CXX11_ABI=0")
-
-    # Specific Linux CXX Flags
-    if(${CMAKE_SYSTEM_NAME} MATCHES "Linux")
-        if(${ARCHITECTURE} STREQUAL "i386")
-            set(PINTOOL_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DBIGARRAY_MULTIPLIER=1 -DUSING_XED -DTARGET_IA32 -DHOST_IA32 -DTARGET_LINUX -m32 -D_GLIBCXX_USE_CXX11_ABI=0")
-        endif(${ARCHITECTURE} STREQUAL "i386")
-
-        if(${ARCHITECTURE} STREQUAL "amd64")
-            set(PINTOOL_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DBIGARRAY_MULTIPLIER=1 -DUSING_XED -DTARGET_IA32E -DHOST_IA32E -DTARGET_LINUX -D_GLIBCXX_USE_CXX11_ABI=0")
-        endif(${ARCHITECTURE} STREQUAL "amd64")
-
-        set(PINTOOL_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -Wl,--hash-style=sysv -Wl,-Bsymbolic -fPIC")
-    endif(${CMAKE_SYSTEM_NAME} MATCHES "Linux")
-
-    # Specific OSX CXX Flags
-    if(${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
-        if(${ARCHITECTURE} STREQUAL "i386")
-            set(PINTOOL_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DBIGARRAY_MULTIPLIER=1 -DTARGET_IA32 -DHOST_IA32E -DTARGET_MAC")
-        endif(${ARCHITECTURE} STREQUAL "i386")
-
-        if(${ARCHITECTURE} STREQUAL "amd64")
-            set(PINTOOL_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DBIGARRAY_MULTIPLIER=1 -DTARGET_IA32E -DHOST_IA32E -DTARGET_MAC")
-        endif(${ARCHITECTURE} STREQUAL "amd64")
-    endif(${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
-
-    # Specific Windows CXX Flags
-    if(${CMAKE_SYSTEM_NAME} MATCHES "Windows")
-        if(${ARCHITECTURE} STREQUAL "i386")
-            set(PINTOOL_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DBIGARRAY_MULTIPLIER=1 -DUSING_XED -DTARGET_IA32 -DHOST_IA32 -DTARGET_WINDOWS -D_SECURE_SCL=0 -DHAVE_ROUND /MT")
-        endif(${ARCHITECTURE} STREQUAL "i386")
-
-        if(${ARCHITECTURE} STREQUAL "amd64")
-            set(PINTOOL_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DBIGARRAY_MULTIPLIER=1 -DUSING_XED -DTARGET_IA32E -DHOST_IA32E -DTARGET_WINDOWS -D_SECURE_SCL=0 -DHAVE_ROUND /MT")
-        endif(${ARCHITECTURE} STREQUAL "amd64")
-
-        set(PINTOOL_SHARED_LINKER_FLAGS " ")
-    endif(${CMAKE_SYSTEM_NAME} MATCHES "Windows")
-
-    # Global UNIX CXX Flags
-    if(CMAKE_COMPILER_IS_GNUCXX)
-        set(PINTOOL_CXX_FLAGS "${PINTOOL_CXX_FLAGS} -std=c++11 -fabi-version=2")
-    elseif("${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang")
-        set(PINTOOL_CXX_FLAGS "${PINTOOL_CXX_FLAGS} -std=c++11")
-    endif()
-
-    # Includes directories (Pin)
-    if(${ARCHITECTURE} STREQUAL "i386")
-        include_directories("${PIN_ROOT}/extras/xed-ia32/include")
-    endif(${ARCHITECTURE} STREQUAL "i386")
-
-    if(${ARCHITECTURE} STREQUAL "amd64")
-        include_directories("${PIN_ROOT}/extras/xed-intel64/include")
-    endif(${ARCHITECTURE} STREQUAL "amd64")
-
-    include_directories("${PIN_ROOT}/source/include/pin")
-    include_directories("${PIN_ROOT}/source/include/pin/gen")
-    include_directories("${PIN_ROOT}/extras/components/include")
-    include_directories("${PIN_ROOT}/source/tools/InstLib")
-
-
-    # Libs directories (Pin)
-    if(${ARCHITECTURE} STREQUAL "i386")
-        link_directories("${PIN_ROOT}/ia32/lib")
-        link_directories("${PIN_ROOT}/ia32/lib-ext")
-        link_directories("${PIN_ROOT}/extras/xed-ia32/lib")
-    endif(${ARCHITECTURE} STREQUAL "i386")
-
-    if(${ARCHITECTURE} STREQUAL "amd64")
-        link_directories("${PIN_ROOT}/intel64/lib")
-        link_directories("${PIN_ROOT}/intel64/lib-ext")
-        link_directories("${PIN_ROOT}/extras/xed-intel64/lib")
-    endif(${ARCHITECTURE} STREQUAL "amd64")
-
-    if(${CMAKE_SYSTEM_NAME} MATCHES "Linux")
-        if(${ARCHITECTURE} STREQUAL "i386")
-            link_directories("${PIN_ROOT}/ia32/runtime/glibc")
-        endif(${ARCHITECTURE} STREQUAL "i386")
-        if(${ARCHITECTURE} STREQUAL "amd64")
-            link_directories("${PIN_ROOT}/intel64/runtime/glibc")
-        endif(${ARCHITECTURE} STREQUAL "amd64")
-    endif(${CMAKE_SYSTEM_NAME} MATCHES "Linux")
-
-    # To prevent error c2872 ambiguous symbol in Windows we need to change the (U?INT\d+?) variables to PIN_(U?INT\d+?) in PIN.
-    # We wrote a python script to do it for you.
-    if(${CMAKE_SYSTEM_NAME} MATCHES "Windows")
-        execute_process(COMMAND python ${CMAKE_SOURCE_DIR}/src/scripts/replace_UINT_PIN.py ${PIN_ROOT})
-    endif(${CMAKE_SYSTEM_NAME} MATCHES "Windows")
-
-endif(${PINTOOL} MATCHES "yes")
-
-
 # Add Triton includes
 include_directories("${CMAKE_SOURCE_DIR}/src/libtriton/includes")
 
 
-#Note: Windows ?!
+# Note: Windows ?!
 if(${CMAKE_SYSTEM_NAME} MATCHES "Linux" OR ${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
     # Triton have to generate a syscalls table from the kernel source
     # This following code tries to find the unistd_64.h or unistd_32.h header depending on the architecture.
@@ -287,6 +196,7 @@ endif(${CMAKE_SYSTEM_NAME} MATCHES "Linux")
 configure_file(
     ${CMAKE_SOURCE_DIR}/src/libtriton/includes/version.hpp.in
     ${CMAKE_SOURCE_DIR}/src/libtriton/includes/version.hpp
+    IMMEDIATE @ONLY
 )
 
 
@@ -328,55 +238,7 @@ target_link_libraries(
 )
 
 
-if(${PINTOOL} MATCHES "yes")
-    file(
-        GLOB_RECURSE
-        PINTOOL_SOURCE_FILES
-        ${CMAKE_SOURCE_DIR}/src/tracer/pin/*
-    )
-    add_library(${PROJECT_PINTOOL} SHARED ${PINTOOL_SOURCE_FILES})
-    set_target_properties(${PROJECT_PINTOOL} PROPERTIES COMPILE_FLAGS ${PINTOOL_CXX_FLAGS})
-    set_target_properties(${PROJECT_PINTOOL} PROPERTIES LINK_FLAGS ${PINTOOL_SHARED_LINKER_FLAGS})
-
-    if(${CMAKE_SYSTEM_NAME} MATCHES "Linux" OR ${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
-        target_link_libraries(${PROJECT_PINTOOL} pin xed pindwarf dl ${PROJECT_LIBTRITON})
-    endif(${CMAKE_SYSTEM_NAME} MATCHES "Linux" OR ${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
-
-    if(${CMAKE_SYSTEM_NAME} MATCHES "Windows")
-        if(${ARCHITECTURE} STREQUAL "i386")
-            target_link_libraries(${PROJECT_PINTOOL} pin pinvm xed ntdll-32 ${PROJECT_LIBTRITON})
-        endif(${ARCHITECTURE} STREQUAL "i386")
-        if(${ARCHITECTURE} STREQUAL "amd64")
-            target_link_libraries(${PROJECT_PINTOOL} pin pinvm xed ntdll-64 ${PROJECT_LIBTRITON})
-        endif(${ARCHITECTURE} STREQUAL "amd64")
-    endif(${CMAKE_SYSTEM_NAME} MATCHES "Windows")
-
-    # Generate the triton's shortcut script
-    set(PIN_BIN_PATH ${PIN_ROOT}/pin.sh)
-    set(PINTOOL_PATH ${CMAKE_BINARY_DIR}/${CMAKE_SHARED_LIBRARY_PREFIX}${PROJECT_PINTOOL}${CMAKE_SHARED_LIBRARY_SUFFIX})
-    set(FLAG_IFEELLUCKY "")
-
-    if(${KERNEL4} MATCHES "yes")
-        set(FLAG_IFEELLUCKY "-ifeellucky")
-    endif(${KERNEL4} MATCHES "yes")
-
-    if(${CMAKE_SYSTEM_NAME} MATCHES "Linux" OR ${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
-        configure_file(
-            ${CMAKE_SOURCE_DIR}/src/scripts/triton.in
-            ${CMAKE_SOURCE_DIR}/triton
-            IMMEDIATE @ONLY
-        )
-
-        configure_file(
-            ${CMAKE_SOURCE_DIR}/src/scripts/tritonAttach.in
-            ${CMAKE_SOURCE_DIR}/tritonAttach
-            IMMEDIATE @ONLY
-        )
-    endif(${CMAKE_SYSTEM_NAME} MATCHES "Linux" OR ${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
-endif(${PINTOOL} MATCHES "yes")
-
-
-# add the install targets
+# Add the install targets
 if(${CMAKE_SYSTEM_NAME} MATCHES "Linux")
     set(TRITON_HEADER_INSTALL /usr/include/triton)
     set(TRITON_LIB_INSTALL /lib)
@@ -394,4 +256,174 @@ endif(${CMAKE_SYSTEM_NAME} MATCHES "Windows")
 
 install (TARGETS ${PROJECT_LIBTRITON} DESTINATION ${TRITON_LIB_INSTALL})
 install (FILES ${LIBTRITON_HEADERS_FILES} DESTINATION ${TRITON_HEADER_INSTALL})
+
+
+
+
+
+
+##################################################################################### CMake libpintool
+
+if(PINTOOL)
+    set(PROJECT_PINTOOL "pintool")
+    add_definitions(-DTRITON_PINTOOL)
+
+    # Root directory of the Pin toolkit
+    set(PIN_ROOT "${CMAKE_SOURCE_DIR}/../../..")
+
+
+    # Specific Linux CXX Flags
+    if(${CMAKE_SYSTEM_NAME} MATCHES "Linux")
+        if(${ARCHITECTURE} STREQUAL "i386")
+            set(PINTOOL_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DBIGARRAY_MULTIPLIER=1 -DUSING_XED -DTARGET_IA32 -DHOST_IA32 -DTARGET_LINUX -m32 -D_GLIBCXX_USE_CXX11_ABI=0")
+        endif(${ARCHITECTURE} STREQUAL "i386")
+
+        if(${ARCHITECTURE} STREQUAL "amd64")
+            set(PINTOOL_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DBIGARRAY_MULTIPLIER=1 -DUSING_XED -DTARGET_IA32E -DHOST_IA32E -DTARGET_LINUX -D_GLIBCXX_USE_CXX11_ABI=0")
+        endif(${ARCHITECTURE} STREQUAL "amd64")
+
+        set(PINTOOL_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -Wl,--hash-style=sysv -Wl,-Bsymbolic -fPIC")
+    endif(${CMAKE_SYSTEM_NAME} MATCHES "Linux")
+
+
+    # Specific OSX CXX Flags
+    if(${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
+        if(${ARCHITECTURE} STREQUAL "i386")
+            set(PINTOOL_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DBIGARRAY_MULTIPLIER=1 -DTARGET_IA32 -DHOST_IA32E -DTARGET_MAC")
+        endif(${ARCHITECTURE} STREQUAL "i386")
+
+        if(${ARCHITECTURE} STREQUAL "amd64")
+            set(PINTOOL_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DBIGARRAY_MULTIPLIER=1 -DTARGET_IA32E -DHOST_IA32E -DTARGET_MAC")
+        endif(${ARCHITECTURE} STREQUAL "amd64")
+
+        set(PINTOOL_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -Wl,-Bsymbolic -fPIC")
+    endif(${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
+
+
+    # Specific Windows CXX Flags
+    if(${CMAKE_SYSTEM_NAME} MATCHES "Windows")
+        if(${ARCHITECTURE} STREQUAL "i386")
+            set(PINTOOL_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DBIGARRAY_MULTIPLIER=1 -DUSING_XED -DTARGET_IA32 -DHOST_IA32 -DTARGET_WINDOWS -D_SECURE_SCL=0 -DHAVE_ROUND /MT")
+        endif(${ARCHITECTURE} STREQUAL "i386")
+
+        if(${ARCHITECTURE} STREQUAL "amd64")
+            set(PINTOOL_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DBIGARRAY_MULTIPLIER=1 -DUSING_XED -DTARGET_IA32E -DHOST_IA32E -DTARGET_WINDOWS -D_SECURE_SCL=0 -DHAVE_ROUND /MT")
+        endif(${ARCHITECTURE} STREQUAL "amd64")
+
+        set(PINTOOL_SHARED_LINKER_FLAGS " ")
+    endif(${CMAKE_SYSTEM_NAME} MATCHES "Windows")
+
+
+    # Global UNIX CXX Flags
+    if(CMAKE_COMPILER_IS_GNUCXX)
+        set(PINTOOL_CXX_FLAGS "${PINTOOL_CXX_FLAGS} -std=c++11 -fabi-version=2")
+    elseif("${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang")
+        set(PINTOOL_CXX_FLAGS "${PINTOOL_CXX_FLAGS} -std=c++11")
+    endif()
+
+
+    # Includes directories (Pin)
+    if(${ARCHITECTURE} STREQUAL "i386")
+        include_directories("${PIN_ROOT}/extras/xed-ia32/include")
+    endif(${ARCHITECTURE} STREQUAL "i386")
+
+    if(${ARCHITECTURE} STREQUAL "amd64")
+        include_directories("${PIN_ROOT}/extras/xed-intel64/include")
+    endif(${ARCHITECTURE} STREQUAL "amd64")
+
+    include_directories("${PIN_ROOT}/source/include/pin")
+    include_directories("${PIN_ROOT}/source/include/pin/gen")
+    include_directories("${PIN_ROOT}/extras/components/include")
+    include_directories("${PIN_ROOT}/source/tools/InstLib")
+
+
+    # Libs directories (Pin)
+    if(${ARCHITECTURE} STREQUAL "i386")
+        link_directories("${PIN_ROOT}/ia32/lib")
+        link_directories("${PIN_ROOT}/ia32/lib-ext")
+        link_directories("${PIN_ROOT}/extras/xed-ia32/lib")
+    endif(${ARCHITECTURE} STREQUAL "i386")
+
+    if(${ARCHITECTURE} STREQUAL "amd64")
+        link_directories("${PIN_ROOT}/intel64/lib")
+        link_directories("${PIN_ROOT}/intel64/lib-ext")
+        link_directories("${PIN_ROOT}/extras/xed-intel64/lib")
+    endif(${ARCHITECTURE} STREQUAL "amd64")
+
+    if(${CMAKE_SYSTEM_NAME} MATCHES "Linux")
+        if(${ARCHITECTURE} STREQUAL "i386")
+            link_directories("${PIN_ROOT}/ia32/runtime/glibc")
+        endif(${ARCHITECTURE} STREQUAL "i386")
+        if(${ARCHITECTURE} STREQUAL "amd64")
+            link_directories("${PIN_ROOT}/intel64/runtime/glibc")
+        endif(${ARCHITECTURE} STREQUAL "amd64")
+    endif(${CMAKE_SYSTEM_NAME} MATCHES "Linux")
+
+
+    # To prevent error c2872 ambiguous symbol in Windows we need to change the (U?INT\d+?) variables to PIN_(U?INT\d+?) in PIN.
+    # We wrote a python script to do it for you.
+    if(${CMAKE_SYSTEM_NAME} MATCHES "Windows")
+        execute_process(COMMAND python ${CMAKE_SOURCE_DIR}/src/scripts/replace_UINT_PIN.py ${PIN_ROOT})
+    endif(${CMAKE_SYSTEM_NAME} MATCHES "Windows")
+
+
+    # Pintool source files
+    configure_file(
+        ${CMAKE_SOURCE_DIR}/src/tracer/pin/init.in
+        ${CMAKE_SOURCE_DIR}/src/tracer/pin/init.cpp
+        IMMEDIATE @ONLY
+    )
+
+    file(
+        GLOB_RECURSE
+        PINTOOL_SOURCE_FILES
+        ${CMAKE_SOURCE_DIR}/src/tracer/pin/*
+    )
+    list(REMOVE_ITEM PINTOOL_SOURCE_FILES ${CMAKE_SOURCE_DIR}/src/tracer/pin/init.in)
+
+    add_library(${PROJECT_PINTOOL} SHARED ${PINTOOL_SOURCE_FILES})
+    set_target_properties(${PROJECT_PINTOOL} PROPERTIES COMPILE_FLAGS ${PINTOOL_CXX_FLAGS})
+    set_target_properties(${PROJECT_PINTOOL} PROPERTIES LINK_FLAGS ${PINTOOL_SHARED_LINKER_FLAGS})
+
+    if(${CMAKE_SYSTEM_NAME} MATCHES "Linux" OR ${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
+        target_link_libraries(${PROJECT_PINTOOL} pin xed pindwarf dl ${PROJECT_LIBTRITON})
+    endif(${CMAKE_SYSTEM_NAME} MATCHES "Linux" OR ${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
+
+    if(${CMAKE_SYSTEM_NAME} MATCHES "Windows")
+        if(${ARCHITECTURE} STREQUAL "i386")
+            target_link_libraries(${PROJECT_PINTOOL} pin pinvm xed ntdll-32 ${PROJECT_LIBTRITON})
+        endif(${ARCHITECTURE} STREQUAL "i386")
+        if(${ARCHITECTURE} STREQUAL "amd64")
+            target_link_libraries(${PROJECT_PINTOOL} pin pinvm xed ntdll-64 ${PROJECT_LIBTRITON})
+        endif(${ARCHITECTURE} STREQUAL "amd64")
+    endif(${CMAKE_SYSTEM_NAME} MATCHES "Windows")
+
+
+    # Generate the triton's shortcut script
+    set(PIN_BIN_PATH ${PIN_ROOT}/pin.sh)
+    set(PINTOOL_PATH ${CMAKE_BINARY_DIR}/${CMAKE_SHARED_LIBRARY_PREFIX}${PROJECT_PINTOOL}${CMAKE_SHARED_LIBRARY_SUFFIX})
+    set(FLAG_IFEELLUCKY "")
+
+
+    # Pin flag for kernel 4.x
+    if(KERNEL4)
+        set(FLAG_IFEELLUCKY "-ifeellucky")
+    endif(KERNEL4)
+
+
+    # Generate Triton pintool script
+    if(${CMAKE_SYSTEM_NAME} MATCHES "Linux" OR ${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
+        configure_file(
+            ${CMAKE_SOURCE_DIR}/src/scripts/triton.in
+            ${CMAKE_SOURCE_DIR}/triton
+            IMMEDIATE @ONLY
+        )
+
+        configure_file(
+            ${CMAKE_SOURCE_DIR}/src/scripts/tritonAttach.in
+            ${CMAKE_SOURCE_DIR}/tritonAttach
+            IMMEDIATE @ONLY
+        )
+    endif(${CMAKE_SYSTEM_NAME} MATCHES "Linux" OR ${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
+endif(PINTOOL)
 

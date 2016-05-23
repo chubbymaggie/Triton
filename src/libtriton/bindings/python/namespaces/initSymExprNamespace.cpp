@@ -12,12 +12,6 @@
 #include <pythonUtils.hpp>
 #include <symbolicExpression.hpp>
 
-#ifdef __unix__
-  #include <python2.7/Python.h>
-#elif _WIN32
-  #include <Python.h>
-#endif
-
 
 
 /*! \page py_SYMEXPR_page SYMEXPR
@@ -47,12 +41,10 @@ namespace triton {
     namespace python {
 
       void initSymExprNamespace(PyObject* symExprDict) {
-
-        PyDict_SetItemString(symExprDict, "UNSET", PyLong_FromUint(static_cast<triton::__uint>(-1)));
-        PyDict_SetItemString(symExprDict, "UNDEF", PyLong_FromUint(triton::engines::symbolic::UNDEF));
-        PyDict_SetItemString(symExprDict, "MEM", PyLong_FromUint(triton::engines::symbolic::MEM));
-        PyDict_SetItemString(symExprDict, "REG", PyLong_FromUint(triton::engines::symbolic::REG));
-
+        PyDict_SetItemString(symExprDict, "UNSET",  PyLong_FromUint(static_cast<triton::__uint>(-1)));
+        PyDict_SetItemString(symExprDict, "UNDEF",  PyLong_FromUint(triton::engines::symbolic::UNDEF));
+        PyDict_SetItemString(symExprDict, "MEM",    PyLong_FromUint(triton::engines::symbolic::MEM));
+        PyDict_SetItemString(symExprDict, "REG",    PyLong_FromUint(triton::engines::symbolic::REG));
       }
 
     }; /* python namespace */

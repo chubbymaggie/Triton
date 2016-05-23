@@ -1,6 +1,6 @@
 
 from triton  import *
-from smt2lib import *
+from ast     import *
 from pintool import *
 
 #
@@ -48,31 +48,37 @@ from pintool import *
 
 def cafter(instruction):
 
-    # movzx esi,BYTE PTR [rax]
+    # movzx  eax,BYTE PTR [rax]
     # RAX points on the user password
-    if instruction.getAddress() == 0x400572:
-        convertRegToSymVar(REG.RSI)
+    if instruction.getAddress() == 0x40057b:
+        convertRegisterToSymbolicVariable(REG.RSI)
 
     # mov eax,DWORD PTR [rbp-0x4]
     # RAX must be equal to 0xad6d to win
-    if instruction.getAddress() == 0x4005c5:
+    if instruction.getAddress() == 0x4005ce:
         print '[+] Please wait, computing in progress...'
         raxId = getSymbolicRegisterId(REG.RAX)
         raxExpr = getFullAstFromId(raxId)
 
+        SymVar_0 = getSymbolicVariableFromName('SymVar_0')
+        SymVar_1 = getSymbolicVariableFromName('SymVar_1')
+        SymVar_2 = getSymbolicVariableFromName('SymVar_2')
+        SymVar_3 = getSymbolicVariableFromName('SymVar_3')
+        SymVar_4 = getSymbolicVariableFromName('SymVar_4')
+
         # We want printable characters
         expr = compound([
-                 smtAssert(bvugt(variable('SymVar_0'), bv(96,  CPUSIZE.QWORD_BIT))),
-                 smtAssert(bvult(variable('SymVar_0'), bv(123, CPUSIZE.QWORD_BIT))),
-                 smtAssert(bvugt(variable('SymVar_1'), bv(96,  CPUSIZE.QWORD_BIT))),
-                 smtAssert(bvult(variable('SymVar_1'), bv(123, CPUSIZE.QWORD_BIT))),
-                 smtAssert(bvugt(variable('SymVar_2'), bv(96,  CPUSIZE.QWORD_BIT))),
-                 smtAssert(bvult(variable('SymVar_2'), bv(123, CPUSIZE.QWORD_BIT))),
-                 smtAssert(bvugt(variable('SymVar_3'), bv(96,  CPUSIZE.QWORD_BIT))),
-                 smtAssert(bvult(variable('SymVar_3'), bv(123, CPUSIZE.QWORD_BIT))),
-                 smtAssert(bvugt(variable('SymVar_4'), bv(96,  CPUSIZE.QWORD_BIT))),
-                 smtAssert(bvult(variable('SymVar_4'), bv(123, CPUSIZE.QWORD_BIT))),
-                 smtAssert(equal(raxExpr, bv(0xad6d, CPUSIZE.QWORD_BIT)))  # collision: (assert (= rax 0xad6d)
+                 assert_(bvugt(variable(SymVar_0), bv(96,  CPUSIZE.QWORD_BIT))),
+                 assert_(bvult(variable(SymVar_0), bv(123, CPUSIZE.QWORD_BIT))),
+                 assert_(bvugt(variable(SymVar_1), bv(96,  CPUSIZE.QWORD_BIT))),
+                 assert_(bvult(variable(SymVar_1), bv(123, CPUSIZE.QWORD_BIT))),
+                 assert_(bvugt(variable(SymVar_2), bv(96,  CPUSIZE.QWORD_BIT))),
+                 assert_(bvult(variable(SymVar_2), bv(123, CPUSIZE.QWORD_BIT))),
+                 assert_(bvugt(variable(SymVar_3), bv(96,  CPUSIZE.QWORD_BIT))),
+                 assert_(bvult(variable(SymVar_3), bv(123, CPUSIZE.QWORD_BIT))),
+                 assert_(bvugt(variable(SymVar_4), bv(96,  CPUSIZE.QWORD_BIT))),
+                 assert_(bvult(variable(SymVar_4), bv(123, CPUSIZE.QWORD_BIT))),
+                 assert_(equal(raxExpr, bv(0xad6d, CPUSIZE.QWORD_BIT)))  # collision: (assert (= rax 0xad6d)
                ])
 
         # Get max 20 different models

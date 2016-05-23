@@ -46,8 +46,11 @@ namespace triton {
         //! Returns the lower bit
         triton::uint32 getLow(void) const;
 
-        //! Returns the vector's size
+        //! Returns the size of the vector
         triton::uint32 getVectorSize(void) const;
+
+        //! Returns the max possible value of the bitvector.
+        triton::uint512 getMaxValue(void) const;
 
         //! Returns the pair<high, low>
         std::pair<triton::uint32, triton::uint32> getPair(void) const;
@@ -55,13 +58,13 @@ namespace triton {
         //! Copy a BitsVector.
         void operator=(const BitsVector& other);
 
-        //! Sets the highest bit's position
+        //! Sets the highest bit position
         void setHigh(triton::uint32 v);
 
-        //! Sets the lower bit's position
+        //! Sets the lower bit position
         void setLow(triton::uint32 v);
 
-        //! Sets the pair<high, low>'s position
+        //! Sets the pair<high, low> position
         void setPair(std::pair<triton::uint32, triton::uint32> p);
 
         //! Constructor.
@@ -71,14 +74,17 @@ namespace triton {
         BitsVector(triton::uint32 high, triton::uint32 low);
 
         //! Constructor by copy.
-        BitsVector(const triton::arch::BitsVector &copy);
+        BitsVector(const triton::arch::BitsVector& copy);
 
         //! Destructor.
         ~BitsVector();
     };
 
     //! Displays a BitsVector.
-    std::ostream &operator<<(std::ostream &stream, BitsVector bv);
+    std::ostream& operator<<(std::ostream& stream, const BitsVector& bv);
+
+    //! Displays a BitsVector.
+    std::ostream& operator<<(std::ostream& stream, const BitsVector* bv);
 
   /*! @} End of arch namespace */
   };

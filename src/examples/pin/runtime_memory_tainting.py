@@ -13,9 +13,9 @@ ENDC  = "\033[0m"
 # When the instruction located in 0x40058b is executed,
 # we taint the memory that RAX holds.
 def cbeforeSymProc(instruction):
-    if instruction.getAddress() == 0x40058b:
+    if instruction.getAddress() == 0x400574:
         rax = getCurrentRegisterValue(REG.RAX)
-        taintAddr(rax)
+        taintMemory(rax)
 
 
 def cafter(instruction):

@@ -19,12 +19,28 @@ namespace triton {
  *  @{
  */
 
-  //! Inject the value into the buffer.
-  void fromUint128ToBuffer(triton::uint128 value, triton::uint8* buffer);
+  //! \module The Utils namespace
+  namespace utils {
+  /*!
+   *  \ingroup triton
+   *  \addtogroup utils
+   *  @{
+   */
 
-  //! Returns the value located into the buffer.
-  triton::uint128 fromBufferToUint128(triton::uint8* buffer);
+    //! Inject the value into the buffer. Make sure that the `buffer` contains at least 16 allocated bytes.
+    void fromUintToBuffer(triton::uint128 value, triton::uint8* buffer);
 
+    //! Inject the value into the buffer. Make sure that the `buffer` contains at least 32 allocated bytes.
+    void fromUintToBuffer(triton::uint256 value, triton::uint8* buffer);
+
+    //! Inject the value into the buffer. Make sure that the `buffer` contains at least 64 allocated bytes.
+    void fromUintToBuffer(triton::uint512 value, triton::uint8* buffer);
+
+    //! Returns the value located into the buffer.
+    template <typename T> T fromBufferToUint(const triton::uint8* buffer);
+
+  /*! @} End of triton namespace */
+  };
 /*! @} End of triton namespace */
 };
 

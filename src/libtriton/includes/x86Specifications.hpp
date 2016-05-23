@@ -35,11 +35,7 @@ namespace triton {
      *  @{
      */
 
-      //! Initializes the 32-bits spec.
-      void init32(void);
-
-      //! Initializes the 64-bits spec.
-      void init64(void);
+      extern RegisterOperand x86_reg_invalid;
 
       extern RegisterOperand x86_reg_rax;
       extern RegisterOperand x86_reg_eax;
@@ -91,9 +87,7 @@ namespace triton {
       extern RegisterOperand x86_reg_ip;
       extern RegisterOperand x86_reg_pc;
 
-      extern RegisterOperand x86_reg_rflags;
       extern RegisterOperand x86_reg_eflags;
-      extern RegisterOperand x86_reg_flags;
 
       extern RegisterOperand x86_reg_r8;
       extern RegisterOperand x86_reg_r8d;
@@ -135,6 +129,15 @@ namespace triton {
       extern RegisterOperand x86_reg_r15w;
       extern RegisterOperand x86_reg_r15b;
 
+      extern RegisterOperand x86_reg_mm0;
+      extern RegisterOperand x86_reg_mm1;
+      extern RegisterOperand x86_reg_mm2;
+      extern RegisterOperand x86_reg_mm3;
+      extern RegisterOperand x86_reg_mm4;
+      extern RegisterOperand x86_reg_mm5;
+      extern RegisterOperand x86_reg_mm6;
+      extern RegisterOperand x86_reg_mm7;
+
       extern RegisterOperand x86_reg_xmm0;
       extern RegisterOperand x86_reg_xmm1;
       extern RegisterOperand x86_reg_xmm2;
@@ -152,6 +155,75 @@ namespace triton {
       extern RegisterOperand x86_reg_xmm14;
       extern RegisterOperand x86_reg_xmm15;
 
+      extern RegisterOperand x86_reg_ymm0;
+      extern RegisterOperand x86_reg_ymm1;
+      extern RegisterOperand x86_reg_ymm2;
+      extern RegisterOperand x86_reg_ymm3;
+      extern RegisterOperand x86_reg_ymm4;
+      extern RegisterOperand x86_reg_ymm5;
+      extern RegisterOperand x86_reg_ymm6;
+      extern RegisterOperand x86_reg_ymm7;
+      extern RegisterOperand x86_reg_ymm8;
+      extern RegisterOperand x86_reg_ymm9;
+      extern RegisterOperand x86_reg_ymm10;
+      extern RegisterOperand x86_reg_ymm11;
+      extern RegisterOperand x86_reg_ymm12;
+      extern RegisterOperand x86_reg_ymm13;
+      extern RegisterOperand x86_reg_ymm14;
+      extern RegisterOperand x86_reg_ymm15;
+
+      extern RegisterOperand x86_reg_zmm0;
+      extern RegisterOperand x86_reg_zmm1;
+      extern RegisterOperand x86_reg_zmm2;
+      extern RegisterOperand x86_reg_zmm3;
+      extern RegisterOperand x86_reg_zmm4;
+      extern RegisterOperand x86_reg_zmm5;
+      extern RegisterOperand x86_reg_zmm6;
+      extern RegisterOperand x86_reg_zmm7;
+      extern RegisterOperand x86_reg_zmm8;
+      extern RegisterOperand x86_reg_zmm9;
+      extern RegisterOperand x86_reg_zmm10;
+      extern RegisterOperand x86_reg_zmm11;
+      extern RegisterOperand x86_reg_zmm12;
+      extern RegisterOperand x86_reg_zmm13;
+      extern RegisterOperand x86_reg_zmm14;
+      extern RegisterOperand x86_reg_zmm15;
+      extern RegisterOperand x86_reg_zmm16;
+      extern RegisterOperand x86_reg_zmm17;
+      extern RegisterOperand x86_reg_zmm18;
+      extern RegisterOperand x86_reg_zmm19;
+      extern RegisterOperand x86_reg_zmm20;
+      extern RegisterOperand x86_reg_zmm21;
+      extern RegisterOperand x86_reg_zmm22;
+      extern RegisterOperand x86_reg_zmm23;
+      extern RegisterOperand x86_reg_zmm24;
+      extern RegisterOperand x86_reg_zmm25;
+      extern RegisterOperand x86_reg_zmm26;
+      extern RegisterOperand x86_reg_zmm27;
+      extern RegisterOperand x86_reg_zmm28;
+      extern RegisterOperand x86_reg_zmm29;
+      extern RegisterOperand x86_reg_zmm30;
+      extern RegisterOperand x86_reg_zmm31;
+
+      extern RegisterOperand x86_reg_mxcsr;
+
+      extern RegisterOperand x86_reg_cr0;
+      extern RegisterOperand x86_reg_cr1;
+      extern RegisterOperand x86_reg_cr2;
+      extern RegisterOperand x86_reg_cr3;
+      extern RegisterOperand x86_reg_cr4;
+      extern RegisterOperand x86_reg_cr5;
+      extern RegisterOperand x86_reg_cr6;
+      extern RegisterOperand x86_reg_cr7;
+      extern RegisterOperand x86_reg_cr8;
+      extern RegisterOperand x86_reg_cr9;
+      extern RegisterOperand x86_reg_cr10;
+      extern RegisterOperand x86_reg_cr11;
+      extern RegisterOperand x86_reg_cr12;
+      extern RegisterOperand x86_reg_cr13;
+      extern RegisterOperand x86_reg_cr14;
+      extern RegisterOperand x86_reg_cr15;
+
       extern RegisterOperand x86_reg_af;
       extern RegisterOperand x86_reg_cf;
       extern RegisterOperand x86_reg_df;
@@ -162,20 +234,46 @@ namespace triton {
       extern RegisterOperand x86_reg_tf;
       extern RegisterOperand x86_reg_zf;
 
+      extern RegisterOperand x86_reg_ie;
+      extern RegisterOperand x86_reg_de;
+      extern RegisterOperand x86_reg_ze;
+      extern RegisterOperand x86_reg_oe;
+      extern RegisterOperand x86_reg_ue;
+      extern RegisterOperand x86_reg_pe;
+      extern RegisterOperand x86_reg_daz;
+      extern RegisterOperand x86_reg_im;
+      extern RegisterOperand x86_reg_dm;
+      extern RegisterOperand x86_reg_zm;
+      extern RegisterOperand x86_reg_om;
+      extern RegisterOperand x86_reg_um;
+      extern RegisterOperand x86_reg_pm;
+      extern RegisterOperand x86_reg_rl;
+      extern RegisterOperand x86_reg_rh;
+      extern RegisterOperand x86_reg_fz;
+
+      extern RegisterOperand x86_reg_cs;
+      extern RegisterOperand x86_reg_ds;
+      extern RegisterOperand x86_reg_es;
+      extern RegisterOperand x86_reg_fs;
+      extern RegisterOperand x86_reg_gs;
+      extern RegisterOperand x86_reg_ss;
+
 
       //! Returns all information about the register from its ID.
-      std::tuple<std::string, triton::uint32, triton::uint32, triton::uint32> regIdToRegInfo(triton::uint32 reg);
+      std::tuple<std::string, triton::uint32, triton::uint32, triton::uint32> registerIdToRegisterInformation(triton::uint32 reg);
 
       //! Converts a capstone's register id to a triton's register id.
-      triton::uint32 capstoneRegToTritonReg(triton::uint32 id);
+      triton::uint32 capstoneRegisterToTritonRegister(triton::uint32 id);
 
       //! Converts a capstone's instruction id to a triton's instruction id.
-      triton::uint32 capstoneInstToTritonInst(triton::uint32 id);
+      triton::uint32 capstoneInstructionToTritonInstruction(triton::uint32 id);
+
+      //! Converts a capstone's prefix id to a triton's prefix id.
+      triton::uint32 capstonePrefixToTritonPrefix(triton::uint32 id);
 
 
       //! The list of registers.
-      enum registers_e
-      {
+      enum registers_e {
         ID_REG_INVALID = 0, //!< invalid = 0
 
         /* GPR 64-bits */
@@ -188,7 +286,6 @@ namespace triton {
         ID_REG_RBP, //!< rbp
         ID_REG_RSP, //!< rsp
         ID_REG_RIP, //!< rip
-        ID_REG_RFLAGS, //!< rflags
 
         ID_REG_R8, //!< r8
         ID_REG_R8D, //!< r8d
@@ -272,7 +369,18 @@ namespace triton {
 
         ID_REG_EFLAGS, //!< eflags
 
+        /* MMX */
+        ID_REG_MM0, //!< mm0
+        ID_REG_MM1, //!< mm1
+        ID_REG_MM2, //!< mm2
+        ID_REG_MM3, //!< mm3
+        ID_REG_MM4, //!< mm4
+        ID_REG_MM5, //!< mm5
+        ID_REG_MM6, //!< mm6
+        ID_REG_MM7, //!< mm7
+
         /* SSE */
+        ID_REG_MXCSR, //!< mxcsr
         ID_REG_XMM0, //!< xmm0
         ID_REG_XMM1, //!< xmm1
         ID_REG_XMM2, //!< xmm2
@@ -290,6 +398,76 @@ namespace triton {
         ID_REG_XMM14, //!< xmm14
         ID_REG_XMM15, //!< xmm15
 
+        /* AVX-256 */
+        ID_REG_YMM0, //!< ymm0
+        ID_REG_YMM1, //!< ymm1
+        ID_REG_YMM2, //!< ymm2
+        ID_REG_YMM3, //!< ymm3
+        ID_REG_YMM4, //!< ymm4
+        ID_REG_YMM5, //!< ymm5
+        ID_REG_YMM6, //!< ymm6
+        ID_REG_YMM7, //!< ymm7
+        ID_REG_YMM8, //!< ymm8
+        ID_REG_YMM9, //!< ymm9
+        ID_REG_YMM10, //!< ymm10
+        ID_REG_YMM11, //!< ymm11
+        ID_REG_YMM12, //!< ymm12
+        ID_REG_YMM13, //!< ymm13
+        ID_REG_YMM14, //!< ymm14
+        ID_REG_YMM15, //!< ymm15
+
+        /* AVX-512 */
+        ID_REG_ZMM0, //!< zmm0
+        ID_REG_ZMM1, //!< zmm1
+        ID_REG_ZMM2, //!< zmm2
+        ID_REG_ZMM3, //!< zmm3
+        ID_REG_ZMM4, //!< zmm4
+        ID_REG_ZMM5, //!< zmm5
+        ID_REG_ZMM6, //!< zmm6
+        ID_REG_ZMM7, //!< zmm7
+        ID_REG_ZMM8, //!< zmm8
+        ID_REG_ZMM9, //!< zmm9
+        ID_REG_ZMM10, //!< zmm10
+        ID_REG_ZMM11, //!< zmm11
+        ID_REG_ZMM12, //!< zmm12
+        ID_REG_ZMM13, //!< zmm13
+        ID_REG_ZMM14, //!< zmm14
+        ID_REG_ZMM15, //!< zmm15
+        ID_REG_ZMM16, //!< zmm16
+        ID_REG_ZMM17, //!< zmm17
+        ID_REG_ZMM18, //!< zmm18
+        ID_REG_ZMM19, //!< zmm19
+        ID_REG_ZMM20, //!< zmm20
+        ID_REG_ZMM21, //!< zmm21
+        ID_REG_ZMM22, //!< zmm22
+        ID_REG_ZMM23, //!< zmm23
+        ID_REG_ZMM24, //!< zmm24
+        ID_REG_ZMM25, //!< zmm25
+        ID_REG_ZMM26, //!< zmm26
+        ID_REG_ZMM27, //!< zmm27
+        ID_REG_ZMM28, //!< zmm28
+        ID_REG_ZMM29, //!< zmm29
+        ID_REG_ZMM30, //!< zmm30
+        ID_REG_ZMM31, //!< zmm31
+
+        /* Control */
+        ID_REG_CR0, //!< cr0
+        ID_REG_CR1, //!< cr1
+        ID_REG_CR2, //!< cr2
+        ID_REG_CR3, //!< cr3
+        ID_REG_CR4, //!< cr4
+        ID_REG_CR5, //!< cr5
+        ID_REG_CR6, //!< cr6
+        ID_REG_CR7, //!< cr7
+        ID_REG_CR8, //!< cr8
+        ID_REG_CR9, //!< cr9
+        ID_REG_CR10, //!< cr10
+        ID_REG_CR11, //!< cr11
+        ID_REG_CR12, //!< cr12
+        ID_REG_CR13, //!< cr13
+        ID_REG_CR14, //!< cr14
+        ID_REG_CR15, //!< cr15
+
         /* Flags ID used in the Taint and Symbolic Engines */
         ID_REG_AF, //!< af
         ID_REG_CF, //!< cf
@@ -301,10 +479,55 @@ namespace triton {
         ID_REG_TF, //!< tf
         ID_REG_ZF, //!< zf
 
+        /* SSE flags */
+        ID_REG_IE,  //!< ie (Invalid Operation Flag)
+        ID_REG_DE,  //!< de (Denormal Flag)
+        ID_REG_ZE,  //!< ze (Divide By Zero Flag)
+        ID_REG_OE,  //!< oe (Overflow Flag)
+        ID_REG_UE,  //!< ue (Underflow Flag)
+        ID_REG_PE,  //!< pe (Precision Flag)
+        ID_REG_DAZ, //!< da (Denormals Are Zero)
+        ID_REG_IM,  //!< im (Invalid Operation Mask)
+        ID_REG_DM,  //!< dm (Denormal Mask)
+        ID_REG_ZM,  //!< zm (Divide By Zero Mask)
+        ID_REG_OM,  //!< om (Overflow Mask)
+        ID_REG_UM,  //!< um (Underflow Mask)
+        ID_REG_PM,  //!< pm (Precision Mask)
+        ID_REG_RL,  //!< r- (Round Negative)
+        ID_REG_RH,  //!< r+ (Round Positive)
+        ID_REG_FZ,  //!< fz (Flush To Zero)
+
+        /* Segments */
+        ID_REG_CS,  //!< Code Segment
+        ID_REG_DS,  //!< Data Segment
+        ID_REG_ES,  //!< Extra Segment
+        ID_REG_FS,  //!< F Segment
+        ID_REG_GS,  //!< G Segment
+        ID_REG_SS,  //!< Stack Segment
+
         /* Must be the last item */
         ID_REG_LAST_ITEM //!< must be the last item
       };
 
+      //! Global set of registers.
+      extern RegisterOperand* x86_regs[ID_REG_LAST_ITEM];
+
+      /*! \brief The list of prefixes.
+       *
+       *  \description
+       *  Note that `REP` and `REPE` have the some opcode. The `REP`
+       *  prefix becomes a `REPE` if the instruction modifies `ZF`.
+       */
+      enum prefix_e {
+        ID_PREFIX_INVALID = 0,  //!< invalid
+        ID_PREFIX_LOCK,         //!< LOCK
+        ID_PREFIX_REP,          //!< REP
+        ID_PREFIX_REPE,         //!< REPE
+        ID_PREFIX_REPNE,        //!< REPNE
+
+        /* Must be the last item */
+        ID_PREFIX_LAST_ITEM     //!< must be the last item
+      };
 
       //! The list of opcodes.
       enum instructions_e {
@@ -1617,6 +1840,8 @@ namespace triton {
 };
 
 
+//! Temporary INVALID register.
+#define TRITON_X86_REG_INVALID  triton::arch::x86::x86_reg_invalid
 //! Temporary RAX register.
 #define TRITON_X86_REG_RAX      triton::arch::x86::x86_reg_rax
 //! Temporary EAX register.
@@ -1699,8 +1924,6 @@ namespace triton {
 #define TRITON_X86_REG_IP       triton::arch::x86::x86_reg_ip
 //! Temporary PC register.
 #define TRITON_X86_REG_PC       triton::arch::x86::x86_reg_pc
-//! Temporary RFLAGS register.
-#define TRITON_X86_REG_RFLAGS   triton::arch::x86::x86_reg_rflags
 //! Temporary EFLAGS register.
 #define TRITON_X86_REG_EFLAGS   triton::arch::x86::x86_reg_eflags
 //! Temporary R8 register.
@@ -1767,6 +1990,22 @@ namespace triton {
 #define TRITON_X86_REG_R15W     triton::arch::x86::x86_reg_r15w
 //! Temporary R15B register.
 #define TRITON_X86_REG_R15B     triton::arch::x86::x86_reg_r15b
+//! Temporary MM0 register.
+#define TRITON_X86_REG_MM0      triton::arch::x86::x86_reg_mm0
+//! Temporary MM1 register.
+#define TRITON_X86_REG_MM1      triton::arch::x86::x86_reg_mm1
+//! Temporary MM2 register.
+#define TRITON_X86_REG_MM2      triton::arch::x86::x86_reg_mm2
+//! Temporary MM3 register.
+#define TRITON_X86_REG_MM3      triton::arch::x86::x86_reg_mm3
+//! Temporary MM4 register.
+#define TRITON_X86_REG_MM4      triton::arch::x86::x86_reg_mm4
+//! Temporary MM5 register.
+#define TRITON_X86_REG_MM5      triton::arch::x86::x86_reg_mm5
+//! Temporary MM6 register.
+#define TRITON_X86_REG_MM6      triton::arch::x86::x86_reg_mm6
+//! Temporary MM7 register.
+#define TRITON_X86_REG_MM7      triton::arch::x86::x86_reg_mm7
 //! Temporary XMM0 register.
 #define TRITON_X86_REG_XMM0     triton::arch::x86::x86_reg_xmm0
 //! Temporary XMM1 register.
@@ -1799,6 +2038,168 @@ namespace triton {
 #define TRITON_X86_REG_XMM14    triton::arch::x86::x86_reg_xmm14
 //! Temporary XMM15 register.
 #define TRITON_X86_REG_XMM15    triton::arch::x86::x86_reg_xmm15
+//! Temporary YMM0 register.
+#define TRITON_X86_REG_YMM0     triton::arch::x86::x86_reg_ymm0
+//! Temporary YMM1 register.
+#define TRITON_X86_REG_YMM1     triton::arch::x86::x86_reg_ymm1
+//! Temporary YMM2 register.
+#define TRITON_X86_REG_YMM2     triton::arch::x86::x86_reg_ymm2
+//! Temporary YMM3 register.
+#define TRITON_X86_REG_YMM3     triton::arch::x86::x86_reg_ymm3
+//! Temporary YMM4 register.
+#define TRITON_X86_REG_YMM4     triton::arch::x86::x86_reg_ymm4
+//! Temporary YMM5 register.
+#define TRITON_X86_REG_YMM5     triton::arch::x86::x86_reg_ymm5
+//! Temporary YMM6 register.
+#define TRITON_X86_REG_YMM6     triton::arch::x86::x86_reg_ymm6
+//! Temporary YMM7 register.
+#define TRITON_X86_REG_YMM7     triton::arch::x86::x86_reg_ymm7
+//! Temporary YMM8 register.
+#define TRITON_X86_REG_YMM8     triton::arch::x86::x86_reg_ymm8
+//! Temporary YMM9 register.
+#define TRITON_X86_REG_YMM9     triton::arch::x86::x86_reg_ymm9
+//! Temporary YMM10 register.
+#define TRITON_X86_REG_YMM10    triton::arch::x86::x86_reg_ymm10
+//! Temporary YMM11 register.
+#define TRITON_X86_REG_YMM11    triton::arch::x86::x86_reg_ymm11
+//! Temporary YMM12 register.
+#define TRITON_X86_REG_YMM12    triton::arch::x86::x86_reg_ymm12
+//! Temporary YMM13 register.
+#define TRITON_X86_REG_YMM13    triton::arch::x86::x86_reg_ymm13
+//! Temporary YMM14 register.
+#define TRITON_X86_REG_YMM14    triton::arch::x86::x86_reg_ymm14
+//! Temporary YMM15 register.
+#define TRITON_X86_REG_YMM15    triton::arch::x86::x86_reg_ymm15
+//! Temporary ZMM0 register.
+#define TRITON_X86_REG_ZMM0     triton::arch::x86::x86_reg_zmm0
+//! Temporary ZMM1 register.
+#define TRITON_X86_REG_ZMM1     triton::arch::x86::x86_reg_zmm1
+//! Temporary ZMM2 register.
+#define TRITON_X86_REG_ZMM2     triton::arch::x86::x86_reg_zmm2
+//! Temporary ZMM3 register.
+#define TRITON_X86_REG_ZMM3     triton::arch::x86::x86_reg_zmm3
+//! Temporary ZMM4 register.
+#define TRITON_X86_REG_ZMM4     triton::arch::x86::x86_reg_zmm4
+//! Temporary ZMM5 register.
+#define TRITON_X86_REG_ZMM5     triton::arch::x86::x86_reg_zmm5
+//! Temporary ZMM6 register.
+#define TRITON_X86_REG_ZMM6     triton::arch::x86::x86_reg_zmm6
+//! Temporary ZMM7 register.
+#define TRITON_X86_REG_ZMM7     triton::arch::x86::x86_reg_zmm7
+//! Temporary ZMM8 register.
+#define TRITON_X86_REG_ZMM8     triton::arch::x86::x86_reg_zmm8
+//! Temporary ZMM9 register.
+#define TRITON_X86_REG_ZMM9     triton::arch::x86::x86_reg_zmm9
+//! Temporary ZMM10 register.
+#define TRITON_X86_REG_ZMM10    triton::arch::x86::x86_reg_zmm10
+//! Temporary ZMM11 register.
+#define TRITON_X86_REG_ZMM11    triton::arch::x86::x86_reg_zmm11
+//! Temporary ZMM12 register.
+#define TRITON_X86_REG_ZMM12    triton::arch::x86::x86_reg_zmm12
+//! Temporary ZMM13 register.
+#define TRITON_X86_REG_ZMM13    triton::arch::x86::x86_reg_zmm13
+//! Temporary ZMM14 register.
+#define TRITON_X86_REG_ZMM14    triton::arch::x86::x86_reg_zmm14
+//! Temporary ZMM15 register.
+#define TRITON_X86_REG_ZMM15    triton::arch::x86::x86_reg_zmm15
+//! Temporary ZMM16 register.
+#define TRITON_X86_REG_ZMM16    triton::arch::x86::x86_reg_zmm16
+//! Temporary ZMM17 register.
+#define TRITON_X86_REG_ZMM17    triton::arch::x86::x86_reg_zmm17
+//! Temporary ZMM18 register.
+#define TRITON_X86_REG_ZMM18    triton::arch::x86::x86_reg_zmm18
+//! Temporary ZMM19 register.
+#define TRITON_X86_REG_ZMM19    triton::arch::x86::x86_reg_zmm19
+//! Temporary ZMM20 register.
+#define TRITON_X86_REG_ZMM20    triton::arch::x86::x86_reg_zmm20
+//! Temporary ZMM21 register.
+#define TRITON_X86_REG_ZMM21    triton::arch::x86::x86_reg_zmm21
+//! Temporary ZMM22 register.
+#define TRITON_X86_REG_ZMM22    triton::arch::x86::x86_reg_zmm22
+//! Temporary ZMM23 register.
+#define TRITON_X86_REG_ZMM23    triton::arch::x86::x86_reg_zmm23
+//! Temporary ZMM24 register.
+#define TRITON_X86_REG_ZMM24    triton::arch::x86::x86_reg_zmm24
+//! Temporary ZMM25 register.
+#define TRITON_X86_REG_ZMM25    triton::arch::x86::x86_reg_zmm25
+//! Temporary ZMM26 register.
+#define TRITON_X86_REG_ZMM26    triton::arch::x86::x86_reg_zmm26
+//! Temporary ZMM27 register.
+#define TRITON_X86_REG_ZMM27    triton::arch::x86::x86_reg_zmm27
+//! Temporary ZMM28 register.
+#define TRITON_X86_REG_ZMM28    triton::arch::x86::x86_reg_zmm28
+//! Temporary ZMM29 register.
+#define TRITON_X86_REG_ZMM29    triton::arch::x86::x86_reg_zmm29
+//! Temporary ZMM30 register.
+#define TRITON_X86_REG_ZMM30    triton::arch::x86::x86_reg_zmm30
+//! Temporary ZMM31 register.
+#define TRITON_X86_REG_ZMM31    triton::arch::x86::x86_reg_zmm31
+//! Temporary MXCSR register.
+#define TRITON_X86_REG_MXCSR    triton::arch::x86::x86_reg_mxcsr
+//! Temporary CR0 register.
+#define TRITON_X86_REG_CR0     triton::arch::x86::x86_reg_cr0
+//! Temporary CR1 register.
+#define TRITON_X86_REG_CR1     triton::arch::x86::x86_reg_cr1
+//! Temporary CR2 register.
+#define TRITON_X86_REG_CR2     triton::arch::x86::x86_reg_cr2
+//! Temporary CR3 register.
+#define TRITON_X86_REG_CR3     triton::arch::x86::x86_reg_cr3
+//! Temporary CR4 register.
+#define TRITON_X86_REG_CR4     triton::arch::x86::x86_reg_cr4
+//! Temporary CR5 register.
+#define TRITON_X86_REG_CR5     triton::arch::x86::x86_reg_cr5
+//! Temporary CR6 register.
+#define TRITON_X86_REG_CR6     triton::arch::x86::x86_reg_cr6
+//! Temporary CR7 register.
+#define TRITON_X86_REG_CR7     triton::arch::x86::x86_reg_cr7
+//! Temporary CR8 register.
+#define TRITON_X86_REG_CR8     triton::arch::x86::x86_reg_cr8
+//! Temporary CR9 register.
+#define TRITON_X86_REG_CR9     triton::arch::x86::x86_reg_cr9
+//! Temporary CR10 register.
+#define TRITON_X86_REG_CR10    triton::arch::x86::x86_reg_cr10
+//! Temporary CR11 register.
+#define TRITON_X86_REG_CR11    triton::arch::x86::x86_reg_cr11
+//! Temporary CR12 register.
+#define TRITON_X86_REG_CR12    triton::arch::x86::x86_reg_cr12
+//! Temporary CR13 register.
+#define TRITON_X86_REG_CR13    triton::arch::x86::x86_reg_cr13
+//! Temporary CR14 register.
+#define TRITON_X86_REG_CR14    triton::arch::x86::x86_reg_cr14
+//! Temporary CR15 register.
+#define TRITON_X86_REG_CR15    triton::arch::x86::x86_reg_cr15
+//! Temporary IE register.
+#define TRITON_X86_REG_IE       triton::arch::x86::x86_reg_ie
+//! Temporary DE register.
+#define TRITON_X86_REG_DE       triton::arch::x86::x86_reg_de
+//! Temporary ZE register.
+#define TRITON_X86_REG_ZE       triton::arch::x86::x86_reg_ze
+//! Temporary OE register.
+#define TRITON_X86_REG_OE       triton::arch::x86::x86_reg_oe
+//! Temporary UE register.
+#define TRITON_X86_REG_UE       triton::arch::x86::x86_reg_ue
+//! Temporary PE register.
+#define TRITON_X86_REG_PE       triton::arch::x86::x86_reg_pe
+//! Temporary DAZ register.
+#define TRITON_X86_REG_DAZ      triton::arch::x86::x86_reg_daz
+//! Temporary IM register.
+#define TRITON_X86_REG_IM       triton::arch::x86::x86_reg_im
+//! Temporary DM register.
+#define TRITON_X86_REG_DM       triton::arch::x86::x86_reg_dm
+//! Temporary ZM register.
+#define TRITON_X86_REG_ZM       triton::arch::x86::x86_reg_zm
+//! Temporary OM register.
+#define TRITON_X86_REG_OM       triton::arch::x86::x86_reg_om
+//! Temporary UM register.
+#define TRITON_X86_REG_UM       triton::arch::x86::x86_reg_um
+//! Temporary PM register.
+#define TRITON_X86_REG_PM       triton::arch::x86::x86_reg_pm
+//! Temporary RL register.
+#define TRITON_X86_REG_RL       triton::arch::x86::x86_reg_rl
+//! Temporary RH register.
+#define TRITON_X86_REG_RH       triton::arch::x86::x86_reg_rh
+//! Temporary FZ register.
+#define TRITON_X86_REG_FZ       triton::arch::x86::x86_reg_fz
 //! Temporary AF register.
 #define TRITON_X86_REG_AF       triton::arch::x86::x86_reg_af
 //! Temporary CF register.
@@ -1817,6 +2218,17 @@ namespace triton {
 #define TRITON_X86_REG_TF       triton::arch::x86::x86_reg_tf
 //! Temporary ZF register.
 #define TRITON_X86_REG_ZF       triton::arch::x86::x86_reg_zf
-
+//! Temporary CS register.
+#define TRITON_X86_REG_CS       triton::arch::x86::x86_reg_cs
+//! Temporary DS register.
+#define TRITON_X86_REG_DS       triton::arch::x86::x86_reg_ds
+//! Temporary ES register.
+#define TRITON_X86_REG_ES       triton::arch::x86::x86_reg_es
+//! Temporary FS register.
+#define TRITON_X86_REG_FS       triton::arch::x86::x86_reg_fs
+//! Temporary GS register.
+#define TRITON_X86_REG_GS       triton::arch::x86::x86_reg_gs
+//! Temporary SS register.
+#define TRITON_X86_REG_SS       triton::arch::x86::x86_reg_ss
 
 #endif /* TRITON_X86SPECIFICATIONS_H */

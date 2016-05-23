@@ -11,12 +11,6 @@
 #include <pythonBindings.hpp>
 #include <pythonUtils.hpp>
 
-#ifdef __unix__
-  #include <python2.7/Python.h>
-#elif _WIN32
-  #include <Python.h>
-#endif
-
 
 
 /*! \page py_OPERAND_page OPERAND
@@ -46,12 +40,10 @@ namespace triton {
     namespace python {
 
       void initOperandNamespace(PyObject* operandDict) {
-
-        PyDict_SetItemString(operandDict, "INVALID", PyLong_FromUint(triton::arch::OP_INVALID));
-        PyDict_SetItemString(operandDict, "IMM", PyLong_FromUint(triton::arch::OP_IMM));
-        PyDict_SetItemString(operandDict, "MEM", PyLong_FromUint(triton::arch::OP_MEM));
-        PyDict_SetItemString(operandDict, "REG", PyLong_FromUint(triton::arch::OP_REG));
-
+        PyDict_SetItemString(operandDict, "INVALID",  PyLong_FromUint(triton::arch::OP_INVALID));
+        PyDict_SetItemString(operandDict, "IMM",      PyLong_FromUint(triton::arch::OP_IMM));
+        PyDict_SetItemString(operandDict, "MEM",      PyLong_FromUint(triton::arch::OP_MEM));
+        PyDict_SetItemString(operandDict, "REG",      PyLong_FromUint(triton::arch::OP_REG));
       }
 
     }; /* python namespace */

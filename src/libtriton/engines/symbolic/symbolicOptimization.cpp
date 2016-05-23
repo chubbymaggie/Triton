@@ -21,6 +21,7 @@ namespace triton {
 
 
       SymbolicOptimization::SymbolicOptimization() {
+        this->enableOptimization(PC_TRACKING_SYMBOLIC, true); /* This optimization is enabled by default */
       }
 
 
@@ -28,20 +29,18 @@ namespace triton {
       }
 
 
-      bool SymbolicOptimization::isOptimizationEnabled(enum optimization_e opti) {
+      bool SymbolicOptimization::isOptimizationEnabled(enum optimization_e opti) const {
         if (this->enabledOptimizations.find(opti) != this->enabledOptimizations.end())
           return true;
         return false;
       }
 
 
-      void SymbolicOptimization::disableOptimization(enum optimization_e opti) {
-        this->enabledOptimizations.erase(opti);
-      }
-
-
-      void SymbolicOptimization::enableOptimization(enum optimization_e opti) {
-        this->enabledOptimizations.insert(opti);
+      void SymbolicOptimization::enableOptimization(enum optimization_e opti, bool flag) {
+        if (flag == true)
+          this->enabledOptimizations.insert(opti);
+        else
+          this->enabledOptimizations.erase(opti);
       }
 
     }; /* symbolic namespace */

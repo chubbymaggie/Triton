@@ -8,9 +8,9 @@
 #include <stdexcept>
 
 #include <api.hpp>
-#include <smt2lib.hpp>
-#include <smt2libZ3Ast.hpp>
-#include <smt2libZ3Result.hpp>
+#include <ast.hpp>
+#include <tritonToZ3Ast.hpp>
+#include <z3Result.hpp>
 #include <solverEngine.hpp>
 
 
@@ -23,8 +23,8 @@
 \section solver_interface_description Description
 <hr>
 
-The solver engine is the interface between an SMT solver and **Triton** itself. All requests are sent to the SMT solver
-as an \ref py_smt2lib_page AST. The AST representation as string looks like a manually crafted SMT2-LIB script.
+The solver engine is the interface between a SMT solver and **Triton** itself. All requests are sent to the SMT solver
+as Triton AST (See: \ref py_ast_page). The AST representation as string looks like a manually crafted SMT2-LIB script.
 
 <b>Example:</b>
 
@@ -63,19 +63,19 @@ Let assume that the \f$rax\f$'s symbolic expression contains a symbolic variable
 this program point, we want that \f$rax = 0\f$. We first get the symbolic expression id corresponding to the \f$rax\f$ register, then, its AST.
 When the AST has been got, we are able to build our constraint such that \f$ AST_{constraint} = assert(AST_{rax} == 0) \f$.
 
-The solver interface triton::API::getModel() gets as parameter a triton::smt2lib::smtAstAbstractNode which corresponds to the \f$ AST_{constraint} \f$ and
+The solver interface triton::API::getModel() gets as parameter a triton::ast::AbstractNode which corresponds to the \f$ AST_{constraint} \f$ and
 returns a list of triton::engines::solver::SolverModel. Each model for a symbolic variable \f$x \in X\f$ is represented by a triton::engines::solver::SolverModel.
 For example, if there are two symbolic variables in your constraint, the triton::API::getModel() function will return a list of two items.
 
 ~~~~~~~~~~~~~{cpp}
-  // Get the RAX's symbolic ID
+  // Get the symbolic id of RAX
   auto raxSymId = api.getSymbolicRegisterId(TRITON_X86_REG_RAX);
 
-  // Get the RAX's full AST
+  // Get the full AST of RAX
   auto raxFullAst = api.getFullAstFromId(raxSymId);
 
-  // Modify RAX's AST to build the constraint
-  auto constraint = smt2lib::smtAssert(smt2lib::equal(raxFullAst, smt2lib::bv(0, raxFullAst->getBitvectorSize())));
+  // Modify the AST of RAX to build the constraint
+  auto constraint = triton::ast::assert_(triton::ast::equal(raxFullAst, triton::ast::bv(0, raxFullAst->getBitvectorSize())));
 
   // Ask a model
   auto model = api.getModel(constraint);
@@ -114,14 +114,18 @@ namespace triton {
       }
 
 
-      std::list<std::map<triton::uint32, SolverModel>> SolverEngine::getModels(smt2lib::smtAstAbstractNode *node, triton::uint32 limit) {
+      std::list<std::map<triton::uint32, SolverModel>> SolverEngine::getModels(triton::ast::AbstractNode *node, triton::uint32 limit) const {
         std::list<std::map<triton::uint32, SolverModel>>  ret;
         std::stringstream                                 formula;
         z3::context                                       ctx;
         z3::solver                                        solver(ctx);
+        triton::uint32                                    representationMode = triton::api.getAstRepresentationMode();
 
         if (node == nullptr)
           throw std::runtime_error("SolverEngine::getModels(): node cannot be null.");
+
+        /* Switch into the SMT mode */
+        triton::api.setAstRepresentationMode(triton::ast::representations::SMT_REPRESENTATION);
 
         /* First, set the QF_AUFBV flag  */
         formula << "(set-logic QF_AUFBV)";
@@ -176,11 +180,14 @@ namespace triton {
           limit--;
         }
 
+        /* Restore the representation mode */
+        triton::api.setAstRepresentationMode(representationMode);
+
         return ret;
       }
 
 
-      std::map<triton::uint32, SolverModel> SolverEngine::getModel(smt2lib::smtAstAbstractNode *node) {
+      std::map<triton::uint32, SolverModel> SolverEngine::getModel(triton::ast::AbstractNode *node) const {
         std::map<triton::uint32, SolverModel> ret;
         std::list<std::map<triton::uint32, SolverModel>> allModels;
 
@@ -192,11 +199,11 @@ namespace triton {
       }
 
 
-      triton::uint512 SolverEngine::evaluateAst(smt2lib::smtAstAbstractNode *node) {
+      triton::uint512 SolverEngine::evaluateAstViaZ3(triton::ast::AbstractNode *node) const {
         if (node == nullptr)
-          throw std::runtime_error("SolverEngine::evaluateAst(): node cannot be null.");
-        triton::smt2lib::Z3Ast z3ast{};
-        triton::smt2lib::Z3Result result = z3ast.eval(*node);
+          throw std::runtime_error("SolverEngine::evaluateAstViaZ3(): node cannot be null.");
+        triton::ast::TritonToZ3Ast z3ast{};
+        triton::ast::Z3Result result = z3ast.eval(*node);
         triton::uint512 nbResult{result.getStringValue()};
         return nbResult;
       }

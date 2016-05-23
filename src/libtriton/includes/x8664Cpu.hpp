@@ -11,8 +11,9 @@
 #include <map>
 #include <set>
 #include <tuple>
+#include <vector>
 
-#include "abstractCpu.hpp"
+#include "cpuInterface.hpp"
 #include "instruction.hpp"
 #include "memoryOperand.hpp"
 #include "registerOperand.hpp"
@@ -46,7 +47,7 @@ namespace triton {
 
       //! \class x8664Cpu
       /*! \brief This class is used to describe the x86 (64-bits) spec. */
-      class x8664Cpu : public AbstractCpu {
+      class x8664Cpu : public cpuInterface {
 
         protected:
 
@@ -92,8 +93,24 @@ namespace triton {
           triton::uint8 r14[QWORD_SIZE];
           //! Concrete value of r15
           triton::uint8 r15[QWORD_SIZE];
-          //! Concrete value of rflags
-          triton::uint8 rflags[QWORD_SIZE];
+          //! Concrete value of eflags
+          triton::uint8 eflags[QWORD_SIZE];
+          //! Concrete value of mm0
+          triton::uint8 mm0[QWORD_SIZE];
+          //! Concrete value of mm1
+          triton::uint8 mm1[QWORD_SIZE];
+          //! Concrete value of mm2
+          triton::uint8 mm2[QWORD_SIZE];
+          //! Concrete value of mm3
+          triton::uint8 mm3[QWORD_SIZE];
+          //! Concrete value of mm4
+          triton::uint8 mm4[QWORD_SIZE];
+          //! Concrete value of mm5
+          triton::uint8 mm5[QWORD_SIZE];
+          //! Concrete value of mm6
+          triton::uint8 mm6[QWORD_SIZE];
+          //! Concrete value of mm7
+          triton::uint8 mm7[QWORD_SIZE];
           //! Concrete value of xmm0
           triton::uint8 xmm0[DQWORD_SIZE];
           //! Concrete value of xmm1
@@ -126,6 +143,148 @@ namespace triton {
           triton::uint8 xmm14[DQWORD_SIZE];
           //! Concrete value of xmm15
           triton::uint8 xmm15[DQWORD_SIZE];
+          //! Concrete value of ymm0
+          triton::uint8 ymm0[QQWORD_SIZE];
+          //! Concrete value of ymm1
+          triton::uint8 ymm1[QQWORD_SIZE];
+          //! Concrete value of ymm2
+          triton::uint8 ymm2[QQWORD_SIZE];
+          //! Concrete value of ymm3
+          triton::uint8 ymm3[QQWORD_SIZE];
+          //! Concrete value of ymm4
+          triton::uint8 ymm4[QQWORD_SIZE];
+          //! Concrete value of ymm5
+          triton::uint8 ymm5[QQWORD_SIZE];
+          //! Concrete value of ymm6
+          triton::uint8 ymm6[QQWORD_SIZE];
+          //! Concrete value of ymm7
+          triton::uint8 ymm7[QQWORD_SIZE];
+          //! Concrete value of ymm8
+          triton::uint8 ymm8[QQWORD_SIZE];
+          //! Concrete value of ymm9
+          triton::uint8 ymm9[QQWORD_SIZE];
+          //! Concrete value of ymm10
+          triton::uint8 ymm10[QQWORD_SIZE];
+          //! Concrete value of ymm11
+          triton::uint8 ymm11[QQWORD_SIZE];
+          //! Concrete value of ymm12
+          triton::uint8 ymm12[QQWORD_SIZE];
+          //! Concrete value of ymm13
+          triton::uint8 ymm13[QQWORD_SIZE];
+          //! Concrete value of ymm14
+          triton::uint8 ymm14[QQWORD_SIZE];
+          //! Concrete value of ymm15
+          triton::uint8 ymm15[QQWORD_SIZE];
+          //! Concrete value of zmm0
+          triton::uint8 zmm0[DQQWORD_SIZE];
+          //! Concrete value of zmm1
+          triton::uint8 zmm1[DQQWORD_SIZE];
+          //! Concrete value of zmm2
+          triton::uint8 zmm2[DQQWORD_SIZE];
+          //! Concrete value of zmm3
+          triton::uint8 zmm3[DQQWORD_SIZE];
+          //! Concrete value of zmm4
+          triton::uint8 zmm4[DQQWORD_SIZE];
+          //! Concrete value of zmm5
+          triton::uint8 zmm5[DQQWORD_SIZE];
+          //! Concrete value of zmm6
+          triton::uint8 zmm6[DQQWORD_SIZE];
+          //! Concrete value of zmm7
+          triton::uint8 zmm7[DQQWORD_SIZE];
+          //! Concrete value of zmm8
+          triton::uint8 zmm8[DQQWORD_SIZE];
+          //! Concrete value of zmm9
+          triton::uint8 zmm9[DQQWORD_SIZE];
+          //! Concrete value of zmm10
+          triton::uint8 zmm10[DQQWORD_SIZE];
+          //! Concrete value of zmm11
+          triton::uint8 zmm11[DQQWORD_SIZE];
+          //! Concrete value of zmm12
+          triton::uint8 zmm12[DQQWORD_SIZE];
+          //! Concrete value of zmm13
+          triton::uint8 zmm13[DQQWORD_SIZE];
+          //! Concrete value of zmm14
+          triton::uint8 zmm14[DQQWORD_SIZE];
+          //! Concrete value of zmm15
+          triton::uint8 zmm15[DQQWORD_SIZE];
+          //! Concrete value of zmm16
+          triton::uint8 zmm16[DQQWORD_SIZE];
+          //! Concrete value of zmm17
+          triton::uint8 zmm17[DQQWORD_SIZE];
+          //! Concrete value of zmm18
+          triton::uint8 zmm18[DQQWORD_SIZE];
+          //! Concrete value of zmm19
+          triton::uint8 zmm19[DQQWORD_SIZE];
+          //! Concrete value of zmm20
+          triton::uint8 zmm20[DQQWORD_SIZE];
+          //! Concrete value of zmm21
+          triton::uint8 zmm21[DQQWORD_SIZE];
+          //! Concrete value of zmm22
+          triton::uint8 zmm22[DQQWORD_SIZE];
+          //! Concrete value of zmm23
+          triton::uint8 zmm23[DQQWORD_SIZE];
+          //! Concrete value of zmm24
+          triton::uint8 zmm24[DQQWORD_SIZE];
+          //! Concrete value of zmm25
+          triton::uint8 zmm25[DQQWORD_SIZE];
+          //! Concrete value of zmm26
+          triton::uint8 zmm26[DQQWORD_SIZE];
+          //! Concrete value of zmm27
+          triton::uint8 zmm27[DQQWORD_SIZE];
+          //! Concrete value of zmm28
+          triton::uint8 zmm28[DQQWORD_SIZE];
+          //! Concrete value of zmm29
+          triton::uint8 zmm29[DQQWORD_SIZE];
+          //! Concrete value of zmm30
+          triton::uint8 zmm30[DQQWORD_SIZE];
+          //! Concrete value of zmm31
+          triton::uint8 zmm31[DQQWORD_SIZE];
+          //! Concrete value of mxcsr
+          triton::uint8 mxcsr[QWORD_SIZE];
+          //! Concrete value of cr0
+          triton::uint8 cr0[QWORD_SIZE];
+          //! Concrete value of cr1
+          triton::uint8 cr1[QWORD_SIZE];
+          //! Concrete value of cr2
+          triton::uint8 cr2[QWORD_SIZE];
+          //! Concrete value of cr3
+          triton::uint8 cr3[QWORD_SIZE];
+          //! Concrete value of cr4
+          triton::uint8 cr4[QWORD_SIZE];
+          //! Concrete value of cr5
+          triton::uint8 cr5[QWORD_SIZE];
+          //! Concrete value of cr6
+          triton::uint8 cr6[QWORD_SIZE];
+          //! Concrete value of cr7
+          triton::uint8 cr7[QWORD_SIZE];
+          //! Concrete value of cr8
+          triton::uint8 cr8[QWORD_SIZE];
+          //! Concrete value of cr9
+          triton::uint8 cr9[QWORD_SIZE];
+          //! Concrete value of cr10
+          triton::uint8 cr10[QWORD_SIZE];
+          //! Concrete value of cr11
+          triton::uint8 cr11[QWORD_SIZE];
+          //! Concrete value of cr12
+          triton::uint8 cr12[QWORD_SIZE];
+          //! Concrete value of cr13
+          triton::uint8 cr13[QWORD_SIZE];
+          //! Concrete value of cr14
+          triton::uint8 cr14[QWORD_SIZE];
+          //! Concrete value of cr15
+          triton::uint8 cr15[QWORD_SIZE];
+          //! Concrete value of CS
+          triton::uint8 cs[QWORD_SIZE];
+          //! Concrete value of DS
+          triton::uint8 ds[QWORD_SIZE];
+          //! Concrete value of ES
+          triton::uint8 es[QWORD_SIZE];
+          //! Concrete value of FS
+          triton::uint8 fs[QWORD_SIZE];
+          //! Concrete value of GS
+          triton::uint8 gs[QWORD_SIZE];
+          //! Concrete value of SS
+          triton::uint8 ss[QWORD_SIZE];
 
 
         public:
@@ -139,30 +298,48 @@ namespace triton {
 
           void init(void);
           void clear(void);
-          bool isFlag(triton::uint32 regId);
-          bool isReg(triton::uint32 regId);
-          bool isRegValid(triton::uint32 regId);
+          bool isFlag(triton::uint32 regId) const;
+          bool isRegister(triton::uint32 regId) const;
+          bool isRegisterValid(triton::uint32 regId) const;
 
           //! Returns true if regId is a GRP.
-          bool isGPR(triton::uint32 regId);
+          bool isGPR(triton::uint32 regId) const;
+
+          //! Returns true if regId is a MMX register.
+          bool isMMX(triton::uint32 regId) const;
 
           //! Returns true if regId is a SSE register.
-          bool isSSE(triton::uint32 regId);
+          bool isSSE(triton::uint32 regId) const;
 
-          std::tuple<std::string, triton::uint32, triton::uint32, triton::uint32> getRegInfo(triton::uint32 reg);
-          std::set<triton::arch::RegisterOperand*> getParentRegister(void);
-          triton::uint128 getLastMemoryValue(triton::arch::MemoryOperand& mem);
-          triton::uint128 getLastRegisterValue(triton::arch::RegisterOperand& reg);
-          triton::uint32 invalidReg(void);
-          triton::uint32 numberOfReg(void);
-          triton::uint32 regBitSize(void);
-          triton::uint32 regSize(void);
-          triton::uint8 getLastMemoryValue(triton::__uint addr);
-          void buildSemantics(triton::arch::Instruction &inst);
-          void disassembly(triton::arch::Instruction &inst);
+          //! Returns true if regId is a AVX-256 (YMM) register.
+          bool isAVX256(triton::uint32 regId) const;
+
+          //! Returns true if regId is a AVX-512 (ZMM) register.
+          bool isAVX512(triton::uint32 regId) const;
+
+          //! Returns true if regId is a control (cr) register.
+          bool isControl(triton::uint32 regId) const;
+
+          //! Returns true if regId is a Segment.
+          bool isSegment(triton::uint32 regId) const;
+
+          std::tuple<std::string, triton::uint32, triton::uint32, triton::uint32> getRegisterInformation(triton::uint32 reg) const;
+          std::set<triton::arch::RegisterOperand*> getAllRegisters(void) const;
+          std::set<triton::arch::RegisterOperand*> getParentRegisters(void) const;
+          triton::uint512 getLastMemoryValue(const triton::arch::MemoryOperand& mem) const;
+          std::vector<triton::uint8> getLastMemoryAreaValue(triton::__uint baseAddr, triton::uint32 size) const;
+          triton::uint512 getLastRegisterValue(const triton::arch::RegisterOperand& reg) const;
+          triton::uint32 invalidRegister(void) const;
+          triton::uint32 numberOfRegisters(void) const;
+          triton::uint32 registerBitSize(void) const;
+          triton::uint32 registerSize(void) const;
+          triton::uint8 getLastMemoryValue(triton::__uint addr) const;
+          void buildSemantics(triton::arch::Instruction &inst) const;
+          void disassembly(triton::arch::Instruction &inst) const;
           void setLastMemoryValue(triton::__uint addr, triton::uint8 value);
-          void setLastMemoryValue(triton::arch::MemoryOperand& mem);
-          void setLastRegisterValue(triton::arch::RegisterOperand& reg);
+          void setLastMemoryValue(const triton::arch::MemoryOperand& mem);
+          void setLastMemoryAreaValue(triton::__uint baseAddr, const std::vector<triton::uint8>& values);
+          void setLastRegisterValue(const triton::arch::RegisterOperand& reg);
 
           //! Copies a x8664Cpu class.
           void operator=(const x8664Cpu& other);

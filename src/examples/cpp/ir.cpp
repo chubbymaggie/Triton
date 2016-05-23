@@ -55,14 +55,14 @@ int main(int ac, const char **av) {
     inst.setAddress(trace[i].addr);
 
     /* optional - Update register state */
-    inst.updateContext(RegisterOperand(x86::ID_REG_RSP, 12345));
+    //inst.updateContext(RegisterOperand(x86::ID_REG_RSP, 12345));
     //inst.updateContext(RegisterOperand(x86::ID_REG_RBX, 67890));
 
     /* optional - Add memory access <addr, size, content> */
-    MemoryOperand read(11111111, 8, 401234);
-    MemoryOperand write(22222222, 8, 400002);
-    inst.updateContext(read);
-    inst.updateContext(write);
+    //MemoryOperand read(11111111, 8, 401234);
+    //MemoryOperand write(22222222, 8, 400002);
+    //inst.updateContext(read);
+    //inst.updateContext(write);
 
     /* Process everything */
     api.processing(inst);
@@ -71,10 +71,10 @@ int main(int ac, const char **av) {
     for (unsigned int op_index = 0; op_index != inst.operands.size(); op_index++) {
       std::cout << "\tOperand " << op_index << ": " << inst.operands[op_index] << std::endl;
       if (inst.operands[op_index].getType() == OP_MEM) {
-        std::cout << "\t   base  : " << inst.operands[op_index].getMem().getBaseReg() << std::endl;
-        std::cout << "\t   index : " << inst.operands[op_index].getMem().getIndexReg() << std::endl;
-        std::cout << "\t   disp  : " << inst.operands[op_index].getMem().getDisplacement() << std::endl;
-        std::cout << "\t   scale : " << inst.operands[op_index].getMem().getScale() << std::endl;
+        std::cout << "\t   base  : " << inst.operands[op_index].getMemory().getBaseRegister() << std::endl;
+        std::cout << "\t   index : " << inst.operands[op_index].getMemory().getIndexRegister() << std::endl;
+        std::cout << "\t   disp  : " << inst.operands[op_index].getMemory().getDisplacement() << std::endl;
+        std::cout << "\t   scale : " << inst.operands[op_index].getMemory().getScale() << std::endl;
       }
     }
 

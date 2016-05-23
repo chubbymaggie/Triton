@@ -18,12 +18,15 @@ namespace triton {
     }
 
 
-    ImmediateOperand::ImmediateOperand(triton::__uint value, triton::uint32 size) {
+    ImmediateOperand::ImmediateOperand(triton::__uint value, triton::uint32 size /* bytes */) {
       this->value = value;
+
       if (size == 0)
         throw std::runtime_error("ImmediateOperand::ImmediateOperand(): size cannot be zero.");
-      if (size > DQWORD_SIZE)
-        throw std::runtime_error("ImmediateOperand::ImmediateOperand(): size cannot be greater than a DQWORD.");
+
+      if (size != BYTE_SIZE && size != WORD_SIZE && size != DWORD_SIZE && size != QWORD_SIZE && size != DQWORD_SIZE)
+        throw std::runtime_error("ImmediateOperand::ImmediateOperand(): size must be aligned.");
+
       this->setPair(std::make_pair(((size * BYTE_SIZE_BIT) - 1), 0));
     }
 
@@ -84,9 +87,36 @@ namespace triton {
     }
 
 
-    std::ostream &operator<<(std::ostream &stream, ImmediateOperand imm) {
+    std::ostream& operator<<(std::ostream& stream, const ImmediateOperand& imm) {
       stream << "0x" << std::hex << imm.getValue() << ":" << std::dec << imm.getBitSize() << " bv[" << imm.getHigh() << ".." << imm.getLow() << "]";
       return stream;
+    }
+
+
+    std::ostream& operator<<(std::ostream& stream, const ImmediateOperand* imm) {
+      stream << *imm;
+      return stream;
+    }
+
+
+    bool operator==(const ImmediateOperand& imm1, const ImmediateOperand& imm2) {
+      if (imm1.getValue() != imm2.getValue())
+        return false;
+      if (imm1.getSize() != imm2.getSize())
+        return false;
+      return true;
+    }
+
+
+    bool operator!=(const ImmediateOperand& imm1, const ImmediateOperand& imm2) {
+      if (imm1 == imm2)
+        return false;
+      return true;
+    }
+
+
+    bool operator<(const ImmediateOperand& imm1, const ImmediateOperand& imm2) {
+      return imm1.getValue() < imm2.getValue();
     }
 
   }; /* arch namespace */

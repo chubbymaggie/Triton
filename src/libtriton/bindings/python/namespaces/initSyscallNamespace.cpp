@@ -6,19 +6,13 @@
 */
 
 #ifdef TRITON_PYTHON_BINDINGS
-#ifdef __unix__
+#if defined(__unix__) || defined(__APPLE__)
 
 #include <api.hpp>
 #include <architecture.hpp>
 #include <pythonBindings.hpp>
 #include <pythonUtils.hpp>
 #include <unix.hpp>
-
-#ifdef __unix__
-  #include <python2.7/Python.h>
-#elif _WIN32
-  #include <Python.h>
-#endif
 
 
 
@@ -370,29 +364,29 @@ namespace triton {
     namespace python {
 
       void initSyscallNamespace(void) {
-
         if (!triton::bindings::python::initialized)
           return;
 
-        switch (api.getArchitecture()) {
+        PyDict_Clear(triton::bindings::python::syscallsDict);
 
+        switch (api.getArchitecture()) {
           case triton::arch::ARCH_X86_64:
             for (triton::uint32 i = 0; i < triton::os::unix::NB_SYSCALL64; ++i)
               PyDict_SetItemString(triton::bindings::python::syscallsDict, triton::os::unix::syscallmap64[i], PyLong_FromUint(i));
             break;
 
+          #if defined(__unix__)
           case triton::arch::ARCH_X86:
             for (triton::uint32 i = 0; i < triton::os::unix::NB_SYSCALL32; ++i)
               PyDict_SetItemString(triton::bindings::python::syscallsDict, triton::os::unix::syscallmap32[i], PyLong_FromUint(i));
             break;
-
+          #endif
         } /* switch */
-
       }
 
     }; /* python namespace */
   }; /* bindings namespace */
 }; /* triton namespace */
 
-#endif /* unix */
+#endif /* __unix__ || __APPLE__ */
 #endif /* TRITON_PYTHON_BINDINGS */

@@ -1,9 +1,10 @@
 
 from triton  import *
-from smt2lib import *
+from ast import *
 from pintool import *
 
 import sys
+import time
 
 BLUE  = "\033[94m"
 ENDC  = "\033[0m"
@@ -20,7 +21,7 @@ RED   = "\033[91m"
 # [OK] 0x400656: mov rdx, 0x3
 # [OK] 0x40065d: mov rsi, 0x4
 # [OK] 0x400664: imul sil
-# [KO] 0x400667: imul cx (2 error)
+# [KO] 0x400667: imul cx (2 register error(s))
 #      Register       : cf
 #      Symbolic Value : 0000000000000001
 #      Concrete Value : 0000000000000000
@@ -32,15 +33,16 @@ RED   = "\033[91m"
 
 
 def sbefore(instruction):
-    concretizeAllMem()
-    concretizeAllReg()
+    concretizeAllMemory()
+    concretizeAllRegister()
     return
 
 
 def cafter(instruction):
 
+    good = True
     bad  = list()
-    regs = getParentRegister()
+    regs = getParentRegisters()
 
     for reg in regs:
 
@@ -50,10 +52,13 @@ def cafter(instruction):
         if seid == SYMEXPR.UNSET:
             continue
 
-        expr   = getFullAstFromId(seid)
-        svalue = evaluateAst(expr)
+        expr   = getAstFromId(seid)
+        svalue = expr.evaluate()
+        #svalue = evaluateAstViaZ3(expr)
 
+        # Check register
         if cvalue != svalue:
+            good = False
             bad.append({
                 'reg':    reg.getName(),
                 'svalue': svalue,
@@ -61,20 +66,38 @@ def cafter(instruction):
                 'expr':   expr
             })
 
-    if len(instruction.getSymbolicExpressions()) == 0:
-        print "[%s??%s] %#x: %s" %(BLUE, ENDC, instruction.getAddress(), instruction.getDisassembly())
-        return
-
-    if not bad:
-        print "[%sOK%s] %#x: %s" %(GREEN, ENDC, instruction.getAddress(), instruction.getDisassembly())
-
-    else:
-        print "[%sKO%s] %#x: %s (%s%d error%s)" %(RED, ENDC, instruction.getAddress(), instruction.getDisassembly(), RED, len(bad), ENDC)
+    if bad:
+        print "[%sKO%s] %#x: %s (%s%d register error(s)%s)" %(RED, ENDC, instruction.getAddress(), instruction.getDisassembly(), RED, len(bad), ENDC)
         for w in bad:
             print "     Register       : %s" %(w['reg'])
             print "     Symbolic Value : %016x" %(w['svalue'])
             print "     Concrete Value : %016x" %(w['cvalue'])
             print "     Expression     : %s" %(w['expr'])
+
+    # Check memory access
+    for op in instruction.getOperands():
+        if op.getType() == OPERAND.MEM:
+            nativeAddress = op.getAddress()
+            astAddress = op.getLeaAst().evaluate()
+            if nativeAddress != astAddress:
+                good = False
+                print "[%sKO%s] %#x: %s (%smemory error%s)" %(RED, ENDC, instruction.getAddress(), instruction.getDisassembly(), RED, ENDC)
+                print "     Native address   : %016x" %(nativeAddress)
+                print "     Symbolic address : %016x" %(astAddress)
+
+    if len(instruction.getSymbolicExpressions()) == 0:
+        print "[%s??%s] %#x: %s" %(BLUE, ENDC, instruction.getAddress(), instruction.getDisassembly())
+        return
+
+    if good:
+        print "[%sOK%s] %#x: %s" %(GREEN, ENDC, instruction.getAddress(), instruction.getDisassembly())
+        return
+    else:
+        #time.sleep(2)
+        pass
+
+    # Reset everything
+    resetEngines()
 
     return
 
@@ -82,6 +105,7 @@ def cafter(instruction):
 if __name__ == '__main__':
     setArchitecture(ARCH.X86_64)
     startAnalysisFromEntry()
+    #startAnalysisFromSymbol('check')
     addCallback(cafter,  CALLBACK.AFTER)
     addCallback(sbefore, CALLBACK.BEFORE_SYMPROC)
     runProgram()

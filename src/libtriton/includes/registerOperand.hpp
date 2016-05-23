@@ -39,17 +39,17 @@ namespace triton {
     class RegisterOperand : public BitsVector, public OperandInterface {
 
       protected:
-        //! The register's name.
+        //! The name of the register.
         std::string name;
 
-        //! The register's id.
+        //! The id of the register.
         triton::uint32 id;
 
-        //! The register parent's id.
+        //! The parent id of the register.
         triton::uint32 parent;
 
         //! The concrete value (content of the register)
-        triton::uint128 concreteValue;
+        triton::uint512 concreteValue;
 
         //! True if this concrete register value is trusted and synchronized with the real CPU value.
         bool trusted;
@@ -58,7 +58,7 @@ namespace triton {
         void copy(const RegisterOperand& other);
 
         //! Setup everything.
-        void setup(triton::uint32 reg, triton::uint128 concreteValue);
+        void setup(triton::uint32 reg, triton::uint512 concreteValue);
 
         //! Resets information.
         void clear(void);
@@ -68,7 +68,7 @@ namespace triton {
         RegisterOperand();
 
         //! Constructor. You cannot set a concreteValue on a flag.
-        RegisterOperand(triton::uint32 reg, triton::uint128 concreteValue=0);
+        RegisterOperand(triton::uint32 reg, triton::uint512 concreteValue=0);
 
         //! Constructor by copy.
         RegisterOperand(const RegisterOperand& other);
@@ -76,67 +76,72 @@ namespace triton {
         //! Destructor.
         ~RegisterOperand();
 
-        //! Returns the register parent's id.
+        //! Returns the parent id of the register.
         RegisterOperand getParent(void) const;
 
         //! Returns true if the register is valid.
-        bool isValid(void);
+        bool isValid(void) const;
 
         //! Returns true if the register is a register.
-        bool isReg(void);
+        bool isRegister(void) const;
 
         //! Returns true if the register is a flag.
-        bool isFlag(void);
+        bool isFlag(void) const;
 
         //! True if this concrete register value is trusted and synchronized with the real CPU value.
-        bool isTrusted(void);
+        bool isTrusted(void) const;
 
         //! Sets the trust flag.
         void setTrust(bool flag);
 
-        //! Returns the register's name.
+        //! Returns the name of the register.
         std::string getName(void) const;
 
-        //! Returns the register's highest bit. \sa BitsVector::getHigh()
+        //! Returns the highest bit of the register vector. \sa BitsVector::getHigh()
         triton::uint32 getAbstractHigh(void) const;
 
-        //! Returns the register's lower bit. \sa BitsVector::getLow()
+        //! Returns the lower bit of the register vector. \sa BitsVector::getLow()
         triton::uint32 getAbstractLow(void) const;
 
-        //! Returns the register's size (in bit).
+        //! Returns the size (in bits) of the register.
         triton::uint32 getBitSize(void) const;
 
-        //! Returns the register's id.
+        //! Returns the id of the register.
         triton::uint32 getId(void) const;
 
-        //! Returns the register's size (in byte).
+        //! Returns the size (in bytes) of the register.
         triton::uint32 getSize(void) const;
 
-        //! Returns the operand's type.
+        //! Returns the type of the operand (triton::arch::OP_REG).
         triton::uint32 getType(void) const;
 
         //! Returns the concrete value.
-        triton::uint128 getConcreteValue(void) const;
+        triton::uint512 getConcreteValue(void) const;
 
         //! Copies a RegisterOperand.
         void operator=(const RegisterOperand& other);
 
-        //! Sets the register's id.
+        //! Sets the id of the register.
         void setId(triton::uint32 reg);
 
-        //! Sets the register parent's id.
+        //! Sets the parent id of the register.
         void setParent(triton::uint32 reg);
 
-        //! Sets the register's concrete value. This method cannot be called on a flag.
-        void setConcreteValue(triton::uint128 concreteValue);
-
+        //! Sets the concrete value of the register. This method cannot be called on a flag.
+        void setConcreteValue(triton::uint512 concreteValue);
     };
 
     //! Displays a RegisterOperand.
-    std::ostream &operator<<(std::ostream &stream, const RegisterOperand reg);
+    std::ostream& operator<<(std::ostream& stream, const RegisterOperand& reg);
+
+    //! Displays a RegisterOperand.
+    std::ostream& operator<<(std::ostream& stream, const RegisterOperand* reg);
 
     //! Compares two RegisterOperand.
     bool operator==(const RegisterOperand& reg1, const RegisterOperand& reg2);
+
+    //! Compares two RegisterOperand.
+    bool operator!=(const RegisterOperand& reg1, const RegisterOperand& reg2);
 
     //! Compares two RegisterOperand (needed for std::map)
     bool operator<(const RegisterOperand& reg1, const RegisterOperand& reg2);

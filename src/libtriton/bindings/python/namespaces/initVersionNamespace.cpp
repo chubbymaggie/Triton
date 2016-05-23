@@ -12,12 +12,6 @@
 #include <pythonUtils.hpp>
 #include <version.hpp>
 
-#ifdef __unix__
-  #include <python2.7/Python.h>
-#elif _WIN32
-  #include <Python.h>
-#endif
-
 
 
 /*! \page py_VERSION_page VERSION
@@ -46,11 +40,9 @@ namespace triton {
     namespace python {
 
       void initVersionNamespace(PyObject* versionDict) {
-
         PyDict_SetItemString(versionDict, "MAJOR", PyLong_FromUint(triton::MAJOR));
         PyDict_SetItemString(versionDict, "MINOR", PyLong_FromUint(triton::MINOR));
         PyDict_SetItemString(versionDict, "BUILD", PyLong_FromUint(triton::BUILD));
-
       }
 
     }; /* python namespace */

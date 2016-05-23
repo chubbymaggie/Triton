@@ -19,7 +19,7 @@ namespace triton {
     }
 
 
-    BitsVector::BitsVector(triton::uint32 high, triton::uint32 low) {
+    BitsVector::BitsVector(triton::uint32 high /* bits */, triton::uint32 low /* bits */) {
       this->high = high;
       this->low  = low;
     }
@@ -55,14 +55,21 @@ namespace triton {
     }
 
 
+    triton::uint512 BitsVector::getMaxValue(void) const {
+      triton::uint512 max = -1;
+      max = max >> (512 - this->getVectorSize());
+      return max;
+    }
+
+
     void BitsVector::setHigh(triton::uint32 v) {
       this->high = v;
 
-      if (this->high > DQWORD_SIZE_BIT)
-        throw std::runtime_error("BitsVector::setHigh(): size cannot be greater than a DQWORD.");
+      if (this->high >= MAX_BITS_SUPPORTED)
+        throw std::runtime_error("BitsVector::setHigh(): The highest bit cannot be greater than MAX_BITS_SUPPORTED.");
 
       if (this->getVectorSize() % BYTE_SIZE_BIT && this->getVectorSize() != FLAG_SIZE_BIT)
-        throw std::runtime_error("BitsVector::setHigh(): the vector size must be a multiple of 8");
+        throw std::runtime_error("BitsVector::setHigh(): The vector size must be a multiple of 8.");
     }
 
 
@@ -70,10 +77,10 @@ namespace triton {
       this->low = v;
 
       if (this->low > this->high)
-        throw std::runtime_error("BitsVector::setLow(): low cannot be greater than high.");
+        throw std::runtime_error("BitsVector::setLow(): The lower bit cannot be greater than highest.");
 
       if (this->low % BYTE_SIZE_BIT)
-        throw std::runtime_error("BitsVector::setLow(): low must be a multiple of 8");
+        throw std::runtime_error("BitsVector::setLow(): The lower bit must be a multiple of 8.");
     }
 
 
@@ -81,17 +88,17 @@ namespace triton {
       this->high = std::get<0>(p);
       this->low  = std::get<1>(p);
 
-      if (this->high > DQWORD_SIZE_BIT)
-        throw std::runtime_error("BitsVector::setPair(): size cannot be greater than a DQWORD.");
+      if (this->high >= MAX_BITS_SUPPORTED)
+        throw std::runtime_error("BitsVector::setPair(): The highest bit cannot be greater than MAX_BITS_SUPPORTED.");
 
       if (this->low % BYTE_SIZE_BIT)
-        throw std::runtime_error("BitsVector::setPair(): low must be a multiple of 8");
+        throw std::runtime_error("BitsVector::setPair(): The lower bit must be a multiple of 8.");
 
       if (this->low > this->high)
-        throw std::runtime_error("BitsVector::setPair(): low cannot be greater than high.");
+        throw std::runtime_error("BitsVector::setPair(): The lower bit cannot be greater than highest.");
 
       if (this->getVectorSize() % BYTE_SIZE_BIT && this->getVectorSize() != FLAG_SIZE_BIT)
-        throw std::runtime_error("BitsVector::setHigh(): the vector size must be a multiple of 8");
+        throw std::runtime_error("BitsVector::setHigh(): The vector size must be a multiple of 8.");
     }
 
 
@@ -101,8 +108,14 @@ namespace triton {
     }
 
 
-    std::ostream &operator<<(std::ostream &stream, BitsVector bv) {
+    std::ostream& operator<<(std::ostream& stream, const BitsVector& bv) {
       stream << "bv[" << bv.getHigh() << ".." << bv.getLow() << "]";
+      return stream;
+    }
+
+
+    std::ostream& operator<<(std::ostream& stream, const BitsVector* bv) {
+      stream << *bv;
       return stream;
     }
 

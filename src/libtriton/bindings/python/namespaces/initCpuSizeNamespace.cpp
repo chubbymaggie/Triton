@@ -12,12 +12,6 @@
 #include <pythonBindings.hpp>
 #include <pythonUtils.hpp>
 
-#ifdef __unix__
-  #include <python2.7/Python.h>
-#elif _WIN32
-  #include <Python.h>
-#endif
-
 
 
 /*! \page py_CPUSIZE_page CPUSIZE
@@ -63,17 +57,23 @@ Returns `16`
 - **CPUSIZE.DQWORD_BIT**<br>
 Returns `128`
 
+- **CPUSIZE.QQWORD**<br>
+Returns `32`
+
+- **CPUSIZE.QQWORD_BIT**<br>
+Returns `256`
+
+- **CPUSIZE.DQQWORD**<br>
+Returns `64`
+
+- **CPUSIZE.DQQWORD_BIT**<br>
+Returns `512`
+
 - **CPUSIZE.REG**<br>
 Returns the max register's size according to your CPU architecture.
 
 - **CPUSIZE.REG_BIT**<br>
 Returns the max register's size (in bit) according to your CPU architecture.
-
-- **CPUSIZE.SSE_REG**<br>
-Returns `CPUSIZE.DQWORD`
-
-- **CPUSIZE.SSE_REG_BIT**<br>
-Returns `CPUSIZE.DQWORD_BIT`
 
 */
 
@@ -84,9 +84,10 @@ namespace triton {
     namespace python {
 
       void initCpuSizeNamespace(void) {
-
         if (!triton::bindings::python::initialized)
           return;
+
+        PyDict_Clear(triton::bindings::python::cpuSizeDict);
 
         PyDict_SetItemString(triton::bindings::python::cpuSizeDict, "BYTE",        PyLong_FromUint(BYTE_SIZE));
         PyDict_SetItemString(triton::bindings::python::cpuSizeDict, "BYTE_BIT",    PyLong_FromUint(BYTE_SIZE_BIT));
@@ -98,9 +99,12 @@ namespace triton {
         PyDict_SetItemString(triton::bindings::python::cpuSizeDict, "QWORD_BIT",   PyLong_FromUint(QWORD_SIZE_BIT));
         PyDict_SetItemString(triton::bindings::python::cpuSizeDict, "DQWORD",      PyLong_FromUint(DQWORD_SIZE));
         PyDict_SetItemString(triton::bindings::python::cpuSizeDict, "DQWORD_BIT",  PyLong_FromUint(DQWORD_SIZE_BIT));
-        PyDict_SetItemString(triton::bindings::python::cpuSizeDict, "REG",         PyLong_FromUint(triton::api.cpuRegSize()));
-        PyDict_SetItemString(triton::bindings::python::cpuSizeDict, "REG_BIT",     PyLong_FromUint(triton::api.cpuRegBitSize()));
-
+        PyDict_SetItemString(triton::bindings::python::cpuSizeDict, "QQWORD",      PyLong_FromUint(QQWORD_SIZE));
+        PyDict_SetItemString(triton::bindings::python::cpuSizeDict, "QQWORD_BIT",  PyLong_FromUint(QQWORD_SIZE_BIT));
+        PyDict_SetItemString(triton::bindings::python::cpuSizeDict, "DQQWORD",     PyLong_FromUint(DQQWORD_SIZE));
+        PyDict_SetItemString(triton::bindings::python::cpuSizeDict, "DQQWORD_BIT", PyLong_FromUint(DQQWORD_SIZE_BIT));
+        PyDict_SetItemString(triton::bindings::python::cpuSizeDict, "REG",         PyLong_FromUint(triton::api.cpuRegisterSize()));
+        PyDict_SetItemString(triton::bindings::python::cpuSizeDict, "REG_BIT",     PyLong_FromUint(triton::api.cpuRegisterBitSize()));
       }
 
     }; /* python namespace */
