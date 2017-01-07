@@ -3,27 +3,27 @@
 ##
 ## Output:
 ##
-##   $ ./simplification.py
-##   Expr:  (bvxor (_ bv1 8) (_ bv1 8))
-##   Simp:  (_ bv0 8)
+##  $ ./simplification.py
+##  Expr:  (bvxor (_ bv1 8) (_ bv1 8))
+##  Simp:  (_ bv0 8)
 ##
-##   Expr:  (bvor (bvand (_ bv1 8) (bvnot (_ bv2 8))) (bvand (bvnot (_ bv1 8)) (_ bv2 8)))
-##   Simp:  (bvxor (_ bv1 8) (_ bv2 8))
+##  Expr:  (bvor (bvand (_ bv1 8) (bvnot (_ bv2 8))) (bvand (bvnot (_ bv1 8)) (_ bv2 8)))
+##  Simp:  (bvxor (_ bv1 8) (_ bv2 8))
 ##
-##   Expr:  (bvor (bvand (bvnot (_ bv2 8)) (_ bv1 8)) (bvand (bvnot (_ bv1 8)) (_ bv2 8)))
-##   Simp:  (bvxor (_ bv1 8) (_ bv2 8))
+##  Expr:  (bvor (bvand (bvnot (_ bv2 8)) (_ bv1 8)) (bvand (bvnot (_ bv1 8)) (_ bv2 8)))
+##  Simp:  (bvxor (_ bv1 8) (_ bv2 8))
 ##
-##   Expr:  (bvor (bvand (bvnot (_ bv2 8)) (_ bv1 8)) (bvand (_ bv2 8) (bvnot (_ bv1 8))))
-##   Simp:  (bvxor (_ bv1 8) (_ bv2 8))
+##  Expr:  (bvor (bvand (bvnot (_ bv2 8)) (_ bv1 8)) (bvand (_ bv2 8) (bvnot (_ bv1 8))))
+##  Simp:  (bvxor (_ bv1 8) (_ bv2 8))
 ##
-##   Expr:  (bvor (bvand (_ bv2 8) (bvnot (_ bv1 8))) (bvand (bvnot (_ bv2 8)) (_ bv1 8)))
-##   Simp:  (bvxor (_ bv2 8) (_ bv1 8))
+##  Expr:  (bvor (bvand (_ bv2 8) (bvnot (_ bv1 8))) (bvand (bvnot (_ bv2 8)) (_ bv1 8)))
+##  Simp:  (bvxor (_ bv2 8) (_ bv1 8))
 ##
 
 import sys
 
-from triton import *
-from ast    import *
+from triton     import *
+from triton.ast import *
 
 
 # a ^ a -> a = 0
@@ -63,8 +63,9 @@ def xor_2(node):
             c2_not    = getNot(c2)
             c1_nonNot = getNonNot(c1)
             c2_nonNot = getNonNot(c2)
-            if c1_not == ~c2_nonNot and c1_not == ~c2_nonNot:
+            if c1_not == ~c2_nonNot and c2_not == ~c1_nonNot:
                 return c1_nonNot ^ c2_nonNot
+
     return node
 
 
@@ -74,8 +75,8 @@ if __name__ == "__main__":
     setArchitecture(ARCH.X86_64)
 
     # Record simplifications
-    recordSimplificationCallback(xor_1)
-    recordSimplificationCallback(xor_2)
+    addCallback(xor_1, CALLBACK.SYMBOLIC_SIMPLIFICATION)
+    addCallback(xor_2, CALLBACK.SYMBOLIC_SIMPLIFICATION)
 
     a = bv(1, 8)
     b = bv(2, 8)

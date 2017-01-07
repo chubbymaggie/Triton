@@ -2,7 +2,7 @@
 /*
 **  Copyright (C) - Triton
 **
-**  This program is under the terms of the LGPLv3 License.
+**  This program is under the terms of the BSD License.
 */
 
 #ifdef TRITON_PYTHON_BINDINGS
@@ -14,19 +14,22 @@
   #include <python2.7/Python.h>
   #include <python2.7/longintrepr.h>
 #elif _WIN32
+  #include <cmath>
+  #define _hypot hypot
   #include <Python.h>
+  #include <longintrepr.h>
 #endif
 
 
 
-//! \module The Triton namespace
+//! The Triton namespace
 namespace triton {
 /*!
  *  \addtogroup triton
  *  @{
  */
 
-  //! \module The Bindings namespace
+  //! The Bindings namespace
   namespace bindings {
   /*!
    *  \ingroup triton
@@ -34,7 +37,7 @@ namespace triton {
    *  @{
    */
 
-    //! \module The Python namespace
+    //! The Python namespace
     namespace python {
     /*!
      *  \ingroup bindings
@@ -83,11 +86,17 @@ namespace triton {
       //! Initializes the AST_REPRESENTATION python namespace.
       void initAstRepresentationNamespace(PyObject* astRepresentationDict);
 
+      //! Initializes the CALLBACK python namespace.
+      void initCallbackNamespace(PyObject* callbackDict);
+
       //! Initializes the CPUSIZE python namespace.
       void initCpuSizeNamespace(void);
 
-      //! Initializes the REG python namespace.
-      void initRegNamespace(void);
+      //! Initializes the ELF python namespace.
+      void initElfNamespace(PyObject* elfDict);
+
+      //! Initializes the PE python namespace.
+      void initPENamespace(PyObject* peDict);
 
       //! Initializes the OPCODE python namespace.
       void initX86OpcodesNamespace(void);
@@ -97,6 +106,9 @@ namespace triton {
 
       //! Initializes the OPERAND python namespace.
       void initOperandNamespace(PyObject* operandDict);
+
+      //! Initializes the REG python namespace.
+      void initRegNamespace(void);
 
       //! Initializes the OPTIMIZATION python namespace.
       void initSymOptiNamespace(PyObject* symOptiDict);

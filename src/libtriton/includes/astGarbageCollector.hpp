@@ -2,7 +2,7 @@
 /*
 **  Copyright (C) - Triton
 **
-**  This program is under the terms of the LGPLv3 License.
+**  This program is under the terms of the BSD License.
 */
 
 #ifndef TRITON_ASTGARBAGECOLLECTOR_H
@@ -12,19 +12,19 @@
 #include <string>
 
 #include "ast.hpp"
-#include "symbolicEnums.hpp"
+#include "symbolicEngine.hpp"
 #include "tritonTypes.hpp"
 
 
 
-//! \module The Triton namespace
+//! The Triton namespace
 namespace triton {
 /*!
  *  \addtogroup triton
  *  @{
  */
 
-  //! \module The AST namespace
+  //! The AST namespace
   namespace ast {
   /*!
    *  \ingroup triton
@@ -35,6 +35,10 @@ namespace triton {
     //! \class AstGarbageCollector
     /*! \brief The AST garbage collector class */
     class AstGarbageCollector {
+      private:
+        //! Symbolic Engine API
+        triton::engines::symbolic::SymbolicEngine* symbolicEngine;
+
       protected:
         //! This container contains all allocated nodes.
         std::set<triton::ast::AbstractNode*> allocatedNodes;
@@ -42,13 +46,12 @@ namespace triton {
         //! This map maintains a link between symbolic variables and their nodes.
         std::map<std::string, triton::ast::AbstractNode*> variableNodes;
 
-
       public:
         //! Constructor.
-        AstGarbageCollector();
+        AstGarbageCollector(triton::engines::symbolic::SymbolicEngine* symbolicEngine);
 
         //! Destructor.
-        ~AstGarbageCollector();
+        virtual ~AstGarbageCollector();
 
         //! Go through every allocated nodes and free them.
         void freeAllAstNodes(void);

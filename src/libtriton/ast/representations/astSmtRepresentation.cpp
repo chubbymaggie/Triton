@@ -2,11 +2,11 @@
 /*
 **  Copyright (C) - Triton
 **
-**  This program is under the terms of the LGPLv3 License.
+**  This program is under the terms of the BSD License.
 */
 
-#include <stdexcept>
 #include <astSmtRepresentation.hpp>
+#include <exceptions.hpp>
 
 
 
@@ -75,7 +75,7 @@ namespace triton {
           case VARIABLE_NODE:             return this->print(stream, reinterpret_cast<triton::ast::VariableNode*>(node)); break;
           case ZX_NODE:                   return this->print(stream, reinterpret_cast<triton::ast::ZxNode*>(node)); break;
           default:
-            throw std::invalid_argument("AstSmtRepresentation::print(AbstractNode): Invalid kind node.");
+            throw triton::exceptions::AstRepresentation("AstSmtRepresentation::print(AbstractNode): Invalid kind node.");
         }
         return stream;
       }
@@ -307,7 +307,7 @@ namespace triton {
 
       /* compound representation */
       std::ostream& AstSmtRepresentation::print(std::ostream& stream, triton::ast::CompoundNode* node) {
-        for (triton::uint32 index = 0; index < node->getChilds().size(); index++)
+        for (triton::usize index = 0; index < node->getChilds().size(); index++)
           stream << node->getChilds()[index];
         return stream;
       }
@@ -316,13 +316,13 @@ namespace triton {
       /* concat representation */
       std::ostream& AstSmtRepresentation::print(std::ostream& stream, triton::ast::ConcatNode* node) {
         std::vector<triton::ast::AbstractNode*> childs = node->getChilds();
-        triton::uint32 size = childs.size();
+        triton::usize size = childs.size();
 
         if (size < 2)
-          throw std::length_error("AstSmtRepresentation::print(ConcatNode): Exprs must contain at least two expressions.");
+          throw triton::exceptions::AstRepresentation("AstSmtRepresentation::print(ConcatNode): Exprs must contain at least two expressions.");
 
         stream << "(concat";
-        for (triton::uint32 index = 0; index < size; index++)
+        for (triton::usize index = 0; index < size; index++)
           stream << " " << childs[index];
         stream << ")";
 

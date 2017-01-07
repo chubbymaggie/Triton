@@ -2,7 +2,7 @@
 /*
 **  Copyright (C) - Triton
 **
-**  This program is under the terms of the LGPLv3 License.
+**  This program is under the terms of the BSD License.
 */
 
 #ifndef TRITON_SYMBOLICEXPRESSION_H
@@ -11,21 +11,21 @@
 #include <string>
 
 #include "ast.hpp"
-#include "memoryOperand.hpp"
-#include "registerOperand.hpp"
+#include "memoryAccess.hpp"
+#include "register.hpp"
 #include "symbolicEnums.hpp"
 #include "tritonTypes.hpp"
 
 
 
-//! \module The Triton namespace
+//! The Triton namespace
 namespace triton {
 /*!
  *  \addtogroup triton
  *  @{
  */
 
-  //! \module The Engines namespace
+  //! The Engines namespace
   namespace engines {
   /*!
    *  \ingroup triton
@@ -33,7 +33,7 @@ namespace triton {
    *  @{
    */
 
-    //! \module The Symbolic Execution namespace
+    //! The Symbolic Execution namespace
     namespace symbolic {
     /*!
      *  \ingroup engines
@@ -56,26 +56,29 @@ namespace triton {
           std::string comment;
 
           //! The symbolic expression id. This id is unique.
-          triton::__uint id;
+          triton::usize id;
 
           //! The origin memory address if `kind` is equal to `triton::engines::symbolic::MEM`, invalid memory otherwise.
-          triton::arch::MemoryOperand originMemory;
+          triton::arch::MemoryAccess originMemory;
 
           //! The origin register if `kind` is equal to `triton::engines::symbolic::REG`, `REG_INVALID` otherwise.
-          triton::arch::RegisterOperand originRegister;
+          triton::arch::Register originRegister;
 
         public:
           //! True if the symbolic expression is tainted.
           bool isTainted;
 
           //! Returns the symbolic expression id.
-          triton::__uint getId(void) const;
+          triton::usize getId(void) const;
 
           //! Returns true if the symbolic expression is assigned to a memory. \sa triton::engines::symbolic::symkind_e
           bool isMemory(void) const;
 
           //! Returns true if the symbolic expression is assigned to a register. \sa triton::engines::symbolic::symkind_e
           bool isRegister(void) const;
+
+          //! Returns true if the expression contains a symbolic variable.
+          bool isSymbolized(void) const;
 
           //! Returns the kind of the symbolic expression.
           symkind_e getKind(void) const;
@@ -96,28 +99,31 @@ namespace triton {
           std::string getFormattedComment(void) const;
 
           //! Returns the origin memory access if `kind` is equal to `triton::engines::symbolic::MEM`, invalid memory otherwise.
-          const triton::arch::MemoryOperand& getOriginMemory(void) const;
+          const triton::arch::MemoryAccess& getOriginMemory(void) const;
 
           //! Returns the origin register if `kind` is equal to `triton::engines::symbolic::REG`, `REG_INVALID` otherwise.
-          const triton::arch::RegisterOperand& getOriginRegister(void) const;
+          const triton::arch::Register& getOriginRegister(void) const;
 
           //! Sets a root node.
           void setAst(triton::ast::AbstractNode* node);
+
+          //! Sets a comment to the symbolic expression.
+          void setComment(const std::string& comment);
 
           //! Sets the kind of the symbolic expression.
           void setKind(symkind_e k);
 
           //! Sets the origin memory acccess.
-          void setOriginMemory(const triton::arch::MemoryOperand& mem);
+          void setOriginMemory(const triton::arch::MemoryAccess& mem);
 
           //! Sets the origin register.
-          void setOriginRegister(const triton::arch::RegisterOperand& reg);
+          void setOriginRegister(const triton::arch::Register& reg);
 
           //! Constructor.
-          SymbolicExpression(triton::ast::AbstractNode* expr, triton::__uint id, symkind_e kind, const std::string& comment="");
+          SymbolicExpression(triton::ast::AbstractNode* expr, triton::usize id, symkind_e kind, const std::string& comment="");
 
           //! Destructor.
-          ~SymbolicExpression();
+          virtual ~SymbolicExpression();
       };
 
       //! Displays a symbolic expression.

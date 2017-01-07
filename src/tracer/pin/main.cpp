@@ -2,7 +2,7 @@
 /*
 **  Copyright (C) - Triton
 **
-**  This program is under the terms of the LGPLv3 License.
+**  This program is under the terms of the BSD License.
 */
 
 #include <csignal>
@@ -89,43 +89,37 @@ if __name__ == '__main__':
         inst.setAddress(regs['rip'])
 
         # Update concrete register state
-        inst.updateContext(Register(REG.RAX,    regs['rax']))
-        inst.updateContext(Register(REG.RBX,    regs['rbx']))
-        inst.updateContext(Register(REG.RCX,    regs['rcx']))
-        inst.updateContext(Register(REG.RDX,    regs['rdx']))
-        inst.updateContext(Register(REG.RDI,    regs['rdi']))
-        inst.updateContext(Register(REG.RSI,    regs['rsi']))
-        inst.updateContext(Register(REG.RBP,    regs['rbp']))
-        inst.updateContext(Register(REG.RSP,    regs['rsp']))
-        inst.updateContext(Register(REG.RIP,    regs['rip']))
-        inst.updateContext(Register(REG.R8,     regs['r8']))
-        inst.updateContext(Register(REG.R9,     regs['r9']))
-        inst.updateContext(Register(REG.R10,    regs['r10']))
-        inst.updateContext(Register(REG.R11,    regs['r11']))
-        inst.updateContext(Register(REG.R12,    regs['r12']))
-        inst.updateContext(Register(REG.R13,    regs['r13']))
-        inst.updateContext(Register(REG.R14,    regs['r14']))
-        inst.updateContext(Register(REG.R15,    regs['r15']))
-        inst.updateContext(Register(REG.EFLAGS, regs['eflags']))
+        setConcreteRegisterValue(Register(REG.RAX,    regs['rax']))
+        setConcreteRegisterValue(Register(REG.RBX,    regs['rbx']))
+        setConcreteRegisterValue(Register(REG.RCX,    regs['rcx']))
+        setConcreteRegisterValue(Register(REG.RDX,    regs['rdx']))
+        setConcreteRegisterValue(Register(REG.RDI,    regs['rdi']))
+        setConcreteRegisterValue(Register(REG.RSI,    regs['rsi']))
+        setConcreteRegisterValue(Register(REG.RBP,    regs['rbp']))
+        setConcreteRegisterValue(Register(REG.RSP,    regs['rsp']))
+        setConcreteRegisterValue(Register(REG.RIP,    regs['rip']))
+        setConcreteRegisterValue(Register(REG.R8,     regs['r8']))
+        setConcreteRegisterValue(Register(REG.R9,     regs['r9']))
+        setConcreteRegisterValue(Register(REG.R10,    regs['r10']))
+        setConcreteRegisterValue(Register(REG.R11,    regs['r11']))
+        setConcreteRegisterValue(Register(REG.R12,    regs['r12']))
+        setConcreteRegisterValue(Register(REG.R13,    regs['r13']))
+        setConcreteRegisterValue(Register(REG.R14,    regs['r14']))
+        setConcreteRegisterValue(Register(REG.R15,    regs['r15']))
+        setConcreteRegisterValue(Register(REG.EFLAGS, regs['eflags']))
+        setConcreteRegisterValue(Register(REG.FS,     regs['fs'])) # The mapped base address
+        setConcreteRegisterValue(Register(REG.GS,     regs['gs'])) # The mapped base address
 
         # Update concrete memory access
         accesses = db.get_memory_access_from_inst_id(inst_id)
 
-        # Read before write
+        # Update memory access
         for access in accesses:
             if access['kind'] == 'R':
                 address = access['addr']
                 data    = access['data']
                 value   = struct.unpack(unpack_size[len(data)], data)[0]
-                inst.updateContext(Memory(address, len(data), value))
-
-        # Write after read
-        for access in accesses:
-            if access['kind'] == 'W':
-                address = access['addr']
-                data    = access['data']
-                value   = struct.unpack(unpack_size[len(data)], data)[0]
-                inst.updateContext(Memory(address, len(data), value))
+                setConcreteMemoryValue(MemoryAccess(address, len(data), value))
 
         # Process everything (build IR, spread taint, perform simplification, ...)
         processing(inst)
@@ -155,8 +149,8 @@ This project is shippied with a pintool as tracer. Basically, you can add callba
 start and stop analysis at specific points, select what images are jitted or not, interact with the Triton API and many more... All information about the pintool API
 is describe at this following page \ref pintool_py_api. Below, some examples.
 
-\subsection Tracer_pintool_example_1 Example - Display IR
 <hr>
+\subsection Tracer_pintool_example_1 Example - Display IR
 
 ~~~~~~~~~~~~~{.py}
 #!/usr/bin/env python2
@@ -184,14 +178,14 @@ if __name__ == '__main__':
     startAnalysisFromEntry()
 
     # Add callback
-    addCallback(mycb, CALLBACK.BEFORE)
+    insertCall(mycb, INSERT_POINT.BEFORE)
 
     # Run Program
     runProgram()
 ~~~~~~~~~~~~~
 
-\subsection Tracer_pintool_example_2 Example - Runtime Memory Tainting
 <hr>
+\subsection Tracer_pintool_example_2 Example - Runtime Memory Tainting
 
 ~~~~~~~~~~~~~{.py}
 from triton  import *
@@ -229,15 +223,15 @@ if __name__ == '__main__':
     # Start the symbolic analysis from the 'check' function
     startAnalysisFromSymbol('check')
 
-    addCallback(cbeforeSymProc, CALLBACK.BEFORE_SYMPROC)
-    addCallback(cafter, CALLBACK.AFTER)
+    insertCall(cbeforeSymProc, INSERT_POINT.BEFORE_SYMPROC)
+    insertCall(cafter, INSERT_POINT.AFTER)
 
     # Run the instrumentation - Never returns
     runProgram()
 ~~~~~~~~~~~~~
 
-\subsection Tracer_pintool_example_3 Example - Runtime Register Modification
 <hr>
+\subsection Tracer_pintool_example_3 Example - Runtime Register Modification
 
 ~~~~~~~~~~~~~{.py}
 #!/usr/bin/env python2
@@ -276,13 +270,13 @@ if __name__ == '__main__':
     setArchitecture(ARCH.X86_64)
     setupImageWhitelist(['crackme'])
     startAnalysisFromSymbol('main')
-    addCallback(cb1, CALLBACK.BEFORE_SYMPROC)
-    addCallback(cb2, CALLBACK.BEFORE)
+    insertCall(cb1, INSERT_POINT.BEFORE_SYMPROC)
+    insertCall(cb2, INSERT_POINT.BEFORE)
     runProgram()
 ~~~~~~~~~~~~~
 
-\subsection Tracer_pintool_example_4 Example - Blacklist images
 <hr>
+\subsection Tracer_pintool_example_4 Example - Blacklist images
 
 ~~~~~~~~~~~~~{.py}
 from triton  import *
@@ -302,12 +296,12 @@ if __name__ == '__main__':
     setupImageBlacklist(["libc", "ld-linux"])
 
     startAnalysisFromSymbol('main')
-    addCallback(mycb, CALLBACK.BEFORE)
+    insertCall(mycb, INSERT_POINT.BEFORE)
     runProgram()
 ~~~~~~~~~~~~~
 
-\subsection Tracer_pintool_example_5 Example - Callback on image
 <hr>
+\subsection Tracer_pintool_example_5 Example - Callback on image
 
 ~~~~~~~~~~~~~{.py}
 from triton  import *
@@ -346,14 +340,14 @@ if __name__ == '__main__':
     startAnalysisFromEntry()
 
     # Add a callback.
-    addCallback(image, CALLBACK.IMAGE_LOAD)
+    insertCall(image, INSERT_POINT.IMAGE_LOAD)
 
     # Run the instrumentation - Never returns
     runProgram()
 ~~~~~~~~~~~~~
 
-\subsection Tracer_pintool_example_6 Example - Callback on routine
 <hr>
+\subsection Tracer_pintool_example_6 Example - Callback on routine
 
 ~~~~~~~~~~~~~{.py}
 from triton  import *
@@ -389,15 +383,15 @@ if __name__ == '__main__':
     startAnalysisFromEntry()
 
     # Add a callback.
-    addCallback(mallocEntry, CALLBACK.ROUTINE_ENTRY, "malloc")
-    addCallback(mallocExit, CALLBACK.ROUTINE_EXIT, "malloc")
+    insertCall(mallocEntry, INSERT_POINT.ROUTINE_ENTRY, "malloc")
+    insertCall(mallocExit, INSERT_POINT.ROUTINE_EXIT, "malloc")
 
     # Run the instrumentation - Never returns
     runProgram()
 ~~~~~~~~~~~~~
 
-\subsection Tracer_pintool_example_7 Example - Callback on signals
 <hr>
+\subsection Tracer_pintool_example_7 Example - Callback on signals
 
 ~~~~~~~~~~~~~{.py}
 from triton  import *
@@ -473,14 +467,14 @@ if __name__ == '__main__':
     startAnalysisFromEntry()
 
     # Add a callback.
-    addCallback(signals, CALLBACK.SIGNALS)
+    insertCall(signals, INSERT_POINT.SIGNALS)
 
     # Run the instrumentation - Never returns
     runProgram()
 ~~~~~~~~~~~~~
 
-\subsection Tracer_pintool_example_8 Example - Callback on syscalls
 <hr>
+\subsection Tracer_pintool_example_8 Example - Callback on syscalls
 
 ~~~~~~~~~~~~~{.py}
 from triton  import *
@@ -509,7 +503,7 @@ if __name__ == '__main__':
     # Start the symbolic analysis from the Entry point
     startAnalysisFromEntry()
 
-    addCallback(my_callback_syscall_entry, CALLBACK.SYSCALL_ENTRY)
+    insertCall(my_callback_syscall_entry, INSERT_POINT.SYSCALL_ENTRY)
 
     # Run the instrumentation - Never returns
     runProgram()
@@ -544,7 +538,6 @@ namespace tracer {
 
     /* Callback before instruction processing */
     static void callbackBefore(triton::arch::Instruction* tritonInst, triton::uint8* addr, triton::uint32 size, CONTEXT* ctx, THREADID threadId) {
-
       /* Some configurations must be applied before processing */
       tracer::pintool::callbacks::preProcessing(tritonInst, threadId);
 
@@ -564,15 +557,8 @@ namespace tracer {
       tritonInst->setAddress(reinterpret_cast<triton::__uint>(addr));
       tritonInst->setThreadId(reinterpret_cast<triton::uint32>(threadId));
 
-      /* Setup the concrete context */
-      tracer::pintool::context::setupContextRegister(tritonInst, ctx);
-
       /* Disassemble the instruction */
       triton::api.disassembly(*tritonInst);
-
-      /* Trust operands */
-      for (auto op = tritonInst->operands.begin(); op != tritonInst->operands.end(); op++)
-        op->setTrust(true);
 
       /* Execute the Python callback before the IR processing */
       if (tracer::pintool::context::mustBeExecuted == false)
@@ -585,6 +571,9 @@ namespace tracer {
         tritonInst->reset();
         tracer::pintool::context::executeContext();
       }
+
+      /* Synchronize gliches between Pintool and libTriton */
+      tracer::pintool::context::synchronizeContext();
 
       /* Process the IR and taint */
       triton::api.buildSemantics(*tritonInst);
@@ -602,10 +591,6 @@ namespace tracer {
       /* Some configurations must be applied after processing */
       tracer::pintool::callbacks::postProcessing(tritonInst, threadId);
 
-      /* Untrust operands */
-      for (auto op = tritonInst->operands.begin(); op != tritonInst->operands.end(); op++)
-        op->setTrust(false);
-
       /* Mutex */
       PIN_UnlockClient();
     }
@@ -613,7 +598,6 @@ namespace tracer {
 
     /* Callback after instruction processing */
     static void callbackAfter(triton::arch::Instruction* tritonInst, CONTEXT* ctx, THREADID threadId) {
-
       if (!tracer::pintool::analysisTrigger.getState() || threadId != tracer::pintool::options::targetThreadId)
       /* Analysis locked */
         return;
@@ -651,7 +635,7 @@ namespace tracer {
       /* Mutex */
       PIN_LockClient();
       triton::uint512 value = tracer::pintool::context::getCurrentMemoryValue(addr, size);
-      tritonInst->updateContext(triton::arch::MemoryOperand(addr, size, value));
+      triton::api.setConcreteMemoryValue(triton::arch::MemoryAccess(addr, size, value));
       /* Mutex */
       PIN_UnlockClient();
     }
@@ -968,15 +952,6 @@ namespace tracer {
               IARG_END);
           }
 
-          /* Save memory write informations */
-          if (INS_IsMemoryWrite(ins)) {
-            INS_InsertCall(ins, IPOINT_BEFORE, (AFUNPTR)saveMemoryAccess,
-              IARG_PTR, tritonInst,
-              IARG_MEMORYWRITE_EA,
-              IARG_MEMORYWRITE_SIZE,
-              IARG_END);
-          }
-
           /* Callback before */
           INS_InsertCall(ins, IPOINT_BEFORE, (AFUNPTR)callbackBefore,
             IARG_PTR, tritonInst,
@@ -987,7 +962,7 @@ namespace tracer {
             IARG_END);
 
           /* Callback after */
-          /* Syscall after context must be catcher with CALLBACK.SYSCALL_EXIT */
+          /* Syscall after context must be catcher with INSERT_POINT.SYSCALL_EXIT */
           if (INS_IsSyscall(ins) == false) {
             IPOINT where = IPOINT_AFTER;
             if (INS_HasFallThrough(ins) == false)

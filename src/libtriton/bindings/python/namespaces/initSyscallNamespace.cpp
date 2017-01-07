@@ -2,7 +2,7 @@
 /*
 **  Copyright (C) - Triton
 **
-**  This program is under the terms of the LGPLv3 License.
+**  This program is under the terms of the BSD License.
 */
 
 #ifdef TRITON_PYTHON_BINDINGS
@@ -372,13 +372,13 @@ namespace triton {
         switch (api.getArchitecture()) {
           case triton::arch::ARCH_X86_64:
             for (triton::uint32 i = 0; i < triton::os::unix::NB_SYSCALL64; ++i)
-              PyDict_SetItemString(triton::bindings::python::syscallsDict, triton::os::unix::syscallmap64[i], PyLong_FromUint(i));
+              PyDict_SetItemString(triton::bindings::python::syscallsDict, triton::os::unix::syscallmap64[i], PyLong_FromUint32(i));
             break;
 
           #if defined(__unix__)
           case triton::arch::ARCH_X86:
             for (triton::uint32 i = 0; i < triton::os::unix::NB_SYSCALL32; ++i)
-              PyDict_SetItemString(triton::bindings::python::syscallsDict, triton::os::unix::syscallmap32[i], PyLong_FromUint(i));
+              PyDict_SetItemString(triton::bindings::python::syscallsDict, triton::os::unix::syscallmap32[i], PyLong_FromUint32(i));
             break;
           #endif
         } /* switch */

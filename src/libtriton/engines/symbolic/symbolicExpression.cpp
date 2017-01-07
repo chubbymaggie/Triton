@@ -2,11 +2,10 @@
 /*
 **  Copyright (C) - Triton
 **
-**  This program is under the terms of the LGPLv3 License.
+**  This program is under the terms of the BSD License.
 */
 
-#include <stdexcept>
-#include <api.hpp>
+#include <exceptions.hpp>
 #include <astRepresentation.hpp>
 #include <symbolicExpression.hpp>
 
@@ -16,7 +15,7 @@ namespace triton {
   namespace engines {
     namespace symbolic {
 
-      SymbolicExpression::SymbolicExpression(triton::ast::AbstractNode* node, triton::__uint id, symkind_e kind, const std::string& comment) : originRegister() {
+      SymbolicExpression::SymbolicExpression(triton::ast::AbstractNode* node, triton::usize id, symkind_e kind, const std::string& comment) : originRegister() {
         this->comment       = comment;
         this->ast           = node;
         this->id            = id;
@@ -31,14 +30,14 @@ namespace triton {
 
       triton::ast::AbstractNode* SymbolicExpression::getAst(void) const {
         if (this->ast == nullptr)
-          throw std::runtime_error("SymbolicExpression::getAst(): No AST defined.");
+          throw triton::exceptions::SymbolicExpression("SymbolicExpression::getAst(): No AST defined.");
         return this->ast;
       }
 
 
       triton::ast::AbstractNode* SymbolicExpression::getNewAst(void) const {
         if (this->ast == nullptr)
-          throw std::runtime_error("SymbolicExpression::getNewAst(): No AST defined.");
+          throw triton::exceptions::SymbolicExpression("SymbolicExpression::getNewAst(): No AST defined.");
         return triton::ast::newInstance(this->ast);
       }
 
@@ -48,20 +47,20 @@ namespace triton {
       }
 
 
-      triton::__uint SymbolicExpression::getId(void) const {
+      triton::usize SymbolicExpression::getId(void) const {
         return this->id;
       }
 
 
       std::string SymbolicExpression::getFormattedId(void) const {
-        if (triton::api.getAstRepresentationMode() == triton::ast::representations::SMT_REPRESENTATION)
+        if (triton::ast::representations::astRepresentation.getMode() == triton::ast::representations::SMT_REPRESENTATION)
           return "ref!" + std::to_string(this->id);
 
-        else if (triton::api.getAstRepresentationMode() == triton::ast::representations::PYTHON_REPRESENTATION)
+        else if (triton::ast::representations::astRepresentation.getMode() == triton::ast::representations::PYTHON_REPRESENTATION)
           return "ref_" + std::to_string(this->id);
 
         else
-          throw std::runtime_error("SymbolicExpression::getFormattedId(): Invalid AST representation mode.");
+          throw triton::exceptions::SymbolicExpression("SymbolicExpression::getFormattedId(): Invalid AST representation mode.");
       }
 
 
@@ -69,14 +68,14 @@ namespace triton {
         if (this->getComment().empty())
           return "";
 
-        else if (triton::api.getAstRepresentationMode() == triton::ast::representations::SMT_REPRESENTATION)
+        else if (triton::ast::representations::astRepresentation.getMode() == triton::ast::representations::SMT_REPRESENTATION)
           return "; " + this->getComment();
 
-        else if (triton::api.getAstRepresentationMode() == triton::ast::representations::PYTHON_REPRESENTATION)
+        else if (triton::ast::representations::astRepresentation.getMode() == triton::ast::representations::PYTHON_REPRESENTATION)
           return "# " + this->getComment();
 
         else
-          throw std::runtime_error("SymbolicExpression::getFormattedComment(): Invalid AST representation mode.");
+          throw triton::exceptions::SymbolicExpression("SymbolicExpression::getFormattedComment(): Invalid AST representation mode.");
       }
 
 
@@ -85,12 +84,12 @@ namespace triton {
       }
 
 
-      const triton::arch::MemoryOperand& SymbolicExpression::getOriginMemory(void) const {
+      const triton::arch::MemoryAccess& SymbolicExpression::getOriginMemory(void) const {
         return this->originMemory;
       }
 
 
-      const triton::arch::RegisterOperand& SymbolicExpression::getOriginRegister(void) const {
+      const triton::arch::Register& SymbolicExpression::getOriginRegister(void) const {
         return this->originRegister;
       }
 
@@ -102,17 +101,22 @@ namespace triton {
       }
 
 
+      void SymbolicExpression::setComment(const std::string& comment) {
+        this->comment = comment;
+      }
+
+
       void SymbolicExpression::setKind(symkind_e k) {
         this->kind = k;
       }
 
 
-      void SymbolicExpression::setOriginMemory(const triton::arch::MemoryOperand& mem) {
+      void SymbolicExpression::setOriginMemory(const triton::arch::MemoryAccess& mem) {
         this->originMemory = mem;
       }
 
 
-      void SymbolicExpression::setOriginRegister(const triton::arch::RegisterOperand& reg) {
+      void SymbolicExpression::setOriginRegister(const triton::arch::Register& reg) {
         this->originRegister = reg;
       }
 
@@ -124,6 +128,13 @@ namespace triton {
 
       bool SymbolicExpression::isMemory(void) const {
         return (this->kind == triton::engines::symbolic::MEM);
+      }
+
+
+      bool SymbolicExpression::isSymbolized(void) const {
+        if (this->ast == nullptr)
+          return false;
+        return this->ast->isSymbolized();
       }
 
 

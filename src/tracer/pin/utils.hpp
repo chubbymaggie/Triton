@@ -2,7 +2,7 @@
 /*
 **  Copyright (C) - Triton
 **
-**  This program is under the terms of the LGPLv3 License.
+**  This program is under the terms of the BSD License.
 */
 
 #ifndef TRITON_UTILS_H
@@ -14,14 +14,14 @@
 
 
 
-//! \module The Tracer namespace
+//! The Tracer namespace
 namespace tracer {
 /*!
  *  \addtogroup tracer
  *  @{
  */
 
-  //! \module The pintool namespace
+  //! The Pintool namespace
   namespace pintool {
   /*!
    *  \ingroup tracer

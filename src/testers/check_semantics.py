@@ -1,7 +1,7 @@
 
-from triton  import *
-from ast import *
-from pintool import *
+from triton     import *
+from triton.ast import *
+from pintool    import *
 
 import sys
 import time
@@ -52,7 +52,7 @@ def cafter(instruction):
         if seid == SYMEXPR.UNSET:
             continue
 
-        expr   = getAstFromId(seid)
+        expr   = getFullAstFromId(seid)
         svalue = expr.evaluate()
         #svalue = evaluateAstViaZ3(expr)
 
@@ -106,7 +106,7 @@ if __name__ == '__main__':
     setArchitecture(ARCH.X86_64)
     startAnalysisFromEntry()
     #startAnalysisFromSymbol('check')
-    addCallback(cafter,  CALLBACK.AFTER)
-    addCallback(sbefore, CALLBACK.BEFORE_SYMPROC)
+    insertCall(cafter,  INSERT_POINT.AFTER)
+    insertCall(sbefore, INSERT_POINT.BEFORE_SYMPROC)
     runProgram()
 

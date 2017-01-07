@@ -2,7 +2,7 @@
 /*
 **  Copyright (C) - Triton
 **
-**  This program is under the terms of the LGPLv3 License.
+**  This program is under the terms of the BSD License.
 */
 
 #ifndef TRITON_BITSVECTOR_H
@@ -13,14 +13,14 @@
 
 
 
-//! \module The Triton namespace
+//! The Triton namespace
 namespace triton {
 /*!
  *  \addtogroup triton
  *  @{
  */
 
-  //! \module The Architecture namespace
+  //! The Architecture namespace
   namespace arch {
   /*!
    *  \ingroup triton
@@ -77,7 +77,7 @@ namespace triton {
         BitsVector(const triton::arch::BitsVector& copy);
 
         //! Destructor.
-        ~BitsVector();
+        virtual ~BitsVector();
     };
 
     //! Displays a BitsVector.

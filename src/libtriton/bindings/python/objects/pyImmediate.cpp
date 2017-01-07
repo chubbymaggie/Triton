@@ -2,11 +2,13 @@
 /*
 **  Copyright (C) - Triton
 **
-**  This program is under the terms of the LGPLv3 License.
+**  This program is under the terms of the BSD License.
 */
 
 #ifdef TRITON_PYTHON_BINDINGS
 
+#include <exceptions.hpp>
+#include <immediate.hpp>
 #include <pythonObjects.hpp>
 #include <pythonUtils.hpp>
 #include <pythonXFunctions.hpp>
@@ -21,7 +23,7 @@
 \section py_Immediate_description Description
 <hr>
 
-This object is used to represent an immediate operand.
+This object is used to represent an immediate.
 
 \subsection py_Immediate_example Example
 
@@ -58,24 +60,24 @@ This object is used to represent an immediate operand.
 \section Immediate_py_api Python API - Methods of the Immediate class
 <hr>
 
-- **getBitSize(void)**<br>
-Returns the size (in bits) of the immediate as integer.<br>
+- <b>integer getBitSize(void)</b><br>
+Returns the size (in bits) of the immediate.<br>
 e.g: `64`
 
-- **getBitvector(void)**<br>
-Returns the bitvector as \ref py_Bitvector_page.
+- <b>\ref py_Bitvector_page getBitvector(void)</b><br>
+Returns the bitvector.
 
-- **getSize(void)**<br>
-Returns the size (in bytes) of the immediate as integer.<br>
+- <b>integer getSize(void)</b><br>
+Returns the size (in bytes) of the immediate.<br>
 e.g: `8`
 
-- **getType(void)**<br>
-Returns the type of the immediate as \ref py_OPERAND_page. In this case this function returns `OPERAND.IMM`.
+- <b>\ref py_OPERAND_page getType(void)</b><br>
+Returns the type of the immediate. In this case this function returns `OPERAND.IMM`.
 
-- **getValue(void)**<br>
+- <b>integer getValue(void)</b><br>
 Returns the immediate value.
 
-- **setValue(void)**<br>
+- <b>setValue(integer value)</b><br>
 Sets the immediate value.
 
 */
@@ -87,157 +89,166 @@ namespace triton {
     namespace python {
 
       //! Immediate destructor.
-      void ImmediateOperand_dealloc(PyObject* self) {
+      void Immediate_dealloc(PyObject* self) {
         std::cout << std::flush;
-        delete PyImmediateOperand_AsImmediateOperand(self);
+        delete PyImmediate_AsImmediate(self);
         Py_DECREF(self);
       }
 
 
-      static PyObject* ImmediateOperand_getBitvector(PyObject* self, PyObject* noarg) {
+      static PyObject* Immediate_getBitvector(PyObject* self, PyObject* noarg) {
         try {
-          return PyBitvector(*PyImmediateOperand_AsImmediateOperand(self));
+          return PyBitvector(*PyImmediate_AsImmediate(self));
         }
-        catch (const std::exception& e) {
+        catch (const triton::exceptions::Exception& e) {
           return PyErr_Format(PyExc_TypeError, "%s", e.what());
         }
       }
 
 
-      static PyObject* ImmediateOperand_getBitSize(PyObject* self, PyObject* noarg) {
+      static PyObject* Immediate_getBitSize(PyObject* self, PyObject* noarg) {
         try {
-          return Py_BuildValue("k", PyImmediateOperand_AsImmediateOperand(self)->getBitSize());
+          return PyLong_FromUint32(PyImmediate_AsImmediate(self)->getBitSize());
         }
-        catch (const std::exception& e) {
+        catch (const triton::exceptions::Exception& e) {
           return PyErr_Format(PyExc_TypeError, "%s", e.what());
         }
       }
 
 
-      static PyObject* ImmediateOperand_getSize(PyObject* self, PyObject* noarg) {
+      static PyObject* Immediate_getSize(PyObject* self, PyObject* noarg) {
         try {
-          return Py_BuildValue("k", PyImmediateOperand_AsImmediateOperand(self)->getSize());
+          return PyLong_FromUint32(PyImmediate_AsImmediate(self)->getSize());
         }
-        catch (const std::exception& e) {
+        catch (const triton::exceptions::Exception& e) {
           return PyErr_Format(PyExc_TypeError, "%s", e.what());
         }
       }
 
 
-      static PyObject* ImmediateOperand_getType(PyObject* self, PyObject* noarg) {
+      static PyObject* Immediate_getType(PyObject* self, PyObject* noarg) {
         try {
-          return Py_BuildValue("k", PyImmediateOperand_AsImmediateOperand(self)->getType());
+          return PyLong_FromUint32(PyImmediate_AsImmediate(self)->getType());
         }
-        catch (const std::exception& e) {
+        catch (const triton::exceptions::Exception& e) {
           return PyErr_Format(PyExc_TypeError, "%s", e.what());
         }
       }
 
 
-      static PyObject* ImmediateOperand_getValue(PyObject* self, PyObject* noarg) {
+      static PyObject* Immediate_getValue(PyObject* self, PyObject* noarg) {
         try {
-          return PyLong_FromUint(PyImmediateOperand_AsImmediateOperand(self)->getValue());
+          return PyLong_FromUint64(PyImmediate_AsImmediate(self)->getValue());
         }
-        catch (const std::exception& e) {
+        catch (const triton::exceptions::Exception& e) {
           return PyErr_Format(PyExc_TypeError, "%s", e.what());
         }
       }
 
 
-      static PyObject* ImmediateOperand_setValue(PyObject* self, PyObject* value) {
+      static PyObject* Immediate_setValue(PyObject* self, PyObject* value) {
         try {
           if (!PyLong_Check(value) && !PyInt_Check(value))
             return PyErr_Format(PyExc_TypeError, "setValue(): expected an integer as argument");
-          PyImmediateOperand_AsImmediateOperand(self)->setValue(PyLong_AsUint(value));
+          PyImmediate_AsImmediate(self)->setValue(PyLong_AsUint64(value));
           Py_INCREF(Py_None);
           return Py_None;
         }
-        catch (const std::exception& e) {
+        catch (const triton::exceptions::Exception& e) {
           return PyErr_Format(PyExc_TypeError, "%s", e.what());
         }
       }
 
 
-      static int ImmediateOperand_print(PyObject* self) {
-        std::cout << PyImmediateOperand_AsImmediateOperand(self);
+      static int Immediate_print(PyObject* self) {
+        std::cout << PyImmediate_AsImmediate(self);
         return 0;
       }
 
 
-      static PyObject* ImmediateOperand_str(PyObject* self) {
+      static PyObject* Immediate_str(PyObject* self) {
         try {
           std::stringstream str;
-          str << PyImmediateOperand_AsImmediateOperand(self);
+          str << PyImmediate_AsImmediate(self);
           return PyString_FromFormat("%s", str.str().c_str());
         }
-        catch (const std::exception& e) {
+        catch (const triton::exceptions::Exception& e) {
           return PyErr_Format(PyExc_TypeError, "%s", e.what());
         }
       }
 
 
       //! Immediate methods.
-      PyMethodDef ImmediateOperand_callbacks[] = {
-        {"getBitSize",    ImmediateOperand_getBitSize,     METH_NOARGS,     ""},
-        {"getBitvector",  ImmediateOperand_getBitvector,   METH_NOARGS,     ""},
-        {"getSize",       ImmediateOperand_getSize,        METH_NOARGS,     ""},
-        {"getType",       ImmediateOperand_getType,        METH_NOARGS,     ""},
-        {"getValue",      ImmediateOperand_getValue,       METH_NOARGS,     ""},
-        {"setValue",      ImmediateOperand_setValue,       METH_O,          ""},
-        {nullptr,         nullptr,                         0,               nullptr}
+      PyMethodDef Immediate_callbacks[] = {
+        {"getBitSize",    Immediate_getBitSize,     METH_NOARGS,     ""},
+        {"getBitvector",  Immediate_getBitvector,   METH_NOARGS,     ""},
+        {"getSize",       Immediate_getSize,        METH_NOARGS,     ""},
+        {"getType",       Immediate_getType,        METH_NOARGS,     ""},
+        {"getValue",      Immediate_getValue,       METH_NOARGS,     ""},
+        {"setValue",      Immediate_setValue,       METH_O,          ""},
+        {nullptr,         nullptr,                  0,               nullptr}
       };
 
 
-      PyTypeObject ImmediateOperand_Type = {
-          PyObject_HEAD_INIT(&PyType_Type)
-          0,                                          /* ob_size*/
-          "Immediate",                                /* tp_name*/
-          sizeof(ImmediateOperand_Object),            /* tp_basicsize*/
-          0,                                          /* tp_itemsize*/
-          (destructor)ImmediateOperand_dealloc,       /* tp_dealloc*/
-          (printfunc)ImmediateOperand_print,          /* tp_print*/
-          0,                                          /* tp_getattr*/
-          0,                                          /* tp_setattr*/
-          0,                                          /* tp_compare*/
-          0,                                          /* tp_repr*/
-          0,                                          /* tp_as_number*/
-          0,                                          /* tp_as_sequence*/
-          0,                                          /* tp_as_mapping*/
-          0,                                          /* tp_hash */
-          0,                                          /* tp_call*/
-          (reprfunc)ImmediateOperand_str,             /* tp_str*/
-          0,                                          /* tp_getattro*/
-          0,                                          /* tp_setattro*/
-          0,                                          /* tp_as_buffer*/
-          Py_TPFLAGS_DEFAULT,                         /* tp_flags*/
-          "Immediate objects",                        /* tp_doc */
-          0,                                          /* tp_traverse */
-          0,                                          /* tp_clear */
-          0,                                          /* tp_richcompare */
-          0,                                          /* tp_weaklistoffset */
-          0,                                          /* tp_iter */
-          0,                                          /* tp_iternext */
-          ImmediateOperand_callbacks,                 /* tp_methods */
-          0,                                          /* tp_members */
-          0,                                          /* tp_getset */
-          0,                                          /* tp_base */
-          0,                                          /* tp_dict */
-          0,                                          /* tp_descr_get */
-          0,                                          /* tp_descr_set */
-          0,                                          /* tp_dictoffset */
-          0,                                          /* tp_init */
-          0,                                          /* tp_alloc */
-          0,                                          /* tp_new */
+      PyTypeObject Immediate_Type = {
+        PyObject_HEAD_INIT(&PyType_Type)
+        0,                                          /* ob_size */
+        "Immediate",                                /* tp_name */
+        sizeof(Immediate_Object),                   /* tp_basicsize */
+        0,                                          /* tp_itemsize */
+        (destructor)Immediate_dealloc,              /* tp_dealloc */
+        (printfunc)Immediate_print,                 /* tp_print */
+        0,                                          /* tp_getattr */
+        0,                                          /* tp_setattr */
+        0,                                          /* tp_compare */
+        0,                                          /* tp_repr */
+        0,                                          /* tp_as_number */
+        0,                                          /* tp_as_sequence */
+        0,                                          /* tp_as_mapping */
+        0,                                          /* tp_hash */
+        0,                                          /* tp_call */
+        (reprfunc)Immediate_str,                    /* tp_str */
+        0,                                          /* tp_getattro */
+        0,                                          /* tp_setattro */
+        0,                                          /* tp_as_buffer */
+        Py_TPFLAGS_DEFAULT,                         /* tp_flags */
+        "Immediate objects",                        /* tp_doc */
+        0,                                          /* tp_traverse */
+        0,                                          /* tp_clear */
+        0,                                          /* tp_richcompare */
+        0,                                          /* tp_weaklistoffset */
+        0,                                          /* tp_iter */
+        0,                                          /* tp_iternext */
+        Immediate_callbacks,                        /* tp_methods */
+        0,                                          /* tp_members */
+        0,                                          /* tp_getset */
+        0,                                          /* tp_base */
+        0,                                          /* tp_dict */
+        0,                                          /* tp_descr_get */
+        0,                                          /* tp_descr_set */
+        0,                                          /* tp_dictoffset */
+        0,                                          /* tp_init */
+        0,                                          /* tp_alloc */
+        0,                                          /* tp_new */
+        0,                                          /* tp_free */
+        0,                                          /* tp_is_gc */
+        0,                                          /* tp_bases */
+        0,                                          /* tp_mro */
+        0,                                          /* tp_cache */
+        0,                                          /* tp_subclasses */
+        0,                                          /* tp_weaklist */
+        0,                                          /* tp_del */
+        0                                           /* tp_version_tag */
       };
 
 
-      PyObject* PyImmediateOperand(const triton::arch::ImmediateOperand& imm) {
-        ImmediateOperand_Object* object;
+      PyObject* PyImmediate(const triton::arch::Immediate& imm) {
+        Immediate_Object* object;
 
-        PyType_Ready(&ImmediateOperand_Type);
-        object = PyObject_NEW(ImmediateOperand_Object, &ImmediateOperand_Type);
+        PyType_Ready(&Immediate_Type);
+        object = PyObject_NEW(Immediate_Object, &Immediate_Type);
         if (object != NULL)
-          object->imm = new triton::arch::ImmediateOperand(imm);
+          object->imm = new triton::arch::Immediate(imm);
 
         return (PyObject*)object;
       }

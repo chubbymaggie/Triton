@@ -2,13 +2,14 @@
 /*
 **  Copyright (C) - Triton
 **
-**  This program is under the terms of the LGPLv3 License.
+**  This program is under the terms of the BSD License.
 */
 
 #ifndef TRITON_ASTREPRESENTATION_H
 #define TRITON_ASTREPRESENTATION_H
 
 #include <iostream>
+
 #include "astPythonRepresentation.hpp"
 #include "astRepresentationInterface.hpp"
 #include "astSmtRepresentation.hpp"
@@ -16,14 +17,14 @@
 
 
 
-//! \module The Triton namespace
+//! The Triton namespace
 namespace triton {
 /*!
  *  \addtogroup triton
  *  @{
  */
 
-  //! \module The AST namespace
+  //! The AST namespace
   namespace ast {
   /*!
    *  \ingroup triton
@@ -31,7 +32,7 @@ namespace triton {
    *  @{
    */
 
-    //! \module The Representations namespace
+    //! The Representations namespace
     namespace representations {
     /*!
      *  \ingroup ast
@@ -45,7 +46,6 @@ namespace triton {
         PYTHON_REPRESENTATION,  /*!< Python representation */
         LAST_REPRESENTATION
       };
-
 
       //! Pseudo code of SMT AST.
       class AstRepresentation {
@@ -62,7 +62,7 @@ namespace triton {
           AstRepresentation();
 
           //! Destructor.
-          ~AstRepresentation();
+          virtual ~AstRepresentation();
 
           //! Returns the representation mode.
           triton::uint32 getMode(void) const;
@@ -73,6 +73,9 @@ namespace triton {
           //! Displays the node according to the representation mode.
           std::ostream& print(std::ostream& stream, AbstractNode* node);
       };
+
+      //! The AST representation interface as global for all instances of API.
+      extern triton::ast::representations::AstRepresentation astRepresentation;
 
     /*! @} End of representations namespace */
     };

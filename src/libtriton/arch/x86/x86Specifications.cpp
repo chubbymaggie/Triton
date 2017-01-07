@@ -2,10 +2,10 @@
 /*
 **  Copyright (C) - Triton
 **
-**  This program is under the terms of the LGPLv3 License.
+**  This program is under the terms of the BSD License.
 */
 
-#include <api.hpp>
+#include <architecture.hpp>
 #include <cpuSize.hpp>
 #include <externalLibs.hpp>
 #include <x86Specifications.hpp>
@@ -19,235 +19,235 @@ namespace triton {
       /*
        * Inside semantics, sometime we have to use references to registers.
        * TRITON_X86_REG_RAX, TRITON_X86_REG_RBX, ..., TRITON_X86_REG_AF...
-       * are now available for a temporary access to the triton::arch::RegisterOperand
+       * are now available for a temporary access to the triton::arch::Register
        * class. By default, these X86_REG are empty. We must use init32 or init64 before.
        */
 
-      triton::arch::RegisterOperand x86_reg_invalid = triton::arch::RegisterOperand();
+      triton::arch::Register x86_reg_invalid = triton::arch::Register();
 
-      triton::arch::RegisterOperand x86_reg_rax     = triton::arch::RegisterOperand();
-      triton::arch::RegisterOperand x86_reg_eax     = triton::arch::RegisterOperand();
-      triton::arch::RegisterOperand x86_reg_ax      = triton::arch::RegisterOperand();
-      triton::arch::RegisterOperand x86_reg_ah      = triton::arch::RegisterOperand();
-      triton::arch::RegisterOperand x86_reg_al      = triton::arch::RegisterOperand();
+      triton::arch::Register x86_reg_rax     = triton::arch::Register();
+      triton::arch::Register x86_reg_eax     = triton::arch::Register();
+      triton::arch::Register x86_reg_ax      = triton::arch::Register();
+      triton::arch::Register x86_reg_ah      = triton::arch::Register();
+      triton::arch::Register x86_reg_al      = triton::arch::Register();
 
-      triton::arch::RegisterOperand x86_reg_rbx     = triton::arch::RegisterOperand();
-      triton::arch::RegisterOperand x86_reg_ebx     = triton::arch::RegisterOperand();
-      triton::arch::RegisterOperand x86_reg_bx      = triton::arch::RegisterOperand();
-      triton::arch::RegisterOperand x86_reg_bh      = triton::arch::RegisterOperand();
-      triton::arch::RegisterOperand x86_reg_bl      = triton::arch::RegisterOperand();
+      triton::arch::Register x86_reg_rbx     = triton::arch::Register();
+      triton::arch::Register x86_reg_ebx     = triton::arch::Register();
+      triton::arch::Register x86_reg_bx      = triton::arch::Register();
+      triton::arch::Register x86_reg_bh      = triton::arch::Register();
+      triton::arch::Register x86_reg_bl      = triton::arch::Register();
 
-      triton::arch::RegisterOperand x86_reg_rcx     = triton::arch::RegisterOperand();
-      triton::arch::RegisterOperand x86_reg_ecx     = triton::arch::RegisterOperand();
-      triton::arch::RegisterOperand x86_reg_cx      = triton::arch::RegisterOperand();
-      triton::arch::RegisterOperand x86_reg_ch      = triton::arch::RegisterOperand();
-      triton::arch::RegisterOperand x86_reg_cl      = triton::arch::RegisterOperand();
+      triton::arch::Register x86_reg_rcx     = triton::arch::Register();
+      triton::arch::Register x86_reg_ecx     = triton::arch::Register();
+      triton::arch::Register x86_reg_cx      = triton::arch::Register();
+      triton::arch::Register x86_reg_ch      = triton::arch::Register();
+      triton::arch::Register x86_reg_cl      = triton::arch::Register();
 
-      triton::arch::RegisterOperand x86_reg_rdx     = triton::arch::RegisterOperand();
-      triton::arch::RegisterOperand x86_reg_edx     = triton::arch::RegisterOperand();
-      triton::arch::RegisterOperand x86_reg_dx      = triton::arch::RegisterOperand();
-      triton::arch::RegisterOperand x86_reg_dh      = triton::arch::RegisterOperand();
-      triton::arch::RegisterOperand x86_reg_dl      = triton::arch::RegisterOperand();
+      triton::arch::Register x86_reg_rdx     = triton::arch::Register();
+      triton::arch::Register x86_reg_edx     = triton::arch::Register();
+      triton::arch::Register x86_reg_dx      = triton::arch::Register();
+      triton::arch::Register x86_reg_dh      = triton::arch::Register();
+      triton::arch::Register x86_reg_dl      = triton::arch::Register();
 
-      triton::arch::RegisterOperand x86_reg_rdi     = triton::arch::RegisterOperand();
-      triton::arch::RegisterOperand x86_reg_edi     = triton::arch::RegisterOperand();
-      triton::arch::RegisterOperand x86_reg_di      = triton::arch::RegisterOperand();
-      triton::arch::RegisterOperand x86_reg_dil     = triton::arch::RegisterOperand();
+      triton::arch::Register x86_reg_rdi     = triton::arch::Register();
+      triton::arch::Register x86_reg_edi     = triton::arch::Register();
+      triton::arch::Register x86_reg_di      = triton::arch::Register();
+      triton::arch::Register x86_reg_dil     = triton::arch::Register();
 
-      triton::arch::RegisterOperand x86_reg_rsi     = triton::arch::RegisterOperand();
-      triton::arch::RegisterOperand x86_reg_esi     = triton::arch::RegisterOperand();
-      triton::arch::RegisterOperand x86_reg_si      = triton::arch::RegisterOperand();
-      triton::arch::RegisterOperand x86_reg_sil     = triton::arch::RegisterOperand();
+      triton::arch::Register x86_reg_rsi     = triton::arch::Register();
+      triton::arch::Register x86_reg_esi     = triton::arch::Register();
+      triton::arch::Register x86_reg_si      = triton::arch::Register();
+      triton::arch::Register x86_reg_sil     = triton::arch::Register();
 
-      triton::arch::RegisterOperand x86_reg_rsp     = triton::arch::RegisterOperand();
-      triton::arch::RegisterOperand x86_reg_esp     = triton::arch::RegisterOperand();
-      triton::arch::RegisterOperand x86_reg_sp      = triton::arch::RegisterOperand();
-      triton::arch::RegisterOperand x86_reg_spl     = triton::arch::RegisterOperand();
-      triton::arch::RegisterOperand x86_reg_stack   = triton::arch::RegisterOperand();
+      triton::arch::Register x86_reg_rsp     = triton::arch::Register();
+      triton::arch::Register x86_reg_esp     = triton::arch::Register();
+      triton::arch::Register x86_reg_sp      = triton::arch::Register();
+      triton::arch::Register x86_reg_spl     = triton::arch::Register();
+      triton::arch::Register x86_reg_stack   = triton::arch::Register();
 
-      triton::arch::RegisterOperand x86_reg_rbp     = triton::arch::RegisterOperand();
-      triton::arch::RegisterOperand x86_reg_ebp     = triton::arch::RegisterOperand();
-      triton::arch::RegisterOperand x86_reg_bp      = triton::arch::RegisterOperand();
-      triton::arch::RegisterOperand x86_reg_bpl     = triton::arch::RegisterOperand();
+      triton::arch::Register x86_reg_rbp     = triton::arch::Register();
+      triton::arch::Register x86_reg_ebp     = triton::arch::Register();
+      triton::arch::Register x86_reg_bp      = triton::arch::Register();
+      triton::arch::Register x86_reg_bpl     = triton::arch::Register();
 
-      triton::arch::RegisterOperand x86_reg_rip     = triton::arch::RegisterOperand();
-      triton::arch::RegisterOperand x86_reg_eip     = triton::arch::RegisterOperand();
-      triton::arch::RegisterOperand x86_reg_ip      = triton::arch::RegisterOperand();
-      triton::arch::RegisterOperand x86_reg_pc      = triton::arch::RegisterOperand();
+      triton::arch::Register x86_reg_rip     = triton::arch::Register();
+      triton::arch::Register x86_reg_eip     = triton::arch::Register();
+      triton::arch::Register x86_reg_ip      = triton::arch::Register();
+      triton::arch::Register x86_reg_pc      = triton::arch::Register();
 
-      triton::arch::RegisterOperand x86_reg_eflags  = triton::arch::RegisterOperand();
+      triton::arch::Register x86_reg_eflags  = triton::arch::Register();
 
-      triton::arch::RegisterOperand x86_reg_r8      = triton::arch::RegisterOperand();
-      triton::arch::RegisterOperand x86_reg_r8d     = triton::arch::RegisterOperand();
-      triton::arch::RegisterOperand x86_reg_r8w     = triton::arch::RegisterOperand();
-      triton::arch::RegisterOperand x86_reg_r8b     = triton::arch::RegisterOperand();
+      triton::arch::Register x86_reg_r8      = triton::arch::Register();
+      triton::arch::Register x86_reg_r8d     = triton::arch::Register();
+      triton::arch::Register x86_reg_r8w     = triton::arch::Register();
+      triton::arch::Register x86_reg_r8b     = triton::arch::Register();
 
-      triton::arch::RegisterOperand x86_reg_r9      = triton::arch::RegisterOperand();
-      triton::arch::RegisterOperand x86_reg_r9d     = triton::arch::RegisterOperand();
-      triton::arch::RegisterOperand x86_reg_r9w     = triton::arch::RegisterOperand();
-      triton::arch::RegisterOperand x86_reg_r9b     = triton::arch::RegisterOperand();
+      triton::arch::Register x86_reg_r9      = triton::arch::Register();
+      triton::arch::Register x86_reg_r9d     = triton::arch::Register();
+      triton::arch::Register x86_reg_r9w     = triton::arch::Register();
+      triton::arch::Register x86_reg_r9b     = triton::arch::Register();
 
-      triton::arch::RegisterOperand x86_reg_r10     = triton::arch::RegisterOperand();
-      triton::arch::RegisterOperand x86_reg_r10d    = triton::arch::RegisterOperand();
-      triton::arch::RegisterOperand x86_reg_r10w    = triton::arch::RegisterOperand();
-      triton::arch::RegisterOperand x86_reg_r10b    = triton::arch::RegisterOperand();
+      triton::arch::Register x86_reg_r10     = triton::arch::Register();
+      triton::arch::Register x86_reg_r10d    = triton::arch::Register();
+      triton::arch::Register x86_reg_r10w    = triton::arch::Register();
+      triton::arch::Register x86_reg_r10b    = triton::arch::Register();
 
-      triton::arch::RegisterOperand x86_reg_r11     = triton::arch::RegisterOperand();
-      triton::arch::RegisterOperand x86_reg_r11d    = triton::arch::RegisterOperand();
-      triton::arch::RegisterOperand x86_reg_r11w    = triton::arch::RegisterOperand();
-      triton::arch::RegisterOperand x86_reg_r11b    = triton::arch::RegisterOperand();
+      triton::arch::Register x86_reg_r11     = triton::arch::Register();
+      triton::arch::Register x86_reg_r11d    = triton::arch::Register();
+      triton::arch::Register x86_reg_r11w    = triton::arch::Register();
+      triton::arch::Register x86_reg_r11b    = triton::arch::Register();
 
-      triton::arch::RegisterOperand x86_reg_r12     = triton::arch::RegisterOperand();
-      triton::arch::RegisterOperand x86_reg_r12d    = triton::arch::RegisterOperand();
-      triton::arch::RegisterOperand x86_reg_r12w    = triton::arch::RegisterOperand();
-      triton::arch::RegisterOperand x86_reg_r12b    = triton::arch::RegisterOperand();
+      triton::arch::Register x86_reg_r12     = triton::arch::Register();
+      triton::arch::Register x86_reg_r12d    = triton::arch::Register();
+      triton::arch::Register x86_reg_r12w    = triton::arch::Register();
+      triton::arch::Register x86_reg_r12b    = triton::arch::Register();
 
-      triton::arch::RegisterOperand x86_reg_r13     = triton::arch::RegisterOperand();
-      triton::arch::RegisterOperand x86_reg_r13d    = triton::arch::RegisterOperand();
-      triton::arch::RegisterOperand x86_reg_r13w    = triton::arch::RegisterOperand();
-      triton::arch::RegisterOperand x86_reg_r13b    = triton::arch::RegisterOperand();
+      triton::arch::Register x86_reg_r13     = triton::arch::Register();
+      triton::arch::Register x86_reg_r13d    = triton::arch::Register();
+      triton::arch::Register x86_reg_r13w    = triton::arch::Register();
+      triton::arch::Register x86_reg_r13b    = triton::arch::Register();
 
-      triton::arch::RegisterOperand x86_reg_r14     = triton::arch::RegisterOperand();
-      triton::arch::RegisterOperand x86_reg_r14d    = triton::arch::RegisterOperand();
-      triton::arch::RegisterOperand x86_reg_r14w    = triton::arch::RegisterOperand();
-      triton::arch::RegisterOperand x86_reg_r14b    = triton::arch::RegisterOperand();
+      triton::arch::Register x86_reg_r14     = triton::arch::Register();
+      triton::arch::Register x86_reg_r14d    = triton::arch::Register();
+      triton::arch::Register x86_reg_r14w    = triton::arch::Register();
+      triton::arch::Register x86_reg_r14b    = triton::arch::Register();
 
-      triton::arch::RegisterOperand x86_reg_r15     = triton::arch::RegisterOperand();
-      triton::arch::RegisterOperand x86_reg_r15d    = triton::arch::RegisterOperand();
-      triton::arch::RegisterOperand x86_reg_r15w    = triton::arch::RegisterOperand();
-      triton::arch::RegisterOperand x86_reg_r15b    = triton::arch::RegisterOperand();
+      triton::arch::Register x86_reg_r15     = triton::arch::Register();
+      triton::arch::Register x86_reg_r15d    = triton::arch::Register();
+      triton::arch::Register x86_reg_r15w    = triton::arch::Register();
+      triton::arch::Register x86_reg_r15b    = triton::arch::Register();
 
-      triton::arch::RegisterOperand x86_reg_mm0     = triton::arch::RegisterOperand();
-      triton::arch::RegisterOperand x86_reg_mm1     = triton::arch::RegisterOperand();
-      triton::arch::RegisterOperand x86_reg_mm2     = triton::arch::RegisterOperand();
-      triton::arch::RegisterOperand x86_reg_mm3     = triton::arch::RegisterOperand();
-      triton::arch::RegisterOperand x86_reg_mm4     = triton::arch::RegisterOperand();
-      triton::arch::RegisterOperand x86_reg_mm5     = triton::arch::RegisterOperand();
-      triton::arch::RegisterOperand x86_reg_mm6     = triton::arch::RegisterOperand();
-      triton::arch::RegisterOperand x86_reg_mm7     = triton::arch::RegisterOperand();
+      triton::arch::Register x86_reg_mm0     = triton::arch::Register();
+      triton::arch::Register x86_reg_mm1     = triton::arch::Register();
+      triton::arch::Register x86_reg_mm2     = triton::arch::Register();
+      triton::arch::Register x86_reg_mm3     = triton::arch::Register();
+      triton::arch::Register x86_reg_mm4     = triton::arch::Register();
+      triton::arch::Register x86_reg_mm5     = triton::arch::Register();
+      triton::arch::Register x86_reg_mm6     = triton::arch::Register();
+      triton::arch::Register x86_reg_mm7     = triton::arch::Register();
 
-      triton::arch::RegisterOperand x86_reg_xmm0    = triton::arch::RegisterOperand();
-      triton::arch::RegisterOperand x86_reg_xmm1    = triton::arch::RegisterOperand();
-      triton::arch::RegisterOperand x86_reg_xmm2    = triton::arch::RegisterOperand();
-      triton::arch::RegisterOperand x86_reg_xmm3    = triton::arch::RegisterOperand();
-      triton::arch::RegisterOperand x86_reg_xmm4    = triton::arch::RegisterOperand();
-      triton::arch::RegisterOperand x86_reg_xmm5    = triton::arch::RegisterOperand();
-      triton::arch::RegisterOperand x86_reg_xmm6    = triton::arch::RegisterOperand();
-      triton::arch::RegisterOperand x86_reg_xmm7    = triton::arch::RegisterOperand();
-      triton::arch::RegisterOperand x86_reg_xmm8    = triton::arch::RegisterOperand();
-      triton::arch::RegisterOperand x86_reg_xmm9    = triton::arch::RegisterOperand();
-      triton::arch::RegisterOperand x86_reg_xmm10   = triton::arch::RegisterOperand();
-      triton::arch::RegisterOperand x86_reg_xmm11   = triton::arch::RegisterOperand();
-      triton::arch::RegisterOperand x86_reg_xmm12   = triton::arch::RegisterOperand();
-      triton::arch::RegisterOperand x86_reg_xmm13   = triton::arch::RegisterOperand();
-      triton::arch::RegisterOperand x86_reg_xmm14   = triton::arch::RegisterOperand();
-      triton::arch::RegisterOperand x86_reg_xmm15   = triton::arch::RegisterOperand();
+      triton::arch::Register x86_reg_xmm0    = triton::arch::Register();
+      triton::arch::Register x86_reg_xmm1    = triton::arch::Register();
+      triton::arch::Register x86_reg_xmm2    = triton::arch::Register();
+      triton::arch::Register x86_reg_xmm3    = triton::arch::Register();
+      triton::arch::Register x86_reg_xmm4    = triton::arch::Register();
+      triton::arch::Register x86_reg_xmm5    = triton::arch::Register();
+      triton::arch::Register x86_reg_xmm6    = triton::arch::Register();
+      triton::arch::Register x86_reg_xmm7    = triton::arch::Register();
+      triton::arch::Register x86_reg_xmm8    = triton::arch::Register();
+      triton::arch::Register x86_reg_xmm9    = triton::arch::Register();
+      triton::arch::Register x86_reg_xmm10   = triton::arch::Register();
+      triton::arch::Register x86_reg_xmm11   = triton::arch::Register();
+      triton::arch::Register x86_reg_xmm12   = triton::arch::Register();
+      triton::arch::Register x86_reg_xmm13   = triton::arch::Register();
+      triton::arch::Register x86_reg_xmm14   = triton::arch::Register();
+      triton::arch::Register x86_reg_xmm15   = triton::arch::Register();
 
-      triton::arch::RegisterOperand x86_reg_ymm0    = triton::arch::RegisterOperand();
-      triton::arch::RegisterOperand x86_reg_ymm1    = triton::arch::RegisterOperand();
-      triton::arch::RegisterOperand x86_reg_ymm2    = triton::arch::RegisterOperand();
-      triton::arch::RegisterOperand x86_reg_ymm3    = triton::arch::RegisterOperand();
-      triton::arch::RegisterOperand x86_reg_ymm4    = triton::arch::RegisterOperand();
-      triton::arch::RegisterOperand x86_reg_ymm5    = triton::arch::RegisterOperand();
-      triton::arch::RegisterOperand x86_reg_ymm6    = triton::arch::RegisterOperand();
-      triton::arch::RegisterOperand x86_reg_ymm7    = triton::arch::RegisterOperand();
-      triton::arch::RegisterOperand x86_reg_ymm8    = triton::arch::RegisterOperand();
-      triton::arch::RegisterOperand x86_reg_ymm9    = triton::arch::RegisterOperand();
-      triton::arch::RegisterOperand x86_reg_ymm10   = triton::arch::RegisterOperand();
-      triton::arch::RegisterOperand x86_reg_ymm11   = triton::arch::RegisterOperand();
-      triton::arch::RegisterOperand x86_reg_ymm12   = triton::arch::RegisterOperand();
-      triton::arch::RegisterOperand x86_reg_ymm13   = triton::arch::RegisterOperand();
-      triton::arch::RegisterOperand x86_reg_ymm14   = triton::arch::RegisterOperand();
-      triton::arch::RegisterOperand x86_reg_ymm15   = triton::arch::RegisterOperand();
+      triton::arch::Register x86_reg_ymm0    = triton::arch::Register();
+      triton::arch::Register x86_reg_ymm1    = triton::arch::Register();
+      triton::arch::Register x86_reg_ymm2    = triton::arch::Register();
+      triton::arch::Register x86_reg_ymm3    = triton::arch::Register();
+      triton::arch::Register x86_reg_ymm4    = triton::arch::Register();
+      triton::arch::Register x86_reg_ymm5    = triton::arch::Register();
+      triton::arch::Register x86_reg_ymm6    = triton::arch::Register();
+      triton::arch::Register x86_reg_ymm7    = triton::arch::Register();
+      triton::arch::Register x86_reg_ymm8    = triton::arch::Register();
+      triton::arch::Register x86_reg_ymm9    = triton::arch::Register();
+      triton::arch::Register x86_reg_ymm10   = triton::arch::Register();
+      triton::arch::Register x86_reg_ymm11   = triton::arch::Register();
+      triton::arch::Register x86_reg_ymm12   = triton::arch::Register();
+      triton::arch::Register x86_reg_ymm13   = triton::arch::Register();
+      triton::arch::Register x86_reg_ymm14   = triton::arch::Register();
+      triton::arch::Register x86_reg_ymm15   = triton::arch::Register();
 
-      triton::arch::RegisterOperand x86_reg_zmm0    = triton::arch::RegisterOperand();
-      triton::arch::RegisterOperand x86_reg_zmm1    = triton::arch::RegisterOperand();
-      triton::arch::RegisterOperand x86_reg_zmm2    = triton::arch::RegisterOperand();
-      triton::arch::RegisterOperand x86_reg_zmm3    = triton::arch::RegisterOperand();
-      triton::arch::RegisterOperand x86_reg_zmm4    = triton::arch::RegisterOperand();
-      triton::arch::RegisterOperand x86_reg_zmm5    = triton::arch::RegisterOperand();
-      triton::arch::RegisterOperand x86_reg_zmm6    = triton::arch::RegisterOperand();
-      triton::arch::RegisterOperand x86_reg_zmm7    = triton::arch::RegisterOperand();
-      triton::arch::RegisterOperand x86_reg_zmm8    = triton::arch::RegisterOperand();
-      triton::arch::RegisterOperand x86_reg_zmm9    = triton::arch::RegisterOperand();
-      triton::arch::RegisterOperand x86_reg_zmm10   = triton::arch::RegisterOperand();
-      triton::arch::RegisterOperand x86_reg_zmm11   = triton::arch::RegisterOperand();
-      triton::arch::RegisterOperand x86_reg_zmm12   = triton::arch::RegisterOperand();
-      triton::arch::RegisterOperand x86_reg_zmm13   = triton::arch::RegisterOperand();
-      triton::arch::RegisterOperand x86_reg_zmm14   = triton::arch::RegisterOperand();
-      triton::arch::RegisterOperand x86_reg_zmm15   = triton::arch::RegisterOperand();
-      triton::arch::RegisterOperand x86_reg_zmm16   = triton::arch::RegisterOperand();
-      triton::arch::RegisterOperand x86_reg_zmm17   = triton::arch::RegisterOperand();
-      triton::arch::RegisterOperand x86_reg_zmm18   = triton::arch::RegisterOperand();
-      triton::arch::RegisterOperand x86_reg_zmm19   = triton::arch::RegisterOperand();
-      triton::arch::RegisterOperand x86_reg_zmm20   = triton::arch::RegisterOperand();
-      triton::arch::RegisterOperand x86_reg_zmm21   = triton::arch::RegisterOperand();
-      triton::arch::RegisterOperand x86_reg_zmm22   = triton::arch::RegisterOperand();
-      triton::arch::RegisterOperand x86_reg_zmm23   = triton::arch::RegisterOperand();
-      triton::arch::RegisterOperand x86_reg_zmm24   = triton::arch::RegisterOperand();
-      triton::arch::RegisterOperand x86_reg_zmm25   = triton::arch::RegisterOperand();
-      triton::arch::RegisterOperand x86_reg_zmm26   = triton::arch::RegisterOperand();
-      triton::arch::RegisterOperand x86_reg_zmm27   = triton::arch::RegisterOperand();
-      triton::arch::RegisterOperand x86_reg_zmm28   = triton::arch::RegisterOperand();
-      triton::arch::RegisterOperand x86_reg_zmm29   = triton::arch::RegisterOperand();
-      triton::arch::RegisterOperand x86_reg_zmm30   = triton::arch::RegisterOperand();
-      triton::arch::RegisterOperand x86_reg_zmm31   = triton::arch::RegisterOperand();
+      triton::arch::Register x86_reg_zmm0    = triton::arch::Register();
+      triton::arch::Register x86_reg_zmm1    = triton::arch::Register();
+      triton::arch::Register x86_reg_zmm2    = triton::arch::Register();
+      triton::arch::Register x86_reg_zmm3    = triton::arch::Register();
+      triton::arch::Register x86_reg_zmm4    = triton::arch::Register();
+      triton::arch::Register x86_reg_zmm5    = triton::arch::Register();
+      triton::arch::Register x86_reg_zmm6    = triton::arch::Register();
+      triton::arch::Register x86_reg_zmm7    = triton::arch::Register();
+      triton::arch::Register x86_reg_zmm8    = triton::arch::Register();
+      triton::arch::Register x86_reg_zmm9    = triton::arch::Register();
+      triton::arch::Register x86_reg_zmm10   = triton::arch::Register();
+      triton::arch::Register x86_reg_zmm11   = triton::arch::Register();
+      triton::arch::Register x86_reg_zmm12   = triton::arch::Register();
+      triton::arch::Register x86_reg_zmm13   = triton::arch::Register();
+      triton::arch::Register x86_reg_zmm14   = triton::arch::Register();
+      triton::arch::Register x86_reg_zmm15   = triton::arch::Register();
+      triton::arch::Register x86_reg_zmm16   = triton::arch::Register();
+      triton::arch::Register x86_reg_zmm17   = triton::arch::Register();
+      triton::arch::Register x86_reg_zmm18   = triton::arch::Register();
+      triton::arch::Register x86_reg_zmm19   = triton::arch::Register();
+      triton::arch::Register x86_reg_zmm20   = triton::arch::Register();
+      triton::arch::Register x86_reg_zmm21   = triton::arch::Register();
+      triton::arch::Register x86_reg_zmm22   = triton::arch::Register();
+      triton::arch::Register x86_reg_zmm23   = triton::arch::Register();
+      triton::arch::Register x86_reg_zmm24   = triton::arch::Register();
+      triton::arch::Register x86_reg_zmm25   = triton::arch::Register();
+      triton::arch::Register x86_reg_zmm26   = triton::arch::Register();
+      triton::arch::Register x86_reg_zmm27   = triton::arch::Register();
+      triton::arch::Register x86_reg_zmm28   = triton::arch::Register();
+      triton::arch::Register x86_reg_zmm29   = triton::arch::Register();
+      triton::arch::Register x86_reg_zmm30   = triton::arch::Register();
+      triton::arch::Register x86_reg_zmm31   = triton::arch::Register();
 
-      triton::arch::RegisterOperand x86_reg_mxcsr   = triton::arch::RegisterOperand();
+      triton::arch::Register x86_reg_mxcsr   = triton::arch::Register();
 
-      triton::arch::RegisterOperand x86_reg_cr0    = triton::arch::RegisterOperand();
-      triton::arch::RegisterOperand x86_reg_cr1    = triton::arch::RegisterOperand();
-      triton::arch::RegisterOperand x86_reg_cr2    = triton::arch::RegisterOperand();
-      triton::arch::RegisterOperand x86_reg_cr3    = triton::arch::RegisterOperand();
-      triton::arch::RegisterOperand x86_reg_cr4    = triton::arch::RegisterOperand();
-      triton::arch::RegisterOperand x86_reg_cr5    = triton::arch::RegisterOperand();
-      triton::arch::RegisterOperand x86_reg_cr6    = triton::arch::RegisterOperand();
-      triton::arch::RegisterOperand x86_reg_cr7    = triton::arch::RegisterOperand();
-      triton::arch::RegisterOperand x86_reg_cr8    = triton::arch::RegisterOperand();
-      triton::arch::RegisterOperand x86_reg_cr9    = triton::arch::RegisterOperand();
-      triton::arch::RegisterOperand x86_reg_cr10   = triton::arch::RegisterOperand();
-      triton::arch::RegisterOperand x86_reg_cr11   = triton::arch::RegisterOperand();
-      triton::arch::RegisterOperand x86_reg_cr12   = triton::arch::RegisterOperand();
-      triton::arch::RegisterOperand x86_reg_cr13   = triton::arch::RegisterOperand();
-      triton::arch::RegisterOperand x86_reg_cr14   = triton::arch::RegisterOperand();
-      triton::arch::RegisterOperand x86_reg_cr15   = triton::arch::RegisterOperand();
+      triton::arch::Register x86_reg_cr0    = triton::arch::Register();
+      triton::arch::Register x86_reg_cr1    = triton::arch::Register();
+      triton::arch::Register x86_reg_cr2    = triton::arch::Register();
+      triton::arch::Register x86_reg_cr3    = triton::arch::Register();
+      triton::arch::Register x86_reg_cr4    = triton::arch::Register();
+      triton::arch::Register x86_reg_cr5    = triton::arch::Register();
+      triton::arch::Register x86_reg_cr6    = triton::arch::Register();
+      triton::arch::Register x86_reg_cr7    = triton::arch::Register();
+      triton::arch::Register x86_reg_cr8    = triton::arch::Register();
+      triton::arch::Register x86_reg_cr9    = triton::arch::Register();
+      triton::arch::Register x86_reg_cr10   = triton::arch::Register();
+      triton::arch::Register x86_reg_cr11   = triton::arch::Register();
+      triton::arch::Register x86_reg_cr12   = triton::arch::Register();
+      triton::arch::Register x86_reg_cr13   = triton::arch::Register();
+      triton::arch::Register x86_reg_cr14   = triton::arch::Register();
+      triton::arch::Register x86_reg_cr15   = triton::arch::Register();
 
-      triton::arch::RegisterOperand x86_reg_ie      = triton::arch::RegisterOperand();
-      triton::arch::RegisterOperand x86_reg_de      = triton::arch::RegisterOperand();
-      triton::arch::RegisterOperand x86_reg_ze      = triton::arch::RegisterOperand();
-      triton::arch::RegisterOperand x86_reg_oe      = triton::arch::RegisterOperand();
-      triton::arch::RegisterOperand x86_reg_ue      = triton::arch::RegisterOperand();
-      triton::arch::RegisterOperand x86_reg_pe      = triton::arch::RegisterOperand();
-      triton::arch::RegisterOperand x86_reg_daz     = triton::arch::RegisterOperand();
-      triton::arch::RegisterOperand x86_reg_im      = triton::arch::RegisterOperand();
-      triton::arch::RegisterOperand x86_reg_dm      = triton::arch::RegisterOperand();
-      triton::arch::RegisterOperand x86_reg_zm      = triton::arch::RegisterOperand();
-      triton::arch::RegisterOperand x86_reg_om      = triton::arch::RegisterOperand();
-      triton::arch::RegisterOperand x86_reg_um      = triton::arch::RegisterOperand();
-      triton::arch::RegisterOperand x86_reg_pm      = triton::arch::RegisterOperand();
-      triton::arch::RegisterOperand x86_reg_rl      = triton::arch::RegisterOperand();
-      triton::arch::RegisterOperand x86_reg_rh      = triton::arch::RegisterOperand();
-      triton::arch::RegisterOperand x86_reg_fz      = triton::arch::RegisterOperand();
+      triton::arch::Register x86_reg_ie      = triton::arch::Register();
+      triton::arch::Register x86_reg_de      = triton::arch::Register();
+      triton::arch::Register x86_reg_ze      = triton::arch::Register();
+      triton::arch::Register x86_reg_oe      = triton::arch::Register();
+      triton::arch::Register x86_reg_ue      = triton::arch::Register();
+      triton::arch::Register x86_reg_pe      = triton::arch::Register();
+      triton::arch::Register x86_reg_daz     = triton::arch::Register();
+      triton::arch::Register x86_reg_im      = triton::arch::Register();
+      triton::arch::Register x86_reg_dm      = triton::arch::Register();
+      triton::arch::Register x86_reg_zm      = triton::arch::Register();
+      triton::arch::Register x86_reg_om      = triton::arch::Register();
+      triton::arch::Register x86_reg_um      = triton::arch::Register();
+      triton::arch::Register x86_reg_pm      = triton::arch::Register();
+      triton::arch::Register x86_reg_rl      = triton::arch::Register();
+      triton::arch::Register x86_reg_rh      = triton::arch::Register();
+      triton::arch::Register x86_reg_fz      = triton::arch::Register();
 
-      triton::arch::RegisterOperand x86_reg_af      = triton::arch::RegisterOperand();
-      triton::arch::RegisterOperand x86_reg_cf      = triton::arch::RegisterOperand();
-      triton::arch::RegisterOperand x86_reg_df      = triton::arch::RegisterOperand();
-      triton::arch::RegisterOperand x86_reg_if      = triton::arch::RegisterOperand();
-      triton::arch::RegisterOperand x86_reg_of      = triton::arch::RegisterOperand();
-      triton::arch::RegisterOperand x86_reg_pf      = triton::arch::RegisterOperand();
-      triton::arch::RegisterOperand x86_reg_sf      = triton::arch::RegisterOperand();
-      triton::arch::RegisterOperand x86_reg_tf      = triton::arch::RegisterOperand();
-      triton::arch::RegisterOperand x86_reg_zf      = triton::arch::RegisterOperand();
+      triton::arch::Register x86_reg_af      = triton::arch::Register();
+      triton::arch::Register x86_reg_cf      = triton::arch::Register();
+      triton::arch::Register x86_reg_df      = triton::arch::Register();
+      triton::arch::Register x86_reg_if      = triton::arch::Register();
+      triton::arch::Register x86_reg_of      = triton::arch::Register();
+      triton::arch::Register x86_reg_pf      = triton::arch::Register();
+      triton::arch::Register x86_reg_sf      = triton::arch::Register();
+      triton::arch::Register x86_reg_tf      = triton::arch::Register();
+      triton::arch::Register x86_reg_zf      = triton::arch::Register();
 
-      triton::arch::RegisterOperand x86_reg_cs      = triton::arch::RegisterOperand();
-      triton::arch::RegisterOperand x86_reg_ds      = triton::arch::RegisterOperand();
-      triton::arch::RegisterOperand x86_reg_es      = triton::arch::RegisterOperand();
-      triton::arch::RegisterOperand x86_reg_fs      = triton::arch::RegisterOperand();
-      triton::arch::RegisterOperand x86_reg_gs      = triton::arch::RegisterOperand();
-      triton::arch::RegisterOperand x86_reg_ss      = triton::arch::RegisterOperand();
+      triton::arch::Register x86_reg_cs      = triton::arch::Register();
+      triton::arch::Register x86_reg_ds      = triton::arch::Register();
+      triton::arch::Register x86_reg_es      = triton::arch::Register();
+      triton::arch::Register x86_reg_fs      = triton::arch::Register();
+      triton::arch::Register x86_reg_gs      = triton::arch::Register();
+      triton::arch::Register x86_reg_ss      = triton::arch::Register();
 
 
-      triton::arch::RegisterOperand* x86_regs[triton::arch::x86::ID_REG_LAST_ITEM] = {
+      triton::arch::Register* x86_regs[triton::arch::x86::ID_REG_LAST_ITEM] = {
         &TRITON_X86_REG_INVALID,
         &TRITON_X86_REG_RAX,
         &TRITON_X86_REG_RBX,
@@ -444,1363 +444,1364 @@ namespace triton {
       };
 
 
-      /* Returns all information about a register from its triton id */
-      std::tuple<std::string, triton::uint32, triton::uint32, triton::uint32> registerIdToRegisterInformation(triton::uint32 reg) {
+      x86Specifications::x86Specifications() {
+      }
 
-        std::tuple<std::string, triton::uint32, triton::uint32, triton::uint32> ret;
 
-        std::get<0>(ret) = "unknown"; /* name           */
-        std::get<1>(ret) = 0;         /* highest bit    */
-        std::get<2>(ret) = 0;         /* lower bit      */
-        std::get<3>(ret) = 0;         /* higest reg id  */
+      x86Specifications::~x86Specifications() {
+      }
 
-        if (triton::api.getArchitecture() == triton::arch::ARCH_INVALID)
+
+      triton::arch::RegisterSpecification x86Specifications::getX86RegisterSpecification(triton::uint32 arch, triton::uint32 regId) const {
+        triton::arch::RegisterSpecification ret;
+
+        if (arch != triton::arch::ARCH_X86 && arch != triton::arch::ARCH_X86_64)
           return ret;
 
-        switch (reg) {
+        switch (regId) {
 
           case triton::arch::x86::ID_REG_RAX:
-            std::get<0>(ret) = "rax";
-            std::get<1>(ret) = QWORD_SIZE_BIT-1;
-            std::get<2>(ret) = 0;
-            std::get<3>(ret) = triton::arch::x86::ID_REG_RAX;
+            ret.setName("rax");
+            ret.setHigh(QWORD_SIZE_BIT-1);
+            ret.setLow(0);
+            ret.setParentId(triton::arch::x86::ID_REG_RAX);
             break;
 
           case triton::arch::x86::ID_REG_EAX:
-            std::get<0>(ret) = "eax";
-            std::get<1>(ret) = DWORD_SIZE_BIT-1;
-            std::get<2>(ret) = 0;
-            std::get<3>(ret) = (triton::api.getArchitecture() == triton::arch::ARCH_X86_64) ? triton::arch::x86::ID_REG_RAX : triton::arch::x86::ID_REG_EAX;
+            ret.setName("eax");
+            ret.setHigh(DWORD_SIZE_BIT-1);
+            ret.setLow(0);
+            ret.setParentId((arch == triton::arch::ARCH_X86_64) ? triton::arch::x86::ID_REG_RAX : triton::arch::x86::ID_REG_EAX);
             break;
 
           case triton::arch::x86::ID_REG_AX:
-            std::get<0>(ret) = "ax";
-            std::get<1>(ret) = WORD_SIZE_BIT-1;
-            std::get<2>(ret) = 0;
-            std::get<3>(ret) = (triton::api.getArchitecture() == triton::arch::ARCH_X86_64) ? triton::arch::x86::ID_REG_RAX : triton::arch::x86::ID_REG_EAX;
+            ret.setName("ax");
+            ret.setHigh(WORD_SIZE_BIT-1);
+            ret.setLow(0);
+            ret.setParentId((arch == triton::arch::ARCH_X86_64) ? triton::arch::x86::ID_REG_RAX : triton::arch::x86::ID_REG_EAX);
             break;
 
           case triton::arch::x86::ID_REG_AH:
-            std::get<0>(ret) = "ah";
-            std::get<1>(ret) = WORD_SIZE_BIT-1;
-            std::get<2>(ret) = BYTE_SIZE_BIT;
-            std::get<3>(ret) = (triton::api.getArchitecture() == triton::arch::ARCH_X86_64) ? triton::arch::x86::ID_REG_RAX : triton::arch::x86::ID_REG_EAX;
+            ret.setName("ah");
+            ret.setHigh(WORD_SIZE_BIT-1);
+            ret.setLow(BYTE_SIZE_BIT);
+            ret.setParentId((arch == triton::arch::ARCH_X86_64) ? triton::arch::x86::ID_REG_RAX : triton::arch::x86::ID_REG_EAX);
             break;
 
           case triton::arch::x86::ID_REG_AL:
-            std::get<0>(ret) = "al";
-            std::get<1>(ret) = BYTE_SIZE_BIT-1;
-            std::get<2>(ret) = 0;
-            std::get<3>(ret) = (triton::api.getArchitecture() == triton::arch::ARCH_X86_64) ? triton::arch::x86::ID_REG_RAX : triton::arch::x86::ID_REG_EAX;
+            ret.setName("al");
+            ret.setHigh(BYTE_SIZE_BIT-1);
+            ret.setLow(0);
+            ret.setParentId((arch == triton::arch::ARCH_X86_64) ? triton::arch::x86::ID_REG_RAX : triton::arch::x86::ID_REG_EAX);
             break;
 
           case triton::arch::x86::ID_REG_RBX:
-            std::get<0>(ret) = "rbx";
-            std::get<1>(ret) = QWORD_SIZE_BIT-1;
-            std::get<2>(ret) = 0;
-            std::get<3>(ret) = triton::arch::x86::ID_REG_RBX;
+            ret.setName("rbx");
+            ret.setHigh(QWORD_SIZE_BIT-1);
+            ret.setLow(0);
+            ret.setParentId(triton::arch::x86::ID_REG_RBX);
             break;
 
           case triton::arch::x86::ID_REG_EBX:
-            std::get<0>(ret) = "ebx";
-            std::get<1>(ret) = DWORD_SIZE_BIT-1;
-            std::get<2>(ret) = 0;
-            std::get<3>(ret) = (triton::api.getArchitecture() == triton::arch::ARCH_X86_64) ? triton::arch::x86::ID_REG_RBX : triton::arch::x86::ID_REG_EBX;
+            ret.setName("ebx");
+            ret.setHigh(DWORD_SIZE_BIT-1);
+            ret.setLow(0);
+            ret.setParentId((arch == triton::arch::ARCH_X86_64) ? triton::arch::x86::ID_REG_RBX : triton::arch::x86::ID_REG_EBX);
             break;
 
           case triton::arch::x86::ID_REG_BX:
-            std::get<0>(ret) = "bx";
-            std::get<1>(ret) = WORD_SIZE_BIT-1;
-            std::get<2>(ret) = 0;
-            std::get<3>(ret) = (triton::api.getArchitecture() == triton::arch::ARCH_X86_64) ? triton::arch::x86::ID_REG_RBX : triton::arch::x86::ID_REG_EBX;
+            ret.setName("bx");
+            ret.setHigh(WORD_SIZE_BIT-1);
+            ret.setLow(0);
+            ret.setParentId((arch == triton::arch::ARCH_X86_64) ? triton::arch::x86::ID_REG_RBX : triton::arch::x86::ID_REG_EBX);
             break;
 
           case triton::arch::x86::ID_REG_BH:
-            std::get<0>(ret) = "bh";
-            std::get<1>(ret) = WORD_SIZE_BIT-1;
-            std::get<2>(ret) = BYTE_SIZE_BIT;
-            std::get<3>(ret) = (triton::api.getArchitecture() == triton::arch::ARCH_X86_64) ? triton::arch::x86::ID_REG_RBX : triton::arch::x86::ID_REG_EBX;
+            ret.setName("bh");
+            ret.setHigh(WORD_SIZE_BIT-1);
+            ret.setLow(BYTE_SIZE_BIT);
+            ret.setParentId((arch == triton::arch::ARCH_X86_64) ? triton::arch::x86::ID_REG_RBX : triton::arch::x86::ID_REG_EBX);
             break;
 
           case triton::arch::x86::ID_REG_BL:
-            std::get<0>(ret) = "bl";
-            std::get<1>(ret) = BYTE_SIZE_BIT-1;
-            std::get<2>(ret) = 0;
-            std::get<3>(ret) = (triton::api.getArchitecture() == triton::arch::ARCH_X86_64) ? triton::arch::x86::ID_REG_RBX : triton::arch::x86::ID_REG_EBX;
+            ret.setName("bl");
+            ret.setHigh(BYTE_SIZE_BIT-1);
+            ret.setLow(0);
+            ret.setParentId((arch == triton::arch::ARCH_X86_64) ? triton::arch::x86::ID_REG_RBX : triton::arch::x86::ID_REG_EBX);
             break;
 
           case triton::arch::x86::ID_REG_RCX:
-            std::get<0>(ret) = "rcx";
-            std::get<1>(ret) = QWORD_SIZE_BIT-1;
-            std::get<2>(ret) = 0;
-            std::get<3>(ret) = triton::arch::x86::ID_REG_RCX;
+            ret.setName("rcx");
+            ret.setHigh(QWORD_SIZE_BIT-1);
+            ret.setLow(0);
+            ret.setParentId(triton::arch::x86::ID_REG_RCX);
             break;
 
           case triton::arch::x86::ID_REG_ECX:
-            std::get<0>(ret) = "ecx";
-            std::get<1>(ret) = DWORD_SIZE_BIT-1;
-            std::get<2>(ret) = 0;
-            std::get<3>(ret) = (triton::api.getArchitecture() == triton::arch::ARCH_X86_64) ? triton::arch::x86::ID_REG_RCX : triton::arch::x86::ID_REG_ECX;
+            ret.setName("ecx");
+            ret.setHigh(DWORD_SIZE_BIT-1);
+            ret.setLow(0);
+            ret.setParentId((arch == triton::arch::ARCH_X86_64) ? triton::arch::x86::ID_REG_RCX : triton::arch::x86::ID_REG_ECX);
             break;
 
           case triton::arch::x86::ID_REG_CX:
-            std::get<0>(ret) = "cx";
-            std::get<1>(ret) = WORD_SIZE_BIT-1;
-            std::get<2>(ret) = 0;
-            std::get<3>(ret) = (triton::api.getArchitecture() == triton::arch::ARCH_X86_64) ? triton::arch::x86::ID_REG_RCX : triton::arch::x86::ID_REG_ECX;
+            ret.setName("cx");
+            ret.setHigh(WORD_SIZE_BIT-1);
+            ret.setLow(0);
+            ret.setParentId((arch == triton::arch::ARCH_X86_64) ? triton::arch::x86::ID_REG_RCX : triton::arch::x86::ID_REG_ECX);
             break;
 
           case triton::arch::x86::ID_REG_CH:
-            std::get<0>(ret) = "ch";
-            std::get<1>(ret) = WORD_SIZE_BIT-1;
-            std::get<2>(ret) = BYTE_SIZE_BIT;
-            std::get<3>(ret) = (triton::api.getArchitecture() == triton::arch::ARCH_X86_64) ? triton::arch::x86::ID_REG_RCX : triton::arch::x86::ID_REG_ECX;
+            ret.setName("ch");
+            ret.setHigh(WORD_SIZE_BIT-1);
+            ret.setLow(BYTE_SIZE_BIT);
+            ret.setParentId((arch == triton::arch::ARCH_X86_64) ? triton::arch::x86::ID_REG_RCX : triton::arch::x86::ID_REG_ECX);
             break;
 
           case triton::arch::x86::ID_REG_CL:
-            std::get<0>(ret) = "cl";
-            std::get<1>(ret) = BYTE_SIZE_BIT-1;
-            std::get<2>(ret) = 0;
-            std::get<3>(ret) = (triton::api.getArchitecture() == triton::arch::ARCH_X86_64) ? triton::arch::x86::ID_REG_RCX : triton::arch::x86::ID_REG_ECX;
+            ret.setName("cl");
+            ret.setHigh(BYTE_SIZE_BIT-1);
+            ret.setLow(0);
+            ret.setParentId((arch == triton::arch::ARCH_X86_64) ? triton::arch::x86::ID_REG_RCX : triton::arch::x86::ID_REG_ECX);
             break;
 
           case triton::arch::x86::ID_REG_RDX:
-            std::get<0>(ret) = "rdx";
-            std::get<1>(ret) = QWORD_SIZE_BIT-1;
-            std::get<2>(ret) = 0;
-            std::get<3>(ret) = triton::arch::x86::ID_REG_RDX;
+            ret.setName("rdx");
+            ret.setHigh(QWORD_SIZE_BIT-1);
+            ret.setLow(0);
+            ret.setParentId(triton::arch::x86::ID_REG_RDX);
             break;
 
           case triton::arch::x86::ID_REG_EDX:
-            std::get<0>(ret) = "edx";
-            std::get<1>(ret) = DWORD_SIZE_BIT-1;
-            std::get<2>(ret) = 0;
-            std::get<3>(ret) = (triton::api.getArchitecture() == triton::arch::ARCH_X86_64) ? triton::arch::x86::ID_REG_RDX : triton::arch::x86::ID_REG_EDX;
+            ret.setName("edx");
+            ret.setHigh(DWORD_SIZE_BIT-1);
+            ret.setLow(0);
+            ret.setParentId((arch == triton::arch::ARCH_X86_64) ? triton::arch::x86::ID_REG_RDX : triton::arch::x86::ID_REG_EDX);
             break;
 
           case triton::arch::x86::ID_REG_DX:
-            std::get<0>(ret) = "dx";
-            std::get<1>(ret) = WORD_SIZE_BIT-1;
-            std::get<2>(ret) = 0;
-            std::get<3>(ret) = (triton::api.getArchitecture() == triton::arch::ARCH_X86_64) ? triton::arch::x86::ID_REG_RDX : triton::arch::x86::ID_REG_EDX;
+            ret.setName("dx");
+            ret.setHigh(WORD_SIZE_BIT-1);
+            ret.setLow(0);
+            ret.setParentId((arch == triton::arch::ARCH_X86_64) ? triton::arch::x86::ID_REG_RDX : triton::arch::x86::ID_REG_EDX);
             break;
 
           case triton::arch::x86::ID_REG_DH:
-            std::get<0>(ret) = "dh";
-            std::get<1>(ret) = WORD_SIZE_BIT-1;
-            std::get<2>(ret) = BYTE_SIZE_BIT;
-            std::get<3>(ret) = (triton::api.getArchitecture() == triton::arch::ARCH_X86_64) ? triton::arch::x86::ID_REG_RDX : triton::arch::x86::ID_REG_EDX;
+            ret.setName("dh");
+            ret.setHigh(WORD_SIZE_BIT-1);
+            ret.setLow(BYTE_SIZE_BIT);
+            ret.setParentId((arch == triton::arch::ARCH_X86_64) ? triton::arch::x86::ID_REG_RDX : triton::arch::x86::ID_REG_EDX);
             break;
 
           case triton::arch::x86::ID_REG_DL:
-            std::get<0>(ret) = "dl";
-            std::get<1>(ret) = BYTE_SIZE_BIT-1;
-            std::get<2>(ret) = 0;
-            std::get<3>(ret) = (triton::api.getArchitecture() == triton::arch::ARCH_X86_64) ? triton::arch::x86::ID_REG_RDX : triton::arch::x86::ID_REG_EDX;
+            ret.setName("dl");
+            ret.setHigh(BYTE_SIZE_BIT-1);
+            ret.setLow(0);
+            ret.setParentId((arch == triton::arch::ARCH_X86_64) ? triton::arch::x86::ID_REG_RDX : triton::arch::x86::ID_REG_EDX);
             break;
 
           case triton::arch::x86::ID_REG_RDI:
-            std::get<0>(ret) = "rdi";
-            std::get<1>(ret) = QWORD_SIZE_BIT-1;
-            std::get<2>(ret) = 0;
-            std::get<3>(ret) = triton::arch::x86::ID_REG_RDI;
+            ret.setName("rdi");
+            ret.setHigh(QWORD_SIZE_BIT-1);
+            ret.setLow(0);
+            ret.setParentId(triton::arch::x86::ID_REG_RDI);
             break;
 
           case triton::arch::x86::ID_REG_EDI:
-            std::get<0>(ret) = "edi";
-            std::get<1>(ret) = DWORD_SIZE_BIT-1;
-            std::get<2>(ret) = 0;
-            std::get<3>(ret) = (triton::api.getArchitecture() == triton::arch::ARCH_X86_64) ? triton::arch::x86::ID_REG_RDI : triton::arch::x86::ID_REG_EDI;
+            ret.setName("edi");
+            ret.setHigh(DWORD_SIZE_BIT-1);
+            ret.setLow(0);
+            ret.setParentId((arch == triton::arch::ARCH_X86_64) ? triton::arch::x86::ID_REG_RDI : triton::arch::x86::ID_REG_EDI);
             break;
 
           case triton::arch::x86::ID_REG_DI:
-            std::get<0>(ret) = "di";
-            std::get<1>(ret) = WORD_SIZE_BIT-1;
-            std::get<2>(ret) = 0;
-            std::get<3>(ret) = (triton::api.getArchitecture() == triton::arch::ARCH_X86_64) ? triton::arch::x86::ID_REG_RDI : triton::arch::x86::ID_REG_EDI;
+            ret.setName("di");
+            ret.setHigh(WORD_SIZE_BIT-1);
+            ret.setLow(0);
+            ret.setParentId((arch == triton::arch::ARCH_X86_64) ? triton::arch::x86::ID_REG_RDI : triton::arch::x86::ID_REG_EDI);
             break;
 
           case triton::arch::x86::ID_REG_DIL:
-            std::get<0>(ret) = "dil";
-            std::get<1>(ret) = BYTE_SIZE_BIT-1;
-            std::get<2>(ret) = 0;
-            std::get<3>(ret) = (triton::api.getArchitecture() == triton::arch::ARCH_X86_64) ? triton::arch::x86::ID_REG_RDI : triton::arch::x86::ID_REG_EDI;
+            ret.setName("dil");
+            ret.setHigh(BYTE_SIZE_BIT-1);
+            ret.setLow(0);
+            ret.setParentId((arch == triton::arch::ARCH_X86_64) ? triton::arch::x86::ID_REG_RDI : triton::arch::x86::ID_REG_EDI);
             break;
 
           case triton::arch::x86::ID_REG_RSI:
-            std::get<0>(ret) = "rsi";
-            std::get<1>(ret) = QWORD_SIZE_BIT-1;
-            std::get<2>(ret) = 0;
-            std::get<3>(ret) = triton::arch::x86::ID_REG_RSI;
+            ret.setName("rsi");
+            ret.setHigh(QWORD_SIZE_BIT-1);
+            ret.setLow(0);
+            ret.setParentId(triton::arch::x86::ID_REG_RSI);
             break;
 
           case triton::arch::x86::ID_REG_ESI:
-            std::get<0>(ret) = "esi";
-            std::get<1>(ret) = DWORD_SIZE_BIT-1;
-            std::get<2>(ret) = 0;
-            std::get<3>(ret) = (triton::api.getArchitecture() == triton::arch::ARCH_X86_64) ? triton::arch::x86::ID_REG_RSI : triton::arch::x86::ID_REG_ESI;
+            ret.setName("esi");
+            ret.setHigh(DWORD_SIZE_BIT-1);
+            ret.setLow(0);
+            ret.setParentId((arch == triton::arch::ARCH_X86_64) ? triton::arch::x86::ID_REG_RSI : triton::arch::x86::ID_REG_ESI);
             break;
 
           case triton::arch::x86::ID_REG_SI:
-            std::get<0>(ret) = "si";
-            std::get<1>(ret) = WORD_SIZE_BIT-1;
-            std::get<2>(ret) = 0;
-            std::get<3>(ret) = (triton::api.getArchitecture() == triton::arch::ARCH_X86_64) ? triton::arch::x86::ID_REG_RSI : triton::arch::x86::ID_REG_ESI;
+            ret.setName("si");
+            ret.setHigh(WORD_SIZE_BIT-1);
+            ret.setLow(0);
+            ret.setParentId((arch == triton::arch::ARCH_X86_64) ? triton::arch::x86::ID_REG_RSI : triton::arch::x86::ID_REG_ESI);
             break;
 
           case triton::arch::x86::ID_REG_SIL:
-            std::get<0>(ret) = "sil";
-            std::get<1>(ret) = BYTE_SIZE_BIT-1;
-            std::get<2>(ret) = 0;
-            std::get<3>(ret) = (triton::api.getArchitecture() == triton::arch::ARCH_X86_64) ? triton::arch::x86::ID_REG_RSI : triton::arch::x86::ID_REG_ESI;
+            ret.setName("sil");
+            ret.setHigh(BYTE_SIZE_BIT-1);
+            ret.setLow(0);
+            ret.setParentId((arch == triton::arch::ARCH_X86_64) ? triton::arch::x86::ID_REG_RSI : triton::arch::x86::ID_REG_ESI);
             break;
 
           case triton::arch::x86::ID_REG_RBP:
-            std::get<0>(ret) = "rbp";
-            std::get<1>(ret) = QWORD_SIZE_BIT-1;
-            std::get<2>(ret) = 0;
-            std::get<3>(ret) = triton::arch::x86::ID_REG_RBP;
+            ret.setName("rbp");
+            ret.setHigh(QWORD_SIZE_BIT-1);
+            ret.setLow(0);
+            ret.setParentId(triton::arch::x86::ID_REG_RBP);
             break;
 
           case triton::arch::x86::ID_REG_EBP:
-            std::get<0>(ret) = "ebp";
-            std::get<1>(ret) = DWORD_SIZE_BIT-1;
-            std::get<2>(ret) = 0;
-            std::get<3>(ret) = (triton::api.getArchitecture() == triton::arch::ARCH_X86_64) ? triton::arch::x86::ID_REG_RBP : triton::arch::x86::ID_REG_EBP;
+            ret.setName("ebp");
+            ret.setHigh(DWORD_SIZE_BIT-1);
+            ret.setLow(0);
+            ret.setParentId((arch == triton::arch::ARCH_X86_64) ? triton::arch::x86::ID_REG_RBP : triton::arch::x86::ID_REG_EBP);
             break;
 
           case triton::arch::x86::ID_REG_BP:
-            std::get<0>(ret) = "bp";
-            std::get<1>(ret) = WORD_SIZE_BIT-1;
-            std::get<2>(ret) = 0;
-            std::get<3>(ret) = (triton::api.getArchitecture() == triton::arch::ARCH_X86_64) ? triton::arch::x86::ID_REG_RBP : triton::arch::x86::ID_REG_EBP;
+            ret.setName("bp");
+            ret.setHigh(WORD_SIZE_BIT-1);
+            ret.setLow(0);
+            ret.setParentId((arch == triton::arch::ARCH_X86_64) ? triton::arch::x86::ID_REG_RBP : triton::arch::x86::ID_REG_EBP);
             break;
 
           case triton::arch::x86::ID_REG_BPL:
-            std::get<0>(ret) = "bpl";
-            std::get<1>(ret) = BYTE_SIZE_BIT-1;
-            std::get<2>(ret) = 0;
-            std::get<3>(ret) = (triton::api.getArchitecture() == triton::arch::ARCH_X86_64) ? triton::arch::x86::ID_REG_RBP : triton::arch::x86::ID_REG_EBP;
+            ret.setName("bpl");
+            ret.setHigh(BYTE_SIZE_BIT-1);
+            ret.setLow(0);
+            ret.setParentId((arch == triton::arch::ARCH_X86_64) ? triton::arch::x86::ID_REG_RBP : triton::arch::x86::ID_REG_EBP);
             break;
 
           case triton::arch::x86::ID_REG_RSP:
-            std::get<0>(ret) = "rsp";
-            std::get<1>(ret) = QWORD_SIZE_BIT-1;
-            std::get<2>(ret) = 0;
-            std::get<3>(ret) = triton::arch::x86::ID_REG_RSP;
+            ret.setName("rsp");
+            ret.setHigh(QWORD_SIZE_BIT-1);
+            ret.setLow(0);
+            ret.setParentId(triton::arch::x86::ID_REG_RSP);
             break;
 
           case triton::arch::x86::ID_REG_ESP:
-            std::get<0>(ret) = "esp";
-            std::get<1>(ret) = DWORD_SIZE_BIT-1;
-            std::get<2>(ret) = 0;
-            std::get<3>(ret) = (triton::api.getArchitecture() == triton::arch::ARCH_X86_64) ? triton::arch::x86::ID_REG_RSP : triton::arch::x86::ID_REG_ESP;
+            ret.setName("esp");
+            ret.setHigh(DWORD_SIZE_BIT-1);
+            ret.setLow(0);
+            ret.setParentId((arch == triton::arch::ARCH_X86_64) ? triton::arch::x86::ID_REG_RSP : triton::arch::x86::ID_REG_ESP);
             break;
 
           case triton::arch::x86::ID_REG_SP:
-            std::get<0>(ret) = "sp";
-            std::get<1>(ret) = WORD_SIZE_BIT-1;
-            std::get<2>(ret) = 0;
-            std::get<3>(ret) = (triton::api.getArchitecture() == triton::arch::ARCH_X86_64) ? triton::arch::x86::ID_REG_RSP : triton::arch::x86::ID_REG_ESP;
+            ret.setName("sp");
+            ret.setHigh(WORD_SIZE_BIT-1);
+            ret.setLow(0);
+            ret.setParentId((arch == triton::arch::ARCH_X86_64) ? triton::arch::x86::ID_REG_RSP : triton::arch::x86::ID_REG_ESP);
             break;
 
           case triton::arch::x86::ID_REG_SPL:
-            std::get<0>(ret) = "spl";
-            std::get<1>(ret) = BYTE_SIZE_BIT-1;
-            std::get<2>(ret) = 0;
-            std::get<3>(ret) = (triton::api.getArchitecture() == triton::arch::ARCH_X86_64) ? triton::arch::x86::ID_REG_RSP : triton::arch::x86::ID_REG_ESP;
+            ret.setName("spl");
+            ret.setHigh(BYTE_SIZE_BIT-1);
+            ret.setLow(0);
+            ret.setParentId((arch == triton::arch::ARCH_X86_64) ? triton::arch::x86::ID_REG_RSP : triton::arch::x86::ID_REG_ESP);
             break;
 
           case triton::arch::x86::ID_REG_RIP:
-            std::get<0>(ret) = "rip";
-            std::get<1>(ret) = QWORD_SIZE_BIT-1;
-            std::get<2>(ret) = 0;
-            std::get<3>(ret) = triton::arch::x86::ID_REG_RIP;
+            ret.setName("rip");
+            ret.setHigh(QWORD_SIZE_BIT-1);
+            ret.setLow(0);
+            ret.setParentId(triton::arch::x86::ID_REG_RIP);
             break;
 
           case triton::arch::x86::ID_REG_EIP:
-            std::get<0>(ret) = "eip";
-            std::get<1>(ret) = DWORD_SIZE_BIT-1;
-            std::get<2>(ret) = 0;
-            std::get<3>(ret) = (triton::api.getArchitecture() == triton::arch::ARCH_X86_64) ? triton::arch::x86::ID_REG_RIP : triton::arch::x86::ID_REG_EIP;
+            ret.setName("eip");
+            ret.setHigh(DWORD_SIZE_BIT-1);
+            ret.setLow(0);
+            ret.setParentId((arch == triton::arch::ARCH_X86_64) ? triton::arch::x86::ID_REG_RIP : triton::arch::x86::ID_REG_EIP);
             break;
 
           case triton::arch::x86::ID_REG_IP:
-            std::get<0>(ret) = "ip";
-            std::get<1>(ret) = WORD_SIZE_BIT-1;
-            std::get<2>(ret) = 0;
-            std::get<3>(ret) = (triton::api.getArchitecture() == triton::arch::ARCH_X86_64) ? triton::arch::x86::ID_REG_RIP : triton::arch::x86::ID_REG_EIP;
+            ret.setName("ip");
+            ret.setHigh(WORD_SIZE_BIT-1);
+            ret.setLow(0);
+            ret.setParentId((arch == triton::arch::ARCH_X86_64) ? triton::arch::x86::ID_REG_RIP : triton::arch::x86::ID_REG_EIP);
             break;
 
           case triton::arch::x86::ID_REG_EFLAGS:
-            std::get<0>(ret) = "eflags";
-            std::get<1>(ret) = (triton::api.getArchitecture() == triton::arch::ARCH_X86_64) ? QWORD_SIZE_BIT-1 : DWORD_SIZE_BIT-1;
-            std::get<2>(ret) = 0;
-            std::get<3>(ret) = triton::arch::x86::ID_REG_EFLAGS;
+            ret.setName("eflags");
+            ret.setHigh((arch == triton::arch::ARCH_X86_64) ? QWORD_SIZE_BIT-1 : DWORD_SIZE_BIT-1);
+            ret.setLow(0);
+            ret.setParentId(triton::arch::x86::ID_REG_EFLAGS);
             break;
 
           case triton::arch::x86::ID_REG_R8:
-            std::get<0>(ret) = "r8";
-            std::get<1>(ret) = QWORD_SIZE_BIT-1;
-            std::get<2>(ret) = 0;
-            std::get<3>(ret) = triton::arch::x86::ID_REG_R8;
+            ret.setName("r8");
+            ret.setHigh(QWORD_SIZE_BIT-1);
+            ret.setLow(0);
+            ret.setParentId(triton::arch::x86::ID_REG_R8);
             break;
 
           case triton::arch::x86::ID_REG_R8D:
-            std::get<0>(ret) = "r8d";
-            std::get<1>(ret) = DWORD_SIZE_BIT-1;
-            std::get<2>(ret) = 0;
-            std::get<3>(ret) = triton::arch::x86::ID_REG_R8;
+            ret.setName("r8d");
+            ret.setHigh(DWORD_SIZE_BIT-1);
+            ret.setLow(0);
+            ret.setParentId(triton::arch::x86::ID_REG_R8);
             break;
 
           case triton::arch::x86::ID_REG_R8W:
-            std::get<0>(ret) = "r8w";
-            std::get<1>(ret) = WORD_SIZE_BIT-1;
-            std::get<2>(ret) = 0;
-            std::get<3>(ret) = triton::arch::x86::ID_REG_R8;
+            ret.setName("r8w");
+            ret.setHigh(WORD_SIZE_BIT-1);
+            ret.setLow(0);
+            ret.setParentId(triton::arch::x86::ID_REG_R8);
             break;
 
           case triton::arch::x86::ID_REG_R8B:
-            std::get<0>(ret) = "r8b";
-            std::get<1>(ret) = BYTE_SIZE_BIT-1;
-            std::get<2>(ret) = 0;
-            std::get<3>(ret) = triton::arch::x86::ID_REG_R8;
+            ret.setName("r8b");
+            ret.setHigh(BYTE_SIZE_BIT-1);
+            ret.setLow(0);
+            ret.setParentId(triton::arch::x86::ID_REG_R8);
             break;
 
           case triton::arch::x86::ID_REG_R9:
-            std::get<0>(ret) = "r9";
-            std::get<1>(ret) = QWORD_SIZE_BIT-1;
-            std::get<2>(ret) = 0;
-            std::get<3>(ret) = triton::arch::x86::ID_REG_R9;
+            ret.setName("r9");
+            ret.setHigh(QWORD_SIZE_BIT-1);
+            ret.setLow(0);
+            ret.setParentId(triton::arch::x86::ID_REG_R9);
             break;
 
           case triton::arch::x86::ID_REG_R9D:
-            std::get<0>(ret) = "r9d";
-            std::get<1>(ret) = DWORD_SIZE_BIT-1;
-            std::get<2>(ret) = 0;
-            std::get<3>(ret) = triton::arch::x86::ID_REG_R9;
+            ret.setName("r9d");
+            ret.setHigh(DWORD_SIZE_BIT-1);
+            ret.setLow(0);
+            ret.setParentId(triton::arch::x86::ID_REG_R9);
             break;
 
           case triton::arch::x86::ID_REG_R9W:
-            std::get<0>(ret) = "r9w";
-            std::get<1>(ret) = WORD_SIZE_BIT-1;
-            std::get<2>(ret) = 0;
-            std::get<3>(ret) = triton::arch::x86::ID_REG_R9;
+            ret.setName("r9w");
+            ret.setHigh(WORD_SIZE_BIT-1);
+            ret.setLow(0);
+            ret.setParentId(triton::arch::x86::ID_REG_R9);
             break;
 
           case triton::arch::x86::ID_REG_R9B:
-            std::get<0>(ret) = "r9b";
-            std::get<1>(ret) = BYTE_SIZE_BIT-1;
-            std::get<2>(ret) = 0;
-            std::get<3>(ret) = triton::arch::x86::ID_REG_R9;
+            ret.setName("r9b");
+            ret.setHigh(BYTE_SIZE_BIT-1);
+            ret.setLow(0);
+            ret.setParentId(triton::arch::x86::ID_REG_R9);
             break;
 
           case triton::arch::x86::ID_REG_R10:
-            std::get<0>(ret) = "r10";
-            std::get<1>(ret) = QWORD_SIZE_BIT-1;
-            std::get<2>(ret) = 0;
-            std::get<3>(ret) = triton::arch::x86::ID_REG_R10;
+            ret.setName("r10");
+            ret.setHigh(QWORD_SIZE_BIT-1);
+            ret.setLow(0);
+            ret.setParentId(triton::arch::x86::ID_REG_R10);
             break;
 
           case triton::arch::x86::ID_REG_R10D:
-            std::get<0>(ret) = "r10d";
-            std::get<1>(ret) = DWORD_SIZE_BIT-1;
-            std::get<2>(ret) = 0;
-            std::get<3>(ret) = triton::arch::x86::ID_REG_R10;
+            ret.setName("r10d");
+            ret.setHigh(DWORD_SIZE_BIT-1);
+            ret.setLow(0);
+            ret.setParentId(triton::arch::x86::ID_REG_R10);
             break;
 
           case triton::arch::x86::ID_REG_R10W:
-            std::get<0>(ret) = "r10w";
-            std::get<1>(ret) = WORD_SIZE_BIT-1;
-            std::get<2>(ret) = 0;
-            std::get<3>(ret) = triton::arch::x86::ID_REG_R10;
+            ret.setName("r10w");
+            ret.setHigh(WORD_SIZE_BIT-1);
+            ret.setLow(0);
+            ret.setParentId(triton::arch::x86::ID_REG_R10);
             break;
 
           case triton::arch::x86::ID_REG_R10B:
-            std::get<0>(ret) = "r10b";
-            std::get<1>(ret) = BYTE_SIZE_BIT-1;
-            std::get<2>(ret) = 0;
-            std::get<3>(ret) = triton::arch::x86::ID_REG_R10;
+            ret.setName("r10b");
+            ret.setHigh(BYTE_SIZE_BIT-1);
+            ret.setLow(0);
+            ret.setParentId(triton::arch::x86::ID_REG_R10);
             break;
 
           case triton::arch::x86::ID_REG_R11:
-            std::get<0>(ret) = "r11";
-            std::get<1>(ret) = QWORD_SIZE_BIT-1;
-            std::get<2>(ret) = 0;
-            std::get<3>(ret) = triton::arch::x86::ID_REG_R11;
+            ret.setName("r11");
+            ret.setHigh(QWORD_SIZE_BIT-1);
+            ret.setLow(0);
+            ret.setParentId(triton::arch::x86::ID_REG_R11);
             break;
 
           case triton::arch::x86::ID_REG_R11D:
-            std::get<0>(ret) = "r11d";
-            std::get<1>(ret) = DWORD_SIZE_BIT-1;
-            std::get<2>(ret) = 0;
-            std::get<3>(ret) = triton::arch::x86::ID_REG_R11;
+            ret.setName("r11d");
+            ret.setHigh(DWORD_SIZE_BIT-1);
+            ret.setLow(0);
+            ret.setParentId(triton::arch::x86::ID_REG_R11);
             break;
 
           case triton::arch::x86::ID_REG_R11W:
-            std::get<0>(ret) = "r11w";
-            std::get<1>(ret) = WORD_SIZE_BIT-1;
-            std::get<2>(ret) = 0;
-            std::get<3>(ret) = triton::arch::x86::ID_REG_R11;
+            ret.setName("r11w");
+            ret.setHigh(WORD_SIZE_BIT-1);
+            ret.setLow(0);
+            ret.setParentId(triton::arch::x86::ID_REG_R11);
             break;
 
           case triton::arch::x86::ID_REG_R11B:
-            std::get<0>(ret) = "r11b";
-            std::get<1>(ret) = BYTE_SIZE_BIT-1;
-            std::get<2>(ret) = 0;
-            std::get<3>(ret) = triton::arch::x86::ID_REG_R11;
+            ret.setName("r11b");
+            ret.setHigh(BYTE_SIZE_BIT-1);
+            ret.setLow(0);
+            ret.setParentId(triton::arch::x86::ID_REG_R11);
             break;
 
           case triton::arch::x86::ID_REG_R12:
-            std::get<0>(ret) = "r12";
-            std::get<1>(ret) = QWORD_SIZE_BIT-1;
-            std::get<2>(ret) = 0;
-            std::get<3>(ret) = triton::arch::x86::ID_REG_R12;
+            ret.setName("r12");
+            ret.setHigh(QWORD_SIZE_BIT-1);
+            ret.setLow(0);
+            ret.setParentId(triton::arch::x86::ID_REG_R12);
             break;
 
           case triton::arch::x86::ID_REG_R12D:
-            std::get<0>(ret) = "r12d";
-            std::get<1>(ret) = DWORD_SIZE_BIT-1;
-            std::get<2>(ret) = 0;
-            std::get<3>(ret) = triton::arch::x86::ID_REG_R12;
+            ret.setName("r12d");
+            ret.setHigh(DWORD_SIZE_BIT-1);
+            ret.setLow(0);
+            ret.setParentId(triton::arch::x86::ID_REG_R12);
             break;
 
           case triton::arch::x86::ID_REG_R12W:
-            std::get<0>(ret) = "r12w";
-            std::get<1>(ret) = WORD_SIZE_BIT-1;
-            std::get<2>(ret) = 0;
-            std::get<3>(ret) = triton::arch::x86::ID_REG_R12;
+            ret.setName("r12w");
+            ret.setHigh(WORD_SIZE_BIT-1);
+            ret.setLow(0);
+            ret.setParentId(triton::arch::x86::ID_REG_R12);
             break;
 
           case triton::arch::x86::ID_REG_R12B:
-            std::get<0>(ret) = "r12b";
-            std::get<1>(ret) = BYTE_SIZE_BIT-1;
-            std::get<2>(ret) = 0;
-            std::get<3>(ret) = triton::arch::x86::ID_REG_R12;
+            ret.setName("r12b");
+            ret.setHigh(BYTE_SIZE_BIT-1);
+            ret.setLow(0);
+            ret.setParentId(triton::arch::x86::ID_REG_R12);
             break;
 
           case triton::arch::x86::ID_REG_R13:
-            std::get<0>(ret) = "r13";
-            std::get<1>(ret) = QWORD_SIZE_BIT-1;
-            std::get<2>(ret) = 0;
-            std::get<3>(ret) = triton::arch::x86::ID_REG_R13;
+            ret.setName("r13");
+            ret.setHigh(QWORD_SIZE_BIT-1);
+            ret.setLow(0);
+            ret.setParentId(triton::arch::x86::ID_REG_R13);
             break;
 
           case triton::arch::x86::ID_REG_R13D:
-            std::get<0>(ret) = "r13d";
-            std::get<1>(ret) = DWORD_SIZE_BIT-1;
-            std::get<2>(ret) = 0;
-            std::get<3>(ret) = triton::arch::x86::ID_REG_R13;
+            ret.setName("r13d");
+            ret.setHigh(DWORD_SIZE_BIT-1);
+            ret.setLow(0);
+            ret.setParentId(triton::arch::x86::ID_REG_R13);
             break;
 
           case triton::arch::x86::ID_REG_R13W:
-            std::get<0>(ret) = "r13w";
-            std::get<1>(ret) = WORD_SIZE_BIT-1;
-            std::get<2>(ret) = 0;
-            std::get<3>(ret) = triton::arch::x86::ID_REG_R13;
+            ret.setName("r13w");
+            ret.setHigh(WORD_SIZE_BIT-1);
+            ret.setLow(0);
+            ret.setParentId(triton::arch::x86::ID_REG_R13);
             break;
 
           case triton::arch::x86::ID_REG_R13B:
-            std::get<0>(ret) = "r13b";
-            std::get<1>(ret) = BYTE_SIZE_BIT-1;
-            std::get<2>(ret) = 0;
-            std::get<3>(ret) = triton::arch::x86::ID_REG_R13;
+            ret.setName("r13b");
+            ret.setHigh(BYTE_SIZE_BIT-1);
+            ret.setLow(0);
+            ret.setParentId(triton::arch::x86::ID_REG_R13);
             break;
 
           case triton::arch::x86::ID_REG_R14:
-            std::get<0>(ret) = "r14";
-            std::get<1>(ret) = QWORD_SIZE_BIT-1;
-            std::get<2>(ret) = 0;
-            std::get<3>(ret) = triton::arch::x86::ID_REG_R14;
+            ret.setName("r14");
+            ret.setHigh(QWORD_SIZE_BIT-1);
+            ret.setLow(0);
+            ret.setParentId(triton::arch::x86::ID_REG_R14);
             break;
 
           case triton::arch::x86::ID_REG_R14D:
-            std::get<0>(ret) = "r14d";
-            std::get<1>(ret) = DWORD_SIZE_BIT-1;
-            std::get<2>(ret) = 0;
-            std::get<3>(ret) = triton::arch::x86::ID_REG_R14;
+            ret.setName("r14d");
+            ret.setHigh(DWORD_SIZE_BIT-1);
+            ret.setLow(0);
+            ret.setParentId(triton::arch::x86::ID_REG_R14);
             break;
 
           case triton::arch::x86::ID_REG_R14W:
-            std::get<0>(ret) = "r14w";
-            std::get<1>(ret) = WORD_SIZE_BIT-1;
-            std::get<2>(ret) = 0;
-            std::get<3>(ret) = triton::arch::x86::ID_REG_R14;
+            ret.setName("r14w");
+            ret.setHigh(WORD_SIZE_BIT-1);
+            ret.setLow(0);
+            ret.setParentId(triton::arch::x86::ID_REG_R14);
             break;
 
           case triton::arch::x86::ID_REG_R14B:
-            std::get<0>(ret) = "r14b";
-            std::get<1>(ret) = BYTE_SIZE_BIT-1;
-            std::get<2>(ret) = 0;
-            std::get<3>(ret) = triton::arch::x86::ID_REG_R14;
+            ret.setName("r14b");
+            ret.setHigh(BYTE_SIZE_BIT-1);
+            ret.setLow(0);
+            ret.setParentId(triton::arch::x86::ID_REG_R14);
             break;
 
           case triton::arch::x86::ID_REG_R15:
-            std::get<0>(ret) = "r15";
-            std::get<1>(ret) = QWORD_SIZE_BIT-1;
-            std::get<2>(ret) = 0;
-            std::get<3>(ret) = triton::arch::x86::ID_REG_R15;
+            ret.setName("r15");
+            ret.setHigh(QWORD_SIZE_BIT-1);
+            ret.setLow(0);
+            ret.setParentId(triton::arch::x86::ID_REG_R15);
             break;
 
           case triton::arch::x86::ID_REG_R15D:
-            std::get<0>(ret) = "r15d";
-            std::get<1>(ret) = DWORD_SIZE_BIT-1;
-            std::get<2>(ret) = 0;
-            std::get<3>(ret) = triton::arch::x86::ID_REG_R15;
+            ret.setName("r15d");
+            ret.setHigh(DWORD_SIZE_BIT-1);
+            ret.setLow(0);
+            ret.setParentId(triton::arch::x86::ID_REG_R15);
             break;
 
           case triton::arch::x86::ID_REG_R15W:
-            std::get<0>(ret) = "r15w";
-            std::get<1>(ret) = WORD_SIZE_BIT-1;
-            std::get<2>(ret) = 0;
-            std::get<3>(ret) = triton::arch::x86::ID_REG_R15;
+            ret.setName("r15w");
+            ret.setHigh(WORD_SIZE_BIT-1);
+            ret.setLow(0);
+            ret.setParentId(triton::arch::x86::ID_REG_R15);
             break;
 
           case triton::arch::x86::ID_REG_R15B:
-            std::get<0>(ret) = "r15b";
-            std::get<1>(ret) = BYTE_SIZE_BIT-1;
-            std::get<2>(ret) = 0;
-            std::get<3>(ret) = triton::arch::x86::ID_REG_R15;
+            ret.setName("r15b");
+            ret.setHigh(BYTE_SIZE_BIT-1);
+            ret.setLow(0);
+            ret.setParentId(triton::arch::x86::ID_REG_R15);
             break;
 
           case triton::arch::x86::ID_REG_MM0:
-            std::get<0>(ret) = "mm0";
-            std::get<1>(ret) = QWORD_SIZE_BIT-1;
-            std::get<2>(ret) = 0;
-            std::get<3>(ret) = triton::arch::x86::ID_REG_MM0;
+            ret.setName("mm0");
+            ret.setHigh(QWORD_SIZE_BIT-1);
+            ret.setLow(0);
+            ret.setParentId(triton::arch::x86::ID_REG_MM0);
             break;
 
           case triton::arch::x86::ID_REG_MM1:
-            std::get<0>(ret) = "mm1";
-            std::get<1>(ret) = QWORD_SIZE_BIT-1;
-            std::get<2>(ret) = 0;
-            std::get<3>(ret) = triton::arch::x86::ID_REG_MM1;
+            ret.setName("mm1");
+            ret.setHigh(QWORD_SIZE_BIT-1);
+            ret.setLow(0);
+            ret.setParentId(triton::arch::x86::ID_REG_MM1);
             break;
 
           case triton::arch::x86::ID_REG_MM2:
-            std::get<0>(ret) = "mm2";
-            std::get<1>(ret) = QWORD_SIZE_BIT-1;
-            std::get<2>(ret) = 0;
-            std::get<3>(ret) = triton::arch::x86::ID_REG_MM2;
+            ret.setName("mm2");
+            ret.setHigh(QWORD_SIZE_BIT-1);
+            ret.setLow(0);
+            ret.setParentId(triton::arch::x86::ID_REG_MM2);
             break;
 
           case triton::arch::x86::ID_REG_MM3:
-            std::get<0>(ret) = "mm3";
-            std::get<1>(ret) = QWORD_SIZE_BIT-1;
-            std::get<2>(ret) = 0;
-            std::get<3>(ret) = triton::arch::x86::ID_REG_MM3;
+            ret.setName("mm3");
+            ret.setHigh(QWORD_SIZE_BIT-1);
+            ret.setLow(0);
+            ret.setParentId(triton::arch::x86::ID_REG_MM3);
             break;
 
           case triton::arch::x86::ID_REG_MM4:
-            std::get<0>(ret) = "mm4";
-            std::get<1>(ret) = QWORD_SIZE_BIT-1;
-            std::get<2>(ret) = 0;
-            std::get<3>(ret) = triton::arch::x86::ID_REG_MM4;
+            ret.setName("mm4");
+            ret.setHigh(QWORD_SIZE_BIT-1);
+            ret.setLow(0);
+            ret.setParentId(triton::arch::x86::ID_REG_MM4);
             break;
 
           case triton::arch::x86::ID_REG_MM5:
-            std::get<0>(ret) = "mm5";
-            std::get<1>(ret) = QWORD_SIZE_BIT-1;
-            std::get<2>(ret) = 0;
-            std::get<3>(ret) = triton::arch::x86::ID_REG_MM5;
+            ret.setName("mm5");
+            ret.setHigh(QWORD_SIZE_BIT-1);
+            ret.setLow(0);
+            ret.setParentId(triton::arch::x86::ID_REG_MM5);
             break;
 
           case triton::arch::x86::ID_REG_MM6:
-            std::get<0>(ret) = "mm6";
-            std::get<1>(ret) = QWORD_SIZE_BIT-1;
-            std::get<2>(ret) = 0;
-            std::get<3>(ret) = triton::arch::x86::ID_REG_MM6;
+            ret.setName("mm6");
+            ret.setHigh(QWORD_SIZE_BIT-1);
+            ret.setLow(0);
+            ret.setParentId(triton::arch::x86::ID_REG_MM6);
             break;
 
           case triton::arch::x86::ID_REG_MM7:
-            std::get<0>(ret) = "mm7";
-            std::get<1>(ret) = QWORD_SIZE_BIT-1;
-            std::get<2>(ret) = 0;
-            std::get<3>(ret) = triton::arch::x86::ID_REG_MM7;
+            ret.setName("mm7");
+            ret.setHigh(QWORD_SIZE_BIT-1);
+            ret.setLow(0);
+            ret.setParentId(triton::arch::x86::ID_REG_MM7);
             break;
 
           case triton::arch::x86::ID_REG_XMM0:
-            std::get<0>(ret) = "xmm0";
-            std::get<1>(ret) = DQWORD_SIZE_BIT-1;
-            std::get<2>(ret) = 0;
-            std::get<3>(ret) = triton::arch::x86::ID_REG_XMM0;
+            ret.setName("xmm0");
+            ret.setHigh(DQWORD_SIZE_BIT-1);
+            ret.setLow(0);
+            ret.setParentId(triton::arch::x86::ID_REG_XMM0);
             break;
 
           case triton::arch::x86::ID_REG_XMM1:
-            std::get<0>(ret) = "xmm1";
-            std::get<1>(ret) = DQWORD_SIZE_BIT-1;
-            std::get<2>(ret) = 0;
-            std::get<3>(ret) = triton::arch::x86::ID_REG_XMM1;
+            ret.setName("xmm1");
+            ret.setHigh(DQWORD_SIZE_BIT-1);
+            ret.setLow(0);
+            ret.setParentId(triton::arch::x86::ID_REG_XMM1);
             break;
 
           case triton::arch::x86::ID_REG_XMM2:
-            std::get<0>(ret) = "xmm2";
-            std::get<1>(ret) = DQWORD_SIZE_BIT-1;
-            std::get<2>(ret) = 0;
-            std::get<3>(ret) = triton::arch::x86::ID_REG_XMM2;
+            ret.setName("xmm2");
+            ret.setHigh(DQWORD_SIZE_BIT-1);
+            ret.setLow(0);
+            ret.setParentId(triton::arch::x86::ID_REG_XMM2);
             break;
 
           case triton::arch::x86::ID_REG_XMM3:
-            std::get<0>(ret) = "xmm3";
-            std::get<1>(ret) = DQWORD_SIZE_BIT-1;
-            std::get<2>(ret) = 0;
-            std::get<3>(ret) = triton::arch::x86::ID_REG_XMM3;
+            ret.setName("xmm3");
+            ret.setHigh(DQWORD_SIZE_BIT-1);
+            ret.setLow(0);
+            ret.setParentId(triton::arch::x86::ID_REG_XMM3);
             break;
 
           case triton::arch::x86::ID_REG_XMM4:
-            std::get<0>(ret) = "xmm4";
-            std::get<1>(ret) = DQWORD_SIZE_BIT-1;
-            std::get<2>(ret) = 0;
-            std::get<3>(ret) = triton::arch::x86::ID_REG_XMM4;
+            ret.setName("xmm4");
+            ret.setHigh(DQWORD_SIZE_BIT-1);
+            ret.setLow(0);
+            ret.setParentId(triton::arch::x86::ID_REG_XMM4);
             break;
 
           case triton::arch::x86::ID_REG_XMM5:
-            std::get<0>(ret) = "xmm5";
-            std::get<1>(ret) = DQWORD_SIZE_BIT-1;
-            std::get<2>(ret) = 0;
-            std::get<3>(ret) = triton::arch::x86::ID_REG_XMM5;
+            ret.setName("xmm5");
+            ret.setHigh(DQWORD_SIZE_BIT-1);
+            ret.setLow(0);
+            ret.setParentId(triton::arch::x86::ID_REG_XMM5);
             break;
 
           case triton::arch::x86::ID_REG_XMM6:
-            std::get<0>(ret) = "xmm6";
-            std::get<1>(ret) = DQWORD_SIZE_BIT-1;
-            std::get<2>(ret) = 0;
-            std::get<3>(ret) = triton::arch::x86::ID_REG_XMM6;
+            ret.setName("xmm6");
+            ret.setHigh(DQWORD_SIZE_BIT-1);
+            ret.setLow(0);
+            ret.setParentId(triton::arch::x86::ID_REG_XMM6);
             break;
 
           case triton::arch::x86::ID_REG_XMM7:
-            std::get<0>(ret) = "xmm7";
-            std::get<1>(ret) = DQWORD_SIZE_BIT-1;
-            std::get<2>(ret) = 0;
-            std::get<3>(ret) = triton::arch::x86::ID_REG_XMM7;
+            ret.setName("xmm7");
+            ret.setHigh(DQWORD_SIZE_BIT-1);
+            ret.setLow(0);
+            ret.setParentId(triton::arch::x86::ID_REG_XMM7);
             break;
 
           case triton::arch::x86::ID_REG_XMM8:
-            std::get<0>(ret) = "xmm8";
-            std::get<1>(ret) = DQWORD_SIZE_BIT-1;
-            std::get<2>(ret) = 0;
-            std::get<3>(ret) = triton::arch::x86::ID_REG_XMM8;
+            ret.setName("xmm8");
+            ret.setHigh(DQWORD_SIZE_BIT-1);
+            ret.setLow(0);
+            ret.setParentId(triton::arch::x86::ID_REG_XMM8);
             break;
 
           case triton::arch::x86::ID_REG_XMM9:
-            std::get<0>(ret) = "xmm9";
-            std::get<1>(ret) = DQWORD_SIZE_BIT-1;
-            std::get<2>(ret) = 0;
-            std::get<3>(ret) = triton::arch::x86::ID_REG_XMM9;
+            ret.setName("xmm9");
+            ret.setHigh(DQWORD_SIZE_BIT-1);
+            ret.setLow(0);
+            ret.setParentId(triton::arch::x86::ID_REG_XMM9);
             break;
 
           case triton::arch::x86::ID_REG_XMM10:
-            std::get<0>(ret) = "xmm10";
-            std::get<1>(ret) = DQWORD_SIZE_BIT-1;
-            std::get<2>(ret) = 0;
-            std::get<3>(ret) = triton::arch::x86::ID_REG_XMM10;
+            ret.setName("xmm10");
+            ret.setHigh(DQWORD_SIZE_BIT-1);
+            ret.setLow(0);
+            ret.setParentId(triton::arch::x86::ID_REG_XMM10);
             break;
 
           case triton::arch::x86::ID_REG_XMM11:
-            std::get<0>(ret) = "xmm11";
-            std::get<1>(ret) = DQWORD_SIZE_BIT-1;
-            std::get<2>(ret) = 0;
-            std::get<3>(ret) = triton::arch::x86::ID_REG_XMM11;
+            ret.setName("xmm11");
+            ret.setHigh(DQWORD_SIZE_BIT-1);
+            ret.setLow(0);
+            ret.setParentId(triton::arch::x86::ID_REG_XMM11);
             break;
 
           case triton::arch::x86::ID_REG_XMM12:
-            std::get<0>(ret) = "xmm12";
-            std::get<1>(ret) = DQWORD_SIZE_BIT-1;
-            std::get<2>(ret) = 0;
-            std::get<3>(ret) = triton::arch::x86::ID_REG_XMM12;
+            ret.setName("xmm12");
+            ret.setHigh(DQWORD_SIZE_BIT-1);
+            ret.setLow(0);
+            ret.setParentId(triton::arch::x86::ID_REG_XMM12);
             break;
 
           case triton::arch::x86::ID_REG_XMM13:
-            std::get<0>(ret) = "xmm13";
-            std::get<1>(ret) = DQWORD_SIZE_BIT-1;
-            std::get<2>(ret) = 0;
-            std::get<3>(ret) = triton::arch::x86::ID_REG_XMM13;
+            ret.setName("xmm13");
+            ret.setHigh(DQWORD_SIZE_BIT-1);
+            ret.setLow(0);
+            ret.setParentId(triton::arch::x86::ID_REG_XMM13);
             break;
 
           case triton::arch::x86::ID_REG_XMM14:
-            std::get<0>(ret) = "xmm14";
-            std::get<1>(ret) = DQWORD_SIZE_BIT-1;
-            std::get<2>(ret) = 0;
-            std::get<3>(ret) = triton::arch::x86::ID_REG_XMM14;
+            ret.setName("xmm14");
+            ret.setHigh(DQWORD_SIZE_BIT-1);
+            ret.setLow(0);
+            ret.setParentId(triton::arch::x86::ID_REG_XMM14);
             break;
 
           case triton::arch::x86::ID_REG_XMM15:
-            std::get<0>(ret) = "xmm15";
-            std::get<1>(ret) = DQWORD_SIZE_BIT-1;
-            std::get<2>(ret) = 0;
-            std::get<3>(ret) = triton::arch::x86::ID_REG_XMM15;
+            ret.setName("xmm15");
+            ret.setHigh(DQWORD_SIZE_BIT-1);
+            ret.setLow(0);
+            ret.setParentId(triton::arch::x86::ID_REG_XMM15);
             break;
 
           case triton::arch::x86::ID_REG_YMM0:
-            std::get<0>(ret) = "ymm0";
-            std::get<1>(ret) = QQWORD_SIZE_BIT-1;
-            std::get<2>(ret) = 0;
-            std::get<3>(ret) = triton::arch::x86::ID_REG_YMM0;
+            ret.setName("ymm0");
+            ret.setHigh(QQWORD_SIZE_BIT-1);
+            ret.setLow(0);
+            ret.setParentId(triton::arch::x86::ID_REG_YMM0);
             break;
 
           case triton::arch::x86::ID_REG_YMM1:
-            std::get<0>(ret) = "ymm1";
-            std::get<1>(ret) = QQWORD_SIZE_BIT-1;
-            std::get<2>(ret) = 0;
-            std::get<3>(ret) = triton::arch::x86::ID_REG_YMM1;
+            ret.setName("ymm1");
+            ret.setHigh(QQWORD_SIZE_BIT-1);
+            ret.setLow(0);
+            ret.setParentId(triton::arch::x86::ID_REG_YMM1);
             break;
 
           case triton::arch::x86::ID_REG_YMM2:
-            std::get<0>(ret) = "ymm2";
-            std::get<1>(ret) = QQWORD_SIZE_BIT-1;
-            std::get<2>(ret) = 0;
-            std::get<3>(ret) = triton::arch::x86::ID_REG_YMM2;
+            ret.setName("ymm2");
+            ret.setHigh(QQWORD_SIZE_BIT-1);
+            ret.setLow(0);
+            ret.setParentId(triton::arch::x86::ID_REG_YMM2);
             break;
 
           case triton::arch::x86::ID_REG_YMM3:
-            std::get<0>(ret) = "ymm3";
-            std::get<1>(ret) = QQWORD_SIZE_BIT-1;
-            std::get<2>(ret) = 0;
-            std::get<3>(ret) = triton::arch::x86::ID_REG_YMM3;
+            ret.setName("ymm3");
+            ret.setHigh(QQWORD_SIZE_BIT-1);
+            ret.setLow(0);
+            ret.setParentId(triton::arch::x86::ID_REG_YMM3);
             break;
 
           case triton::arch::x86::ID_REG_YMM4:
-            std::get<0>(ret) = "ymm4";
-            std::get<1>(ret) = QQWORD_SIZE_BIT-1;
-            std::get<2>(ret) = 0;
-            std::get<3>(ret) = triton::arch::x86::ID_REG_YMM4;
+            ret.setName("ymm4");
+            ret.setHigh(QQWORD_SIZE_BIT-1);
+            ret.setLow(0);
+            ret.setParentId(triton::arch::x86::ID_REG_YMM4);
             break;
 
           case triton::arch::x86::ID_REG_YMM5:
-            std::get<0>(ret) = "ymm5";
-            std::get<1>(ret) = QQWORD_SIZE_BIT-1;
-            std::get<2>(ret) = 0;
-            std::get<3>(ret) = triton::arch::x86::ID_REG_YMM5;
+            ret.setName("ymm5");
+            ret.setHigh(QQWORD_SIZE_BIT-1);
+            ret.setLow(0);
+            ret.setParentId(triton::arch::x86::ID_REG_YMM5);
             break;
 
           case triton::arch::x86::ID_REG_YMM6:
-            std::get<0>(ret) = "ymm6";
-            std::get<1>(ret) = QQWORD_SIZE_BIT-1;
-            std::get<2>(ret) = 0;
-            std::get<3>(ret) = triton::arch::x86::ID_REG_YMM6;
+            ret.setName("ymm6");
+            ret.setHigh(QQWORD_SIZE_BIT-1);
+            ret.setLow(0);
+            ret.setParentId(triton::arch::x86::ID_REG_YMM6);
             break;
 
           case triton::arch::x86::ID_REG_YMM7:
-            std::get<0>(ret) = "ymm7";
-            std::get<1>(ret) = QQWORD_SIZE_BIT-1;
-            std::get<2>(ret) = 0;
-            std::get<3>(ret) = triton::arch::x86::ID_REG_YMM7;
+            ret.setName("ymm7");
+            ret.setHigh(QQWORD_SIZE_BIT-1);
+            ret.setLow(0);
+            ret.setParentId(triton::arch::x86::ID_REG_YMM7);
             break;
 
           case triton::arch::x86::ID_REG_YMM8:
-            std::get<0>(ret) = "ymm8";
-            std::get<1>(ret) = QQWORD_SIZE_BIT-1;
-            std::get<2>(ret) = 0;
-            std::get<3>(ret) = triton::arch::x86::ID_REG_YMM8;
+            ret.setName("ymm8");
+            ret.setHigh(QQWORD_SIZE_BIT-1);
+            ret.setLow(0);
+            ret.setParentId(triton::arch::x86::ID_REG_YMM8);
             break;
 
           case triton::arch::x86::ID_REG_YMM9:
-            std::get<0>(ret) = "ymm9";
-            std::get<1>(ret) = QQWORD_SIZE_BIT-1;
-            std::get<2>(ret) = 0;
-            std::get<3>(ret) = triton::arch::x86::ID_REG_YMM9;
+            ret.setName("ymm9");
+            ret.setHigh(QQWORD_SIZE_BIT-1);
+            ret.setLow(0);
+            ret.setParentId(triton::arch::x86::ID_REG_YMM9);
             break;
 
           case triton::arch::x86::ID_REG_YMM10:
-            std::get<0>(ret) = "ymm10";
-            std::get<1>(ret) = QQWORD_SIZE_BIT-1;
-            std::get<2>(ret) = 0;
-            std::get<3>(ret) = triton::arch::x86::ID_REG_YMM10;
+            ret.setName("ymm10");
+            ret.setHigh(QQWORD_SIZE_BIT-1);
+            ret.setLow(0);
+            ret.setParentId(triton::arch::x86::ID_REG_YMM10);
             break;
 
           case triton::arch::x86::ID_REG_YMM11:
-            std::get<0>(ret) = "ymm11";
-            std::get<1>(ret) = QQWORD_SIZE_BIT-1;
-            std::get<2>(ret) = 0;
-            std::get<3>(ret) = triton::arch::x86::ID_REG_YMM11;
+            ret.setName("ymm11");
+            ret.setHigh(QQWORD_SIZE_BIT-1);
+            ret.setLow(0);
+            ret.setParentId(triton::arch::x86::ID_REG_YMM11);
             break;
 
           case triton::arch::x86::ID_REG_YMM12:
-            std::get<0>(ret) = "ymm12";
-            std::get<1>(ret) = QQWORD_SIZE_BIT-1;
-            std::get<2>(ret) = 0;
-            std::get<3>(ret) = triton::arch::x86::ID_REG_YMM12;
+            ret.setName("ymm12");
+            ret.setHigh(QQWORD_SIZE_BIT-1);
+            ret.setLow(0);
+            ret.setParentId(triton::arch::x86::ID_REG_YMM12);
             break;
 
           case triton::arch::x86::ID_REG_YMM13:
-            std::get<0>(ret) = "ymm13";
-            std::get<1>(ret) = QQWORD_SIZE_BIT-1;
-            std::get<2>(ret) = 0;
-            std::get<3>(ret) = triton::arch::x86::ID_REG_YMM13;
+            ret.setName("ymm13");
+            ret.setHigh(QQWORD_SIZE_BIT-1);
+            ret.setLow(0);
+            ret.setParentId(triton::arch::x86::ID_REG_YMM13);
             break;
 
           case triton::arch::x86::ID_REG_YMM14:
-            std::get<0>(ret) = "ymm14";
-            std::get<1>(ret) = QQWORD_SIZE_BIT-1;
-            std::get<2>(ret) = 0;
-            std::get<3>(ret) = triton::arch::x86::ID_REG_YMM14;
+            ret.setName("ymm14");
+            ret.setHigh(QQWORD_SIZE_BIT-1);
+            ret.setLow(0);
+            ret.setParentId(triton::arch::x86::ID_REG_YMM14);
             break;
 
           case triton::arch::x86::ID_REG_YMM15:
-            std::get<0>(ret) = "ymm15";
-            std::get<1>(ret) = QQWORD_SIZE_BIT-1;
-            std::get<2>(ret) = 0;
-            std::get<3>(ret) = triton::arch::x86::ID_REG_YMM15;
+            ret.setName("ymm15");
+            ret.setHigh(QQWORD_SIZE_BIT-1);
+            ret.setLow(0);
+            ret.setParentId(triton::arch::x86::ID_REG_YMM15);
             break;
 
           case triton::arch::x86::ID_REG_ZMM0:
-            std::get<0>(ret) = "zmm0";
-            std::get<1>(ret) = DQQWORD_SIZE_BIT-1;
-            std::get<2>(ret) = 0;
-            std::get<3>(ret) = triton::arch::x86::ID_REG_ZMM0;
+            ret.setName("zmm0");
+            ret.setHigh(DQQWORD_SIZE_BIT-1);
+            ret.setLow(0);
+            ret.setParentId(triton::arch::x86::ID_REG_ZMM0);
             break;
 
           case triton::arch::x86::ID_REG_ZMM1:
-            std::get<0>(ret) = "zmm1";
-            std::get<1>(ret) = DQQWORD_SIZE_BIT-1;
-            std::get<2>(ret) = 0;
-            std::get<3>(ret) = triton::arch::x86::ID_REG_ZMM1;
+            ret.setName("zmm1");
+            ret.setHigh(DQQWORD_SIZE_BIT-1);
+            ret.setLow(0);
+            ret.setParentId(triton::arch::x86::ID_REG_ZMM1);
             break;
 
           case triton::arch::x86::ID_REG_ZMM2:
-            std::get<0>(ret) = "zmm2";
-            std::get<1>(ret) = DQQWORD_SIZE_BIT-1;
-            std::get<2>(ret) = 0;
-            std::get<3>(ret) = triton::arch::x86::ID_REG_ZMM2;
+            ret.setName("zmm2");
+            ret.setHigh(DQQWORD_SIZE_BIT-1);
+            ret.setLow(0);
+            ret.setParentId(triton::arch::x86::ID_REG_ZMM2);
             break;
 
           case triton::arch::x86::ID_REG_ZMM3:
-            std::get<0>(ret) = "zmm3";
-            std::get<1>(ret) = DQQWORD_SIZE_BIT-1;
-            std::get<2>(ret) = 0;
-            std::get<3>(ret) = triton::arch::x86::ID_REG_ZMM3;
+            ret.setName("zmm3");
+            ret.setHigh(DQQWORD_SIZE_BIT-1);
+            ret.setLow(0);
+            ret.setParentId(triton::arch::x86::ID_REG_ZMM3);
             break;
 
           case triton::arch::x86::ID_REG_ZMM4:
-            std::get<0>(ret) = "zmm4";
-            std::get<1>(ret) = DQQWORD_SIZE_BIT-1;
-            std::get<2>(ret) = 0;
-            std::get<3>(ret) = triton::arch::x86::ID_REG_ZMM4;
+            ret.setName("zmm4");
+            ret.setHigh(DQQWORD_SIZE_BIT-1);
+            ret.setLow(0);
+            ret.setParentId(triton::arch::x86::ID_REG_ZMM4);
             break;
 
           case triton::arch::x86::ID_REG_ZMM5:
-            std::get<0>(ret) = "zmm5";
-            std::get<1>(ret) = DQQWORD_SIZE_BIT-1;
-            std::get<2>(ret) = 0;
-            std::get<3>(ret) = triton::arch::x86::ID_REG_ZMM5;
+            ret.setName("zmm5");
+            ret.setHigh(DQQWORD_SIZE_BIT-1);
+            ret.setLow(0);
+            ret.setParentId(triton::arch::x86::ID_REG_ZMM5);
             break;
 
           case triton::arch::x86::ID_REG_ZMM6:
-            std::get<0>(ret) = "zmm6";
-            std::get<1>(ret) = DQQWORD_SIZE_BIT-1;
-            std::get<2>(ret) = 0;
-            std::get<3>(ret) = triton::arch::x86::ID_REG_ZMM6;
+            ret.setName("zmm6");
+            ret.setHigh(DQQWORD_SIZE_BIT-1);
+            ret.setLow(0);
+            ret.setParentId(triton::arch::x86::ID_REG_ZMM6);
             break;
 
           case triton::arch::x86::ID_REG_ZMM7:
-            std::get<0>(ret) = "zmm7";
-            std::get<1>(ret) = DQQWORD_SIZE_BIT-1;
-            std::get<2>(ret) = 0;
-            std::get<3>(ret) = triton::arch::x86::ID_REG_ZMM7;
+            ret.setName("zmm7");
+            ret.setHigh(DQQWORD_SIZE_BIT-1);
+            ret.setLow(0);
+            ret.setParentId(triton::arch::x86::ID_REG_ZMM7);
             break;
 
           case triton::arch::x86::ID_REG_ZMM8:
-            std::get<0>(ret) = "zmm8";
-            std::get<1>(ret) = DQQWORD_SIZE_BIT-1;
-            std::get<2>(ret) = 0;
-            std::get<3>(ret) = triton::arch::x86::ID_REG_ZMM8;
+            ret.setName("zmm8");
+            ret.setHigh(DQQWORD_SIZE_BIT-1);
+            ret.setLow(0);
+            ret.setParentId(triton::arch::x86::ID_REG_ZMM8);
             break;
 
           case triton::arch::x86::ID_REG_ZMM9:
-            std::get<0>(ret) = "zmm9";
-            std::get<1>(ret) = DQQWORD_SIZE_BIT-1;
-            std::get<2>(ret) = 0;
-            std::get<3>(ret) = triton::arch::x86::ID_REG_ZMM9;
+            ret.setName("zmm9");
+            ret.setHigh(DQQWORD_SIZE_BIT-1);
+            ret.setLow(0);
+            ret.setParentId(triton::arch::x86::ID_REG_ZMM9);
             break;
 
           case triton::arch::x86::ID_REG_ZMM10:
-            std::get<0>(ret) = "zmm10";
-            std::get<1>(ret) = DQQWORD_SIZE_BIT-1;
-            std::get<2>(ret) = 0;
-            std::get<3>(ret) = triton::arch::x86::ID_REG_ZMM10;
+            ret.setName("zmm10");
+            ret.setHigh(DQQWORD_SIZE_BIT-1);
+            ret.setLow(0);
+            ret.setParentId(triton::arch::x86::ID_REG_ZMM10);
             break;
 
           case triton::arch::x86::ID_REG_ZMM11:
-            std::get<0>(ret) = "zmm11";
-            std::get<1>(ret) = DQQWORD_SIZE_BIT-1;
-            std::get<2>(ret) = 0;
-            std::get<3>(ret) = triton::arch::x86::ID_REG_ZMM11;
+            ret.setName("zmm11");
+            ret.setHigh(DQQWORD_SIZE_BIT-1);
+            ret.setLow(0);
+            ret.setParentId(triton::arch::x86::ID_REG_ZMM11);
             break;
 
           case triton::arch::x86::ID_REG_ZMM12:
-            std::get<0>(ret) = "zmm12";
-            std::get<1>(ret) = DQQWORD_SIZE_BIT-1;
-            std::get<2>(ret) = 0;
-            std::get<3>(ret) = triton::arch::x86::ID_REG_ZMM12;
+            ret.setName("zmm12");
+            ret.setHigh(DQQWORD_SIZE_BIT-1);
+            ret.setLow(0);
+            ret.setParentId(triton::arch::x86::ID_REG_ZMM12);
             break;
 
           case triton::arch::x86::ID_REG_ZMM13:
-            std::get<0>(ret) = "zmm13";
-            std::get<1>(ret) = DQQWORD_SIZE_BIT-1;
-            std::get<2>(ret) = 0;
-            std::get<3>(ret) = triton::arch::x86::ID_REG_ZMM13;
+            ret.setName("zmm13");
+            ret.setHigh(DQQWORD_SIZE_BIT-1);
+            ret.setLow(0);
+            ret.setParentId(triton::arch::x86::ID_REG_ZMM13);
             break;
 
           case triton::arch::x86::ID_REG_ZMM14:
-            std::get<0>(ret) = "zmm14";
-            std::get<1>(ret) = DQQWORD_SIZE_BIT-1;
-            std::get<2>(ret) = 0;
-            std::get<3>(ret) = triton::arch::x86::ID_REG_ZMM14;
+            ret.setName("zmm14");
+            ret.setHigh(DQQWORD_SIZE_BIT-1);
+            ret.setLow(0);
+            ret.setParentId(triton::arch::x86::ID_REG_ZMM14);
             break;
 
           case triton::arch::x86::ID_REG_ZMM15:
-            std::get<0>(ret) = "zmm15";
-            std::get<1>(ret) = DQQWORD_SIZE_BIT-1;
-            std::get<2>(ret) = 0;
-            std::get<3>(ret) = triton::arch::x86::ID_REG_ZMM15;
+            ret.setName("zmm15");
+            ret.setHigh(DQQWORD_SIZE_BIT-1);
+            ret.setLow(0);
+            ret.setParentId(triton::arch::x86::ID_REG_ZMM15);
             break;
 
           case triton::arch::x86::ID_REG_ZMM16:
-            std::get<0>(ret) = "zmm16";
-            std::get<1>(ret) = DQQWORD_SIZE_BIT-1;
-            std::get<2>(ret) = 0;
-            std::get<3>(ret) = triton::arch::x86::ID_REG_ZMM16;
+            ret.setName("zmm16");
+            ret.setHigh(DQQWORD_SIZE_BIT-1);
+            ret.setLow(0);
+            ret.setParentId(triton::arch::x86::ID_REG_ZMM16);
             break;
 
           case triton::arch::x86::ID_REG_ZMM17:
-            std::get<0>(ret) = "zmm17";
-            std::get<1>(ret) = DQQWORD_SIZE_BIT-1;
-            std::get<2>(ret) = 0;
-            std::get<3>(ret) = triton::arch::x86::ID_REG_ZMM17;
+            ret.setName("zmm17");
+            ret.setHigh(DQQWORD_SIZE_BIT-1);
+            ret.setLow(0);
+            ret.setParentId(triton::arch::x86::ID_REG_ZMM17);
             break;
 
           case triton::arch::x86::ID_REG_ZMM18:
-            std::get<0>(ret) = "zmm18";
-            std::get<1>(ret) = DQQWORD_SIZE_BIT-1;
-            std::get<2>(ret) = 0;
-            std::get<3>(ret) = triton::arch::x86::ID_REG_ZMM18;
+            ret.setName("zmm18");
+            ret.setHigh(DQQWORD_SIZE_BIT-1);
+            ret.setLow(0);
+            ret.setParentId(triton::arch::x86::ID_REG_ZMM18);
             break;
 
           case triton::arch::x86::ID_REG_ZMM19:
-            std::get<0>(ret) = "zmm19";
-            std::get<1>(ret) = DQQWORD_SIZE_BIT-1;
-            std::get<2>(ret) = 0;
-            std::get<3>(ret) = triton::arch::x86::ID_REG_ZMM19;
+            ret.setName("zmm19");
+            ret.setHigh(DQQWORD_SIZE_BIT-1);
+            ret.setLow(0);
+            ret.setParentId(triton::arch::x86::ID_REG_ZMM19);
             break;
 
           case triton::arch::x86::ID_REG_ZMM20:
-            std::get<0>(ret) = "zmm20";
-            std::get<1>(ret) = DQQWORD_SIZE_BIT-1;
-            std::get<2>(ret) = 0;
-            std::get<3>(ret) = triton::arch::x86::ID_REG_ZMM20;
+            ret.setName("zmm20");
+            ret.setHigh(DQQWORD_SIZE_BIT-1);
+            ret.setLow(0);
+            ret.setParentId(triton::arch::x86::ID_REG_ZMM20);
             break;
 
           case triton::arch::x86::ID_REG_ZMM21:
-            std::get<0>(ret) = "zmm21";
-            std::get<1>(ret) = DQQWORD_SIZE_BIT-1;
-            std::get<2>(ret) = 0;
-            std::get<3>(ret) = triton::arch::x86::ID_REG_ZMM21;
+            ret.setName("zmm21");
+            ret.setHigh(DQQWORD_SIZE_BIT-1);
+            ret.setLow(0);
+            ret.setParentId(triton::arch::x86::ID_REG_ZMM21);
             break;
 
           case triton::arch::x86::ID_REG_ZMM22:
-            std::get<0>(ret) = "zmm22";
-            std::get<1>(ret) = DQQWORD_SIZE_BIT-1;
-            std::get<2>(ret) = 0;
-            std::get<3>(ret) = triton::arch::x86::ID_REG_ZMM22;
+            ret.setName("zmm22");
+            ret.setHigh(DQQWORD_SIZE_BIT-1);
+            ret.setLow(0);
+            ret.setParentId(triton::arch::x86::ID_REG_ZMM22);
             break;
 
           case triton::arch::x86::ID_REG_ZMM23:
-            std::get<0>(ret) = "zmm23";
-            std::get<1>(ret) = DQQWORD_SIZE_BIT-1;
-            std::get<2>(ret) = 0;
-            std::get<3>(ret) = triton::arch::x86::ID_REG_ZMM23;
+            ret.setName("zmm23");
+            ret.setHigh(DQQWORD_SIZE_BIT-1);
+            ret.setLow(0);
+            ret.setParentId(triton::arch::x86::ID_REG_ZMM23);
             break;
 
           case triton::arch::x86::ID_REG_ZMM24:
-            std::get<0>(ret) = "zmm24";
-            std::get<1>(ret) = DQQWORD_SIZE_BIT-1;
-            std::get<2>(ret) = 0;
-            std::get<3>(ret) = triton::arch::x86::ID_REG_ZMM24;
+            ret.setName("zmm24");
+            ret.setHigh(DQQWORD_SIZE_BIT-1);
+            ret.setLow(0);
+            ret.setParentId(triton::arch::x86::ID_REG_ZMM24);
             break;
 
           case triton::arch::x86::ID_REG_ZMM25:
-            std::get<0>(ret) = "zmm25";
-            std::get<1>(ret) = DQQWORD_SIZE_BIT-1;
-            std::get<2>(ret) = 0;
-            std::get<3>(ret) = triton::arch::x86::ID_REG_ZMM25;
+            ret.setName("zmm25");
+            ret.setHigh(DQQWORD_SIZE_BIT-1);
+            ret.setLow(0);
+            ret.setParentId(triton::arch::x86::ID_REG_ZMM25);
             break;
 
           case triton::arch::x86::ID_REG_ZMM26:
-            std::get<0>(ret) = "zmm26";
-            std::get<1>(ret) = DQQWORD_SIZE_BIT-1;
-            std::get<2>(ret) = 0;
-            std::get<3>(ret) = triton::arch::x86::ID_REG_ZMM26;
+            ret.setName("zmm26");
+            ret.setHigh(DQQWORD_SIZE_BIT-1);
+            ret.setLow(0);
+            ret.setParentId(triton::arch::x86::ID_REG_ZMM26);
             break;
 
           case triton::arch::x86::ID_REG_ZMM27:
-            std::get<0>(ret) = "zmm27";
-            std::get<1>(ret) = DQQWORD_SIZE_BIT-1;
-            std::get<2>(ret) = 0;
-            std::get<3>(ret) = triton::arch::x86::ID_REG_ZMM27;
+            ret.setName("zmm27");
+            ret.setHigh(DQQWORD_SIZE_BIT-1);
+            ret.setLow(0);
+            ret.setParentId(triton::arch::x86::ID_REG_ZMM27);
             break;
 
           case triton::arch::x86::ID_REG_ZMM28:
-            std::get<0>(ret) = "zmm28";
-            std::get<1>(ret) = DQQWORD_SIZE_BIT-1;
-            std::get<2>(ret) = 0;
-            std::get<3>(ret) = triton::arch::x86::ID_REG_ZMM28;
+            ret.setName("zmm28");
+            ret.setHigh(DQQWORD_SIZE_BIT-1);
+            ret.setLow(0);
+            ret.setParentId(triton::arch::x86::ID_REG_ZMM28);
             break;
 
           case triton::arch::x86::ID_REG_ZMM29:
-            std::get<0>(ret) = "zmm29";
-            std::get<1>(ret) = DQQWORD_SIZE_BIT-1;
-            std::get<2>(ret) = 0;
-            std::get<3>(ret) = triton::arch::x86::ID_REG_ZMM29;
+            ret.setName("zmm29");
+            ret.setHigh(DQQWORD_SIZE_BIT-1);
+            ret.setLow(0);
+            ret.setParentId(triton::arch::x86::ID_REG_ZMM29);
             break;
 
           case triton::arch::x86::ID_REG_ZMM30:
-            std::get<0>(ret) = "zmm30";
-            std::get<1>(ret) = DQQWORD_SIZE_BIT-1;
-            std::get<2>(ret) = 0;
-            std::get<3>(ret) = triton::arch::x86::ID_REG_ZMM30;
+            ret.setName("zmm30");
+            ret.setHigh(DQQWORD_SIZE_BIT-1);
+            ret.setLow(0);
+            ret.setParentId(triton::arch::x86::ID_REG_ZMM30);
             break;
 
           case triton::arch::x86::ID_REG_ZMM31:
-            std::get<0>(ret) = "zmm31";
-            std::get<1>(ret) = DQQWORD_SIZE_BIT-1;
-            std::get<2>(ret) = 0;
-            std::get<3>(ret) = triton::arch::x86::ID_REG_ZMM31;
+            ret.setName("zmm31");
+            ret.setHigh(DQQWORD_SIZE_BIT-1);
+            ret.setLow(0);
+            ret.setParentId(triton::arch::x86::ID_REG_ZMM31);
             break;
 
           case triton::arch::x86::ID_REG_MXCSR:
-            std::get<0>(ret) = "mxcsr";
-            std::get<1>(ret) = (triton::api.getArchitecture() == triton::arch::ARCH_X86_64) ? QWORD_SIZE_BIT-1 : DWORD_SIZE_BIT-1;
-            std::get<2>(ret) = 0;
-            std::get<3>(ret) = triton::arch::x86::ID_REG_MXCSR;
+            ret.setName("mxcsr");
+            ret.setHigh((arch == triton::arch::ARCH_X86_64) ? QWORD_SIZE_BIT-1 : DWORD_SIZE_BIT-1);
+            ret.setLow(0);
+            ret.setParentId(triton::arch::x86::ID_REG_MXCSR);
             break;
 
           case triton::arch::x86::ID_REG_CR0:
-            std::get<0>(ret) = "cr0";
-            std::get<1>(ret) = (triton::api.getArchitecture() == triton::arch::ARCH_X86_64) ? QWORD_SIZE_BIT-1 : DWORD_SIZE_BIT-1;
-            std::get<2>(ret) = 0;
-            std::get<3>(ret) = triton::arch::x86::ID_REG_CR0;
+            ret.setName("cr0");
+            ret.setHigh((arch == triton::arch::ARCH_X86_64) ? QWORD_SIZE_BIT-1 : DWORD_SIZE_BIT-1);
+            ret.setLow(0);
+            ret.setParentId(triton::arch::x86::ID_REG_CR0);
             break;
 
           case triton::arch::x86::ID_REG_CR1:
-            std::get<0>(ret) = "cr1";
-            std::get<1>(ret) = (triton::api.getArchitecture() == triton::arch::ARCH_X86_64) ? QWORD_SIZE_BIT-1 : DWORD_SIZE_BIT-1;
-            std::get<2>(ret) = 0;
-            std::get<3>(ret) = triton::arch::x86::ID_REG_CR1;
+            ret.setName("cr1");
+            ret.setHigh((arch == triton::arch::ARCH_X86_64) ? QWORD_SIZE_BIT-1 : DWORD_SIZE_BIT-1);
+            ret.setLow(0);
+            ret.setParentId(triton::arch::x86::ID_REG_CR1);
             break;
 
           case triton::arch::x86::ID_REG_CR2:
-            std::get<0>(ret) = "cr2";
-            std::get<1>(ret) = (triton::api.getArchitecture() == triton::arch::ARCH_X86_64) ? QWORD_SIZE_BIT-1 : DWORD_SIZE_BIT-1;
-            std::get<2>(ret) = 0;
-            std::get<3>(ret) = triton::arch::x86::ID_REG_CR2;
+            ret.setName("cr2");
+            ret.setHigh((arch == triton::arch::ARCH_X86_64) ? QWORD_SIZE_BIT-1 : DWORD_SIZE_BIT-1);
+            ret.setLow(0);
+            ret.setParentId(triton::arch::x86::ID_REG_CR2);
             break;
 
           case triton::arch::x86::ID_REG_CR3:
-            std::get<0>(ret) = "cr3";
-            std::get<1>(ret) = (triton::api.getArchitecture() == triton::arch::ARCH_X86_64) ? QWORD_SIZE_BIT-1 : DWORD_SIZE_BIT-1;
-            std::get<2>(ret) = 0;
-            std::get<3>(ret) = triton::arch::x86::ID_REG_CR3;
+            ret.setName("cr3");
+            ret.setHigh((arch == triton::arch::ARCH_X86_64) ? QWORD_SIZE_BIT-1 : DWORD_SIZE_BIT-1);
+            ret.setLow(0);
+            ret.setParentId(triton::arch::x86::ID_REG_CR3);
             break;
 
           case triton::arch::x86::ID_REG_CR4:
-            std::get<0>(ret) = "cr4";
-            std::get<1>(ret) = (triton::api.getArchitecture() == triton::arch::ARCH_X86_64) ? QWORD_SIZE_BIT-1 : DWORD_SIZE_BIT-1;
-            std::get<2>(ret) = 0;
-            std::get<3>(ret) = triton::arch::x86::ID_REG_CR4;
+            ret.setName("cr4");
+            ret.setHigh((arch == triton::arch::ARCH_X86_64) ? QWORD_SIZE_BIT-1 : DWORD_SIZE_BIT-1);
+            ret.setLow(0);
+            ret.setParentId(triton::arch::x86::ID_REG_CR4);
             break;
 
           case triton::arch::x86::ID_REG_CR5:
-            std::get<0>(ret) = "cr5";
-            std::get<1>(ret) = (triton::api.getArchitecture() == triton::arch::ARCH_X86_64) ? QWORD_SIZE_BIT-1 : DWORD_SIZE_BIT-1;
-            std::get<2>(ret) = 0;
-            std::get<3>(ret) = triton::arch::x86::ID_REG_CR5;
+            ret.setName("cr5");
+            ret.setHigh((arch == triton::arch::ARCH_X86_64) ? QWORD_SIZE_BIT-1 : DWORD_SIZE_BIT-1);
+            ret.setLow(0);
+            ret.setParentId(triton::arch::x86::ID_REG_CR5);
             break;
 
           case triton::arch::x86::ID_REG_CR6:
-            std::get<0>(ret) = "cr6";
-            std::get<1>(ret) = (triton::api.getArchitecture() == triton::arch::ARCH_X86_64) ? QWORD_SIZE_BIT-1 : DWORD_SIZE_BIT-1;
-            std::get<2>(ret) = 0;
-            std::get<3>(ret) = triton::arch::x86::ID_REG_CR6;
+            ret.setName("cr6");
+            ret.setHigh((arch == triton::arch::ARCH_X86_64) ? QWORD_SIZE_BIT-1 : DWORD_SIZE_BIT-1);
+            ret.setLow(0);
+            ret.setParentId(triton::arch::x86::ID_REG_CR6);
             break;
 
           case triton::arch::x86::ID_REG_CR7:
-            std::get<0>(ret) = "cr7";
-            std::get<1>(ret) = (triton::api.getArchitecture() == triton::arch::ARCH_X86_64) ? QWORD_SIZE_BIT-1 : DWORD_SIZE_BIT-1;
-            std::get<2>(ret) = 0;
-            std::get<3>(ret) = triton::arch::x86::ID_REG_CR7;
+            ret.setName("cr7");
+            ret.setHigh((arch == triton::arch::ARCH_X86_64) ? QWORD_SIZE_BIT-1 : DWORD_SIZE_BIT-1);
+            ret.setLow(0);
+            ret.setParentId(triton::arch::x86::ID_REG_CR7);
             break;
 
           case triton::arch::x86::ID_REG_CR8:
-            std::get<0>(ret) = "cr8";
-            std::get<1>(ret) = (triton::api.getArchitecture() == triton::arch::ARCH_X86_64) ? QWORD_SIZE_BIT-1 : DWORD_SIZE_BIT-1;
-            std::get<2>(ret) = 0;
-            std::get<3>(ret) = triton::arch::x86::ID_REG_CR8;
+            ret.setName("cr8");
+            ret.setHigh((arch == triton::arch::ARCH_X86_64) ? QWORD_SIZE_BIT-1 : DWORD_SIZE_BIT-1);
+            ret.setLow(0);
+            ret.setParentId(triton::arch::x86::ID_REG_CR8);
             break;
 
           case triton::arch::x86::ID_REG_CR9:
-            std::get<0>(ret) = "cr9";
-            std::get<1>(ret) = (triton::api.getArchitecture() == triton::arch::ARCH_X86_64) ? QWORD_SIZE_BIT-1 : DWORD_SIZE_BIT-1;
-            std::get<2>(ret) = 0;
-            std::get<3>(ret) = triton::arch::x86::ID_REG_CR9;
+            ret.setName("cr9");
+            ret.setHigh((arch == triton::arch::ARCH_X86_64) ? QWORD_SIZE_BIT-1 : DWORD_SIZE_BIT-1);
+            ret.setLow(0);
+            ret.setParentId(triton::arch::x86::ID_REG_CR9);
             break;
 
           case triton::arch::x86::ID_REG_CR10:
-            std::get<0>(ret) = "cr10";
-            std::get<1>(ret) = (triton::api.getArchitecture() == triton::arch::ARCH_X86_64) ? QWORD_SIZE_BIT-1 : DWORD_SIZE_BIT-1;
-            std::get<2>(ret) = 0;
-            std::get<3>(ret) = triton::arch::x86::ID_REG_CR10;
+            ret.setName("cr10");
+            ret.setHigh((arch == triton::arch::ARCH_X86_64) ? QWORD_SIZE_BIT-1 : DWORD_SIZE_BIT-1);
+            ret.setLow(0);
+            ret.setParentId(triton::arch::x86::ID_REG_CR10);
             break;
 
           case triton::arch::x86::ID_REG_CR11:
-            std::get<0>(ret) = "cr11";
-            std::get<1>(ret) = (triton::api.getArchitecture() == triton::arch::ARCH_X86_64) ? QWORD_SIZE_BIT-1 : DWORD_SIZE_BIT-1;
-            std::get<2>(ret) = 0;
-            std::get<3>(ret) = triton::arch::x86::ID_REG_CR11;
+            ret.setName("cr11");
+            ret.setHigh((arch == triton::arch::ARCH_X86_64) ? QWORD_SIZE_BIT-1 : DWORD_SIZE_BIT-1);
+            ret.setLow(0);
+            ret.setParentId(triton::arch::x86::ID_REG_CR11);
             break;
 
           case triton::arch::x86::ID_REG_CR12:
-            std::get<0>(ret) = "cr12";
-            std::get<1>(ret) = (triton::api.getArchitecture() == triton::arch::ARCH_X86_64) ? QWORD_SIZE_BIT-1 : DWORD_SIZE_BIT-1;
-            std::get<2>(ret) = 0;
-            std::get<3>(ret) = triton::arch::x86::ID_REG_CR12;
+            ret.setName("cr12");
+            ret.setHigh((arch == triton::arch::ARCH_X86_64) ? QWORD_SIZE_BIT-1 : DWORD_SIZE_BIT-1);
+            ret.setLow(0);
+            ret.setParentId(triton::arch::x86::ID_REG_CR12);
             break;
 
           case triton::arch::x86::ID_REG_CR13:
-            std::get<0>(ret) = "cr13";
-            std::get<1>(ret) = (triton::api.getArchitecture() == triton::arch::ARCH_X86_64) ? QWORD_SIZE_BIT-1 : DWORD_SIZE_BIT-1;
-            std::get<2>(ret) = 0;
-            std::get<3>(ret) = triton::arch::x86::ID_REG_CR13;
+            ret.setName("cr13");
+            ret.setHigh((arch == triton::arch::ARCH_X86_64) ? QWORD_SIZE_BIT-1 : DWORD_SIZE_BIT-1);
+            ret.setLow(0);
+            ret.setParentId(triton::arch::x86::ID_REG_CR13);
             break;
 
           case triton::arch::x86::ID_REG_CR14:
-            std::get<0>(ret) = "cr14";
-            std::get<1>(ret) = (triton::api.getArchitecture() == triton::arch::ARCH_X86_64) ? QWORD_SIZE_BIT-1 : DWORD_SIZE_BIT-1;
-            std::get<2>(ret) = 0;
-            std::get<3>(ret) = triton::arch::x86::ID_REG_CR14;
+            ret.setName("cr14");
+            ret.setHigh((arch == triton::arch::ARCH_X86_64) ? QWORD_SIZE_BIT-1 : DWORD_SIZE_BIT-1);
+            ret.setLow(0);
+            ret.setParentId(triton::arch::x86::ID_REG_CR14);
             break;
 
           case triton::arch::x86::ID_REG_CR15:
-            std::get<0>(ret) = "cr15";
-            std::get<1>(ret) = (triton::api.getArchitecture() == triton::arch::ARCH_X86_64) ? QWORD_SIZE_BIT-1 : DWORD_SIZE_BIT-1;
-            std::get<2>(ret) = 0;
-            std::get<3>(ret) = triton::arch::x86::ID_REG_CR15;
+            ret.setName("cr15");
+            ret.setHigh((arch == triton::arch::ARCH_X86_64) ? QWORD_SIZE_BIT-1 : DWORD_SIZE_BIT-1);
+            ret.setLow(0);
+            ret.setParentId(triton::arch::x86::ID_REG_CR15);
             break;
 
           case triton::arch::x86::ID_REG_IE:
-            std::get<0>(ret) = "ie";
-            std::get<1>(ret) = 0;
-            std::get<2>(ret) = 0;
-            std::get<3>(ret) = triton::arch::x86::ID_REG_IE;
+            ret.setName("ie");
+            ret.setHigh(0);
+            ret.setLow(0);
+            ret.setParentId(triton::arch::x86::ID_REG_IE);
             break;
 
           case triton::arch::x86::ID_REG_DE:
-            std::get<0>(ret) = "de";
-            std::get<1>(ret) = 0;
-            std::get<2>(ret) = 0;
-            std::get<3>(ret) = triton::arch::x86::ID_REG_DE;
+            ret.setName("de");
+            ret.setHigh(0);
+            ret.setLow(0);
+            ret.setParentId(triton::arch::x86::ID_REG_DE);
             break;
 
           case triton::arch::x86::ID_REG_ZE:
-            std::get<0>(ret) = "ze";
-            std::get<1>(ret) = 0;
-            std::get<2>(ret) = 0;
-            std::get<3>(ret) = triton::arch::x86::ID_REG_ZE;
+            ret.setName("ze");
+            ret.setHigh(0);
+            ret.setLow(0);
+            ret.setParentId(triton::arch::x86::ID_REG_ZE);
             break;
 
           case triton::arch::x86::ID_REG_OE:
-            std::get<0>(ret) = "OE";
-            std::get<1>(ret) = 0;
-            std::get<2>(ret) = 0;
-            std::get<3>(ret) = triton::arch::x86::ID_REG_OE;
+            ret.setName("oe");
+            ret.setHigh(0);
+            ret.setLow(0);
+            ret.setParentId(triton::arch::x86::ID_REG_OE);
             break;
 
           case triton::arch::x86::ID_REG_UE:
-            std::get<0>(ret) = "UE";
-            std::get<1>(ret) = 0;
-            std::get<2>(ret) = 0;
-            std::get<3>(ret) = triton::arch::x86::ID_REG_UE;
+            ret.setName("ue");
+            ret.setHigh(0);
+            ret.setLow(0);
+            ret.setParentId(triton::arch::x86::ID_REG_UE);
             break;
 
           case triton::arch::x86::ID_REG_PE:
-            std::get<0>(ret) = "PE";
-            std::get<1>(ret) = 0;
-            std::get<2>(ret) = 0;
-            std::get<3>(ret) = triton::arch::x86::ID_REG_PE;
+            ret.setName("pe");
+            ret.setHigh(0);
+            ret.setLow(0);
+            ret.setParentId(triton::arch::x86::ID_REG_PE);
             break;
 
           case triton::arch::x86::ID_REG_DAZ:
-            std::get<0>(ret) = "DA";
-            std::get<1>(ret) = 0;
-            std::get<2>(ret) = 0;
-            std::get<3>(ret) = triton::arch::x86::ID_REG_DAZ;
+            ret.setName("da");
+            ret.setHigh(0);
+            ret.setLow(0);
+            ret.setParentId(triton::arch::x86::ID_REG_DAZ);
             break;
 
           case triton::arch::x86::ID_REG_IM:
-            std::get<0>(ret) = "IM";
-            std::get<1>(ret) = 0;
-            std::get<2>(ret) = 0;
-            std::get<3>(ret) = triton::arch::x86::ID_REG_IM;
+            ret.setName("im");
+            ret.setHigh(0);
+            ret.setLow(0);
+            ret.setParentId(triton::arch::x86::ID_REG_IM);
             break;
 
           case triton::arch::x86::ID_REG_DM:
-            std::get<0>(ret) = "DM";
-            std::get<1>(ret) = 0;
-            std::get<2>(ret) = 0;
-            std::get<3>(ret) = triton::arch::x86::ID_REG_DM;
+            ret.setName("dm");
+            ret.setHigh(0);
+            ret.setLow(0);
+            ret.setParentId(triton::arch::x86::ID_REG_DM);
             break;
 
           case triton::arch::x86::ID_REG_ZM:
-            std::get<0>(ret) = "ZM";
-            std::get<1>(ret) = 0;
-            std::get<2>(ret) = 0;
-            std::get<3>(ret) = triton::arch::x86::ID_REG_ZM;
+            ret.setName("zm");
+            ret.setHigh(0);
+            ret.setLow(0);
+            ret.setParentId(triton::arch::x86::ID_REG_ZM);
             break;
 
           case triton::arch::x86::ID_REG_OM:
-            std::get<0>(ret) = "OM";
-            std::get<1>(ret) = 0;
-            std::get<2>(ret) = 0;
-            std::get<3>(ret) = triton::arch::x86::ID_REG_OM;
+            ret.setName("om");
+            ret.setHigh(0);
+            ret.setLow(0);
+            ret.setParentId(triton::arch::x86::ID_REG_OM);
             break;
 
           case triton::arch::x86::ID_REG_UM:
-            std::get<0>(ret) = "UM";
-            std::get<1>(ret) = 0;
-            std::get<2>(ret) = 0;
-            std::get<3>(ret) = triton::arch::x86::ID_REG_UM;
+            ret.setName("um");
+            ret.setHigh(0);
+            ret.setLow(0);
+            ret.setParentId(triton::arch::x86::ID_REG_UM);
             break;
 
           case triton::arch::x86::ID_REG_PM:
-            std::get<0>(ret) = "PM";
-            std::get<1>(ret) = 0;
-            std::get<2>(ret) = 0;
-            std::get<3>(ret) = triton::arch::x86::ID_REG_PM;
+            ret.setName("pm");
+            ret.setHigh(0);
+            ret.setLow(0);
+            ret.setParentId(triton::arch::x86::ID_REG_PM);
             break;
 
           case triton::arch::x86::ID_REG_RL:
-            std::get<0>(ret) = "RL";
-            std::get<1>(ret) = 0;
-            std::get<2>(ret) = 0;
-            std::get<3>(ret) = triton::arch::x86::ID_REG_RL;
+            ret.setName("rl");
+            ret.setHigh(0);
+            ret.setLow(0);
+            ret.setParentId(triton::arch::x86::ID_REG_RL);
             break;
 
           case triton::arch::x86::ID_REG_RH:
-            std::get<0>(ret) = "RH";
-            std::get<1>(ret) = 0;
-            std::get<2>(ret) = 0;
-            std::get<3>(ret) = triton::arch::x86::ID_REG_RH;
+            ret.setName("rh");
+            ret.setHigh(0);
+            ret.setLow(0);
+            ret.setParentId(triton::arch::x86::ID_REG_RH);
             break;
 
           case triton::arch::x86::ID_REG_FZ:
-            std::get<0>(ret) = "FZ";
-            std::get<1>(ret) = 0;
-            std::get<2>(ret) = 0;
-            std::get<3>(ret) = triton::arch::x86::ID_REG_FZ;
+            ret.setName("fz");
+            ret.setHigh(0);
+            ret.setLow(0);
+            ret.setParentId(triton::arch::x86::ID_REG_FZ);
             break;
 
           case triton::arch::x86::ID_REG_AF:
-            std::get<0>(ret) = "af";
-            std::get<1>(ret) = 0;
-            std::get<2>(ret) = 0;
-            std::get<3>(ret) = triton::arch::x86::ID_REG_AF;
+            ret.setName("af");
+            ret.setHigh(0);
+            ret.setLow(0);
+            ret.setParentId(triton::arch::x86::ID_REG_AF);
             break;
 
           case triton::arch::x86::ID_REG_CF:
-            std::get<0>(ret) = "cf";
-            std::get<1>(ret) = 0;
-            std::get<2>(ret) = 0;
-            std::get<3>(ret) = triton::arch::x86::ID_REG_CF;
+            ret.setName("cf");
+            ret.setHigh(0);
+            ret.setLow(0);
+            ret.setParentId(triton::arch::x86::ID_REG_CF);
             break;
 
           case triton::arch::x86::ID_REG_DF:
-            std::get<0>(ret) = "df";
-            std::get<1>(ret) = 0;
-            std::get<2>(ret) = 0;
-            std::get<3>(ret) = triton::arch::x86::ID_REG_DF;
+            ret.setName("df");
+            ret.setHigh(0);
+            ret.setLow(0);
+            ret.setParentId(triton::arch::x86::ID_REG_DF);
             break;
 
           case triton::arch::x86::ID_REG_IF:
-            std::get<0>(ret) = "if";
-            std::get<1>(ret) = 0;
-            std::get<2>(ret) = 0;
-            std::get<3>(ret) = triton::arch::x86::ID_REG_IF;
+            ret.setName("if");
+            ret.setHigh(0);
+            ret.setLow(0);
+            ret.setParentId(triton::arch::x86::ID_REG_IF);
             break;
 
           case triton::arch::x86::ID_REG_OF:
-            std::get<0>(ret) = "of";
-            std::get<1>(ret) = 0;
-            std::get<2>(ret) = 0;
-            std::get<3>(ret) = triton::arch::x86::ID_REG_OF;
+            ret.setName("of");
+            ret.setHigh(0);
+            ret.setLow(0);
+            ret.setParentId(triton::arch::x86::ID_REG_OF);
             break;
 
           case triton::arch::x86::ID_REG_PF:
-            std::get<0>(ret) = "pf";
-            std::get<1>(ret) = 0;
-            std::get<2>(ret) = 0;
-            std::get<3>(ret) = triton::arch::x86::ID_REG_PF;
+            ret.setName("pf");
+            ret.setHigh(0);
+            ret.setLow(0);
+            ret.setParentId(triton::arch::x86::ID_REG_PF);
             break;
 
           case triton::arch::x86::ID_REG_SF:
-            std::get<0>(ret) = "sf";
-            std::get<1>(ret) = 0;
-            std::get<2>(ret) = 0;
-            std::get<3>(ret) = triton::arch::x86::ID_REG_SF;
+            ret.setName("sf");
+            ret.setHigh(0);
+            ret.setLow(0);
+            ret.setParentId(triton::arch::x86::ID_REG_SF);
             break;
 
           case triton::arch::x86::ID_REG_TF:
-            std::get<0>(ret) = "tf";
-            std::get<1>(ret) = 0;
-            std::get<2>(ret) = 0;
-            std::get<3>(ret) = triton::arch::x86::ID_REG_TF;
+            ret.setName("tf");
+            ret.setHigh(0);
+            ret.setLow(0);
+            ret.setParentId(triton::arch::x86::ID_REG_TF);
             break;
 
           case triton::arch::x86::ID_REG_ZF:
-            std::get<0>(ret) = "zf";
-            std::get<1>(ret) = 0;
-            std::get<2>(ret) = 0;
-            std::get<3>(ret) = triton::arch::x86::ID_REG_ZF;
+            ret.setName("zf");
+            ret.setHigh(0);
+            ret.setLow(0);
+            ret.setParentId(triton::arch::x86::ID_REG_ZF);
             break;
 
           case triton::arch::x86::ID_REG_CS:
-            std::get<0>(ret) = "cs";
-            std::get<1>(ret) = (triton::api.getArchitecture() == triton::arch::ARCH_X86_64) ? QWORD_SIZE_BIT-1 : DWORD_SIZE_BIT-1;
-            std::get<2>(ret) = 0;
-            std::get<3>(ret) = triton::arch::x86::ID_REG_CS;
+            ret.setName("cs");
+            ret.setHigh((arch == triton::arch::ARCH_X86_64) ? QWORD_SIZE_BIT-1 : DWORD_SIZE_BIT-1);
+            ret.setLow(0);
+            ret.setParentId(triton::arch::x86::ID_REG_CS);
             break;
 
           case triton::arch::x86::ID_REG_DS:
-            std::get<0>(ret) = "ds";
-            std::get<1>(ret) = (triton::api.getArchitecture() == triton::arch::ARCH_X86_64) ? QWORD_SIZE_BIT-1 : DWORD_SIZE_BIT-1;
-            std::get<2>(ret) = 0;
-            std::get<3>(ret) = triton::arch::x86::ID_REG_DS;
+            ret.setName("ds");
+            ret.setHigh((arch == triton::arch::ARCH_X86_64) ? QWORD_SIZE_BIT-1 : DWORD_SIZE_BIT-1);
+            ret.setLow(0);
+            ret.setParentId(triton::arch::x86::ID_REG_DS);
             break;
 
           case triton::arch::x86::ID_REG_ES:
-            std::get<0>(ret) = "es";
-            std::get<1>(ret) = (triton::api.getArchitecture() == triton::arch::ARCH_X86_64) ? QWORD_SIZE_BIT-1 : DWORD_SIZE_BIT-1;
-            std::get<2>(ret) = 0;
-            std::get<3>(ret) = triton::arch::x86::ID_REG_ES;
+            ret.setName("es");
+            ret.setHigh((arch == triton::arch::ARCH_X86_64) ? QWORD_SIZE_BIT-1 : DWORD_SIZE_BIT-1);
+            ret.setLow(0);
+            ret.setParentId(triton::arch::x86::ID_REG_ES);
             break;
 
           case triton::arch::x86::ID_REG_FS:
-            std::get<0>(ret) = "fs";
-            std::get<1>(ret) = (triton::api.getArchitecture() == triton::arch::ARCH_X86_64) ? QWORD_SIZE_BIT-1 : DWORD_SIZE_BIT-1;
-            std::get<2>(ret) = 0;
-            std::get<3>(ret) = triton::arch::x86::ID_REG_FS;
+            ret.setName("fs");
+            ret.setHigh((arch == triton::arch::ARCH_X86_64) ? QWORD_SIZE_BIT-1 : DWORD_SIZE_BIT-1);
+            ret.setLow(0);
+            ret.setParentId(triton::arch::x86::ID_REG_FS);
             break;
 
           case triton::arch::x86::ID_REG_GS:
-            std::get<0>(ret) = "gs";
-            std::get<1>(ret) = (triton::api.getArchitecture() == triton::arch::ARCH_X86_64) ? QWORD_SIZE_BIT-1 : DWORD_SIZE_BIT-1;
-            std::get<2>(ret) = 0;
-            std::get<3>(ret) = triton::arch::x86::ID_REG_GS;
+            ret.setName("gs");
+            ret.setHigh((arch == triton::arch::ARCH_X86_64) ? QWORD_SIZE_BIT-1 : DWORD_SIZE_BIT-1);
+            ret.setLow(0);
+            ret.setParentId(triton::arch::x86::ID_REG_GS);
             break;
 
           case triton::arch::x86::ID_REG_SS:
-            std::get<0>(ret) = "ss";
-            std::get<1>(ret) = (triton::api.getArchitecture() == triton::arch::ARCH_X86_64) ? QWORD_SIZE_BIT-1 : DWORD_SIZE_BIT-1;
-            std::get<2>(ret) = 0;
-            std::get<3>(ret) = triton::arch::x86::ID_REG_SS;
+            ret.setName("ss");
+            ret.setHigh((arch == triton::arch::ARCH_X86_64) ? QWORD_SIZE_BIT-1 : DWORD_SIZE_BIT-1);
+            ret.setLow(0);
+            ret.setParentId(triton::arch::x86::ID_REG_SS);
             break;
 
         }
@@ -1808,12 +1809,8 @@ namespace triton {
       }
 
 
-      /* Converts a capstone's register id to a triton's register id */
-      triton::uint32 capstoneRegisterToTritonRegister(triton::uint32 id) {
+      triton::uint32 x86Specifications::capstoneRegisterToTritonRegister(triton::uint32 id) const {
         triton::uint32 tritonId = triton::arch::x86::ID_REG_INVALID;
-
-        if (triton::api.getArchitecture() == triton::arch::ARCH_INVALID)
-          return tritonId;
 
         switch (id) {
 
@@ -2490,12 +2487,8 @@ namespace triton {
       }
 
 
-      /* Converts a capstone's instruction id to a triton's instruction id */
-      triton::uint32 capstoneInstructionToTritonInstruction(triton::uint32 id) {
+      triton::uint32 x86Specifications::capstoneInstructionToTritonInstruction(triton::uint32 id) const {
         triton::uint32 tritonId = triton::arch::x86::ID_INST_INVALID;
-
-        if (triton::api.getArchitecture() == triton::arch::ARCH_INVALID)
-          return tritonId;
 
         switch (id) {
 
@@ -7688,12 +7681,8 @@ namespace triton {
       }
 
 
-      /* Converts a capstone's prefix id to a triton's prefix id */
-      triton::uint32 capstonePrefixToTritonPrefix(triton::uint32 id) {
+      triton::uint32 x86Specifications::capstonePrefixToTritonPrefix(triton::uint32 id) const {
         triton::uint32 tritonId = triton::arch::x86::ID_PREFIX_INVALID;
-
-        if (triton::api.getArchitecture() == triton::arch::ARCH_INVALID)
-          return tritonId;
 
         switch (id) {
 

@@ -2,7 +2,7 @@
 /*
 **  Copyright (C) - Triton
 **
-**  This program is under the terms of the LGPLv3 License.
+**  This program is under the terms of the BSD License.
 */
 
 #if defined(__unix__) || defined(__APPLE__)
@@ -18,16 +18,16 @@ namespace triton {
     namespace unix {
 
       #if defined(__unix__)
-      const char *syscall32NumberToString(triton::uint32 syscallNumber) {
-        if (syscallNumber >= 0 && syscallNumber < (triton::uint32) triton::os::unix::NB_SYSCALL32)
+      const char* syscall32NumberToString(triton::uint32 syscallNumber) {
+        if (syscallNumber < static_cast<triton::uint32>(triton::os::unix::NB_SYSCALL32))
           return triton::os::unix::syscallmap32[syscallNumber];
         else
           return nullptr;
       }
       #endif
 
-      const char *syscall64NumberToString(triton::uint32 syscallNumber) {
-        if (syscallNumber >= 0 && syscallNumber < (triton::uint32) triton::os::unix::NB_SYSCALL64)
+      const char* syscall64NumberToString(triton::uint32 syscallNumber) {
+        if (syscallNumber < static_cast<triton::uint32>(triton::os::unix::NB_SYSCALL64))
           return triton::os::unix::syscallmap64[syscallNumber];
         else
           return nullptr;

@@ -2,12 +2,12 @@
 /*
 **  Copyright (C) - Triton
 **
-**  This program is under the terms of the LGPLv3 License.
+**  This program is under the terms of the BSD License.
 */
 
 #ifdef TRITON_PYTHON_BINDINGS
 
-#include <api.hpp>
+#include <exceptions.hpp>
 #include <pythonObjects.hpp>
 #include <pythonUtils.hpp>
 #include <pythonXFunctions.hpp>
@@ -23,7 +23,7 @@
 \section py_SolverModel_description Description
 <hr>
 
-This object is used to represent a model from a SMT solver.
+This object is used to represent a model from an SMT solver.
 
 ~~~~~~~~~~~~~{.py}
 >>> from triton import *
@@ -63,14 +63,14 @@ SymVar_0 = 287454020
 \section SolverModel_py_api Python API - Methods of the SolverModel class
 <hr>
 
-- **getId(void)**<br>
-Returns the if of the model as integer. This id is the same that the variable id.
+- <b>integer getId(void)</b><br>
+Returns the id of the model. This id is the same that the variable id.
 
-- **getName(void)**<br>
-Returns the name of the model as string. This name is the same that the variable name.
+- <b>string getName(void)</b><br>
+Returns the name of the model. This name is the same that the variable name. Names are always something like this: SymVar_X.
 
-- **getValue(void)**<br>
-Returns the value of the model as integer.
+- <b>integer getValue(void)</b><br>
+Returns the value of the model.
 
 */
 
@@ -90,9 +90,9 @@ namespace triton {
 
       static PyObject* SolverModel_getId(PyObject* self, PyObject* noarg) {
         try {
-          return Py_BuildValue("k", PySolverModel_AsSolverModel(self)->getId());
+          return PyLong_FromUint32(PySolverModel_AsSolverModel(self)->getId());
         }
-        catch (const std::exception& e) {
+        catch (const triton::exceptions::Exception& e) {
           return PyErr_Format(PyExc_TypeError, "%s", e.what());
         }
       }
@@ -102,7 +102,7 @@ namespace triton {
         try {
           return Py_BuildValue("s", PySolverModel_AsSolverModel(self)->getName().c_str());
         }
-        catch (const std::exception& e) {
+        catch (const triton::exceptions::Exception& e) {
           return PyErr_Format(PyExc_TypeError, "%s", e.what());
         }
       }
@@ -112,7 +112,7 @@ namespace triton {
         try {
           return PyLong_FromUint512(PySolverModel_AsSolverModel(self)->getValue());
         }
-        catch (const std::exception& e) {
+        catch (const triton::exceptions::Exception& e) {
           return PyErr_Format(PyExc_TypeError, "%s", e.what());
         }
       }
@@ -130,7 +130,7 @@ namespace triton {
           str << PySolverModel_AsSolverModel(self);
           return PyString_FromFormat("%s", str.str().c_str());
         }
-        catch (const std::exception& e) {
+        catch (const triton::exceptions::Exception& e) {
           return PyErr_Format(PyExc_TypeError, "%s", e.what());
         }
       }
@@ -146,45 +146,54 @@ namespace triton {
 
 
       PyTypeObject SolverModel_Type = {
-          PyObject_HEAD_INIT(&PyType_Type)
-          0,                                          /* ob_size*/
-          "SolverModel",                              /* tp_name*/
-          sizeof(SolverModel_Object),                 /* tp_basicsize*/
-          0,                                          /* tp_itemsize*/
-          (destructor)SolverModel_dealloc,            /* tp_dealloc*/
-          (printfunc)SolverModel_print,               /* tp_print*/
-          0,                                          /* tp_getattr*/
-          0,                                          /* tp_setattr*/
-          0,                                          /* tp_compare*/
-          0,                                          /* tp_repr*/
-          0,                                          /* tp_as_number*/
-          0,                                          /* tp_as_sequence*/
-          0,                                          /* tp_as_mapping*/
-          0,                                          /* tp_hash */
-          0,                                          /* tp_call*/
-          (reprfunc)SolverModel_str,                  /* tp_str*/
-          0,                                          /* tp_getattro*/
-          0,                                          /* tp_setattro*/
-          0,                                          /* tp_as_buffer*/
-          Py_TPFLAGS_DEFAULT,                         /* tp_flags*/
-          "SolverModel objects",                      /* tp_doc */
-          0,                                          /* tp_traverse */
-          0,                                          /* tp_clear */
-          0,                                          /* tp_richcompare */
-          0,                                          /* tp_weaklistoffset */
-          0,                                          /* tp_iter */
-          0,                                          /* tp_iternext */
-          SolverModel_callbacks,                      /* tp_methods */
-          0,                                          /* tp_members */
-          0,                                          /* tp_getset */
-          0,                                          /* tp_base */
-          0,                                          /* tp_dict */
-          0,                                          /* tp_descr_get */
-          0,                                          /* tp_descr_set */
-          0,                                          /* tp_dictoffset */
-          0,                                          /* tp_init */
-          0,                                          /* tp_alloc */
-          0,                                          /* tp_new */
+        PyObject_HEAD_INIT(&PyType_Type)
+        0,                                          /* ob_size */
+        "SolverModel",                              /* tp_name */
+        sizeof(SolverModel_Object),                 /* tp_basicsize */
+        0,                                          /* tp_itemsize */
+        (destructor)SolverModel_dealloc,            /* tp_dealloc */
+        (printfunc)SolverModel_print,               /* tp_print */
+        0,                                          /* tp_getattr */
+        0,                                          /* tp_setattr */
+        0,                                          /* tp_compare */
+        0,                                          /* tp_repr */
+        0,                                          /* tp_as_number */
+        0,                                          /* tp_as_sequence */
+        0,                                          /* tp_as_mapping */
+        0,                                          /* tp_hash */
+        0,                                          /* tp_call */
+        (reprfunc)SolverModel_str,                  /* tp_str */
+        0,                                          /* tp_getattro */
+        0,                                          /* tp_setattro */
+        0,                                          /* tp_as_buffer */
+        Py_TPFLAGS_DEFAULT,                         /* tp_flags */
+        "SolverModel objects",                      /* tp_doc */
+        0,                                          /* tp_traverse */
+        0,                                          /* tp_clear */
+        0,                                          /* tp_richcompare */
+        0,                                          /* tp_weaklistoffset */
+        0,                                          /* tp_iter */
+        0,                                          /* tp_iternext */
+        SolverModel_callbacks,                      /* tp_methods */
+        0,                                          /* tp_members */
+        0,                                          /* tp_getset */
+        0,                                          /* tp_base */
+        0,                                          /* tp_dict */
+        0,                                          /* tp_descr_get */
+        0,                                          /* tp_descr_set */
+        0,                                          /* tp_dictoffset */
+        0,                                          /* tp_init */
+        0,                                          /* tp_alloc */
+        0,                                          /* tp_new */
+        0,                                          /* tp_free */
+        0,                                          /* tp_is_gc */
+        0,                                          /* tp_bases */
+        0,                                          /* tp_mro */
+        0,                                          /* tp_cache */
+        0,                                          /* tp_subclasses */
+        0,                                          /* tp_weaklist */
+        0,                                          /* tp_del */
+        0                                           /* tp_version_tag */
       };
 
 

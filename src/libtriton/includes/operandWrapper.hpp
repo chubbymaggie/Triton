@@ -2,28 +2,28 @@
 /*
 **  Copyright (C) - Triton
 **
-**  This program is under the terms of the LGPLv3 License.
+**  This program is under the terms of the BSD License.
 */
 
 #ifndef TRITON_OPERANDWRAPPER_H
 #define TRITON_OPERANDWRAPPER_H
 
-#include "immediateOperand.hpp"
-#include "memoryOperand.hpp"
+#include "immediate.hpp"
+#include "memoryAccess.hpp"
 #include "operandInterface.hpp"
-#include "registerOperand.hpp"
+#include "register.hpp"
 #include "tritonTypes.hpp"
 
 
 
-//! \module The Triton namespace
+//! The Triton namespace
 namespace triton {
 /*!
  *  \addtogroup triton
  *  @{
  */
 
-  //! \module The Triton namespace
+  //! The Triton namespace
   namespace arch {
   /*!
    *  \ingroup triton
@@ -37,64 +37,58 @@ namespace triton {
     class OperandWrapper {
       public:
         //! If the operand is an immediate, this attribute is filled.
-        ImmediateOperand imm;
+        triton::arch::Immediate imm;
 
-        //! If the operand is an immediate, this attribute is filled.
-        MemoryOperand mem;
+        //! If the operand is a memory, this attribute is filled.
+        triton::arch::MemoryAccess mem;
 
-        //! If the operand is an immediate, this attribute is filled.
-        RegisterOperand reg;
+        //! If the operand is a register, this attribute is filled.
+        triton::arch::Register reg;
 
         //! The type of the operand.
         triton::uint32 type;
 
         //! Immediate constructor.
-        OperandWrapper(const ImmediateOperand& imm);
+        OperandWrapper(const triton::arch::Immediate& imm);
 
         //! Memory constructor.
-        OperandWrapper(const MemoryOperand& mem);
+        OperandWrapper(const triton::arch::MemoryAccess& mem);
 
         //! Register constructor.
-        OperandWrapper(const RegisterOperand& reg);
+        OperandWrapper(const triton::arch::Register& reg);
 
         //! Destructor.
-        ~OperandWrapper();
+        virtual ~OperandWrapper();
 
         //! Returns the abstract type of the operand.
         triton::uint32 getType(void) const;
 
         //! Returns the immediate operand.
-        ImmediateOperand& getImmediate(void);
+        triton::arch::Immediate& getImmediate(void);
 
-        //! Returns the memroy operand.
-        MemoryOperand& getMemory(void);
+        //! Returns the memory operand.
+        triton::arch::MemoryAccess& getMemory(void);
 
         //! Returns the register operand.
-        RegisterOperand& getRegister(void);
+        triton::arch::Register& getRegister(void);
 
         //! Returns the immediate operand.
-        const ImmediateOperand& getConstImmediate(void) const;
+        const triton::arch::Immediate& getConstImmediate(void) const;
 
-        //! Returns the memroy operand.
-        const MemoryOperand& getConstMemory(void) const;
+        //! Returns the memory operand as const.
+        const triton::arch::MemoryAccess& getConstMemory(void) const;
 
         //! Returns the register operand.
-        const RegisterOperand& getConstRegister(void) const;
+        const triton::arch::Register& getConstRegister(void) const;
 
         //! Sets the immediate operand.
-        void setImmediate(const ImmediateOperand& imm);
+        void setImmediate(const triton::arch::Immediate& imm);
 
-        //! Sets the memroy operand.
-        void setMemory(const MemoryOperand& mem);
+        //! Sets the memory operand.
+        void setMemory(const triton::arch::MemoryAccess& mem);
 
         //! Sets the register operand.
-        void setRegister(const RegisterOperand& reg);
-
-        //! True if this concrete abstract value is trusted and synchronized with the real CPU/MMU value.
-        bool isTrusted(void) const;
-
-        //! Sets the trust flag.
-        void setTrust(bool flag);
+        void setRegister(const triton::arch::Register& reg);
 
         //! Returns the abstract size (in bytes) of the operand.
         triton::uint32 getSize(void) const;

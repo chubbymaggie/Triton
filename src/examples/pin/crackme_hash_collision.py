@@ -1,7 +1,7 @@
 
-from triton  import *
-from ast     import *
-from pintool import *
+from triton     import *
+from triton.ast import *
+from pintool    import *
 
 #
 # This example breaks a simple hash routine.
@@ -90,6 +90,6 @@ def cafter(instruction):
 if __name__ == '__main__':
     setArchitecture(ARCH.X86_64)
     startAnalysisFromSymbol('check')
-    addCallback(cafter, CALLBACK.AFTER)
+    insertCall(cafter, INSERT_POINT.AFTER)
     runProgram()
 

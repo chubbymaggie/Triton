@@ -2,10 +2,9 @@
 /*
 **  Copyright (C) - Triton
 **
-**  This program is under the terms of the LGPLv3 License.
+**  This program is under the terms of the BSD License.
 */
 
-#include <stdexcept>
 #include <symbolicOptimization.hpp>
 
 #ifdef TRITON_PYTHON_BINDINGS
@@ -19,13 +18,22 @@ namespace triton {
   namespace engines {
     namespace symbolic {
 
-
       SymbolicOptimization::SymbolicOptimization() {
         this->enableOptimization(PC_TRACKING_SYMBOLIC, true); /* This optimization is enabled by default */
       }
 
 
+      SymbolicOptimization::SymbolicOptimization(const SymbolicOptimization& copy) {
+        this->copy(copy);
+      }
+
+
       SymbolicOptimization::~SymbolicOptimization() {
+      }
+
+
+      void SymbolicOptimization::copy(const SymbolicOptimization& other) {
+        this->enabledOptimizations = other.enabledOptimizations;
       }
 
 
@@ -41,6 +49,11 @@ namespace triton {
           this->enabledOptimizations.insert(opti);
         else
           this->enabledOptimizations.erase(opti);
+      }
+
+
+      void SymbolicOptimization::operator=(const SymbolicOptimization& other) {
+        this->copy(other);
       }
 
     }; /* symbolic namespace */

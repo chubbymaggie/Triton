@@ -2,7 +2,7 @@
 /*
 **  Copyright (C) - Triton
 **
-**  This program is under the terms of the LGPLv3 License.
+**  This program is under the terms of the BSD License.
 */
 
 #include <iostream>
@@ -114,7 +114,7 @@ namespace tracer {
 
       void routine(triton::uint32 threadId, PyObject* callback) {
         PyObject* args = triton::bindings::python::xPyTuple_New(1);
-        PyTuple_SetItem(args, 0, triton::bindings::python::PyLong_FromUint(threadId));
+        PyTuple_SetItem(args, 0, triton::bindings::python::PyLong_FromUint32(threadId));
         if (PyObject_CallObject(callback, args) == nullptr) {
           PyErr_Print();
           exit(1);
@@ -130,8 +130,8 @@ namespace tracer {
           /* CallObject needs a tuple. The size of the tuple is the number of arguments.
            * threadId and sig are sent to the callback. */
           PyObject* args = triton::bindings::python::xPyTuple_New(2);
-          PyTuple_SetItem(args, 0, triton::bindings::python::PyLong_FromUint(threadId));
-          PyTuple_SetItem(args, 1, Py_BuildValue("i", sig));
+          PyTuple_SetItem(args, 0, triton::bindings::python::PyLong_FromUint32(threadId));
+          PyTuple_SetItem(args, 1, triton::bindings::python::PyLong_FromUint32(sig));
           if (PyObject_CallObject(tracer::pintool::options::callbackSignals, args) == nullptr) {
             PyErr_Print();
             exit(1);
@@ -149,8 +149,8 @@ namespace tracer {
           /* CallObject needs a tuple. The size of the tuple is the number of arguments.
            * threadId and Std are sent to the callback. */
           PyObject* args = triton::bindings::python::xPyTuple_New(2);
-          PyTuple_SetItem(args, 0, triton::bindings::python::PyLong_FromUint(threadId));
-          PyTuple_SetItem(args, 1, triton::bindings::python::PyLong_FromUint(std));
+          PyTuple_SetItem(args, 0, triton::bindings::python::PyLong_FromUint32(threadId));
+          PyTuple_SetItem(args, 1, triton::bindings::python::PyLong_FromUint32(std));
           if (PyObject_CallObject(tracer::pintool::options::callbackSyscallEntry, args) == nullptr) {
             PyErr_Print();
             exit(1);
@@ -168,8 +168,8 @@ namespace tracer {
           /* CallObject needs a tuple. The size of the tuple is the number of arguments.
            * threadId and Std are sent to the callback. */
           PyObject* args = triton::bindings::python::xPyTuple_New(2);
-          PyTuple_SetItem(args, 0, triton::bindings::python::PyLong_FromUint(threadId));
-          PyTuple_SetItem(args, 1, triton::bindings::python::PyLong_FromUint(std));
+          PyTuple_SetItem(args, 0, triton::bindings::python::PyLong_FromUint32(threadId));
+          PyTuple_SetItem(args, 1, triton::bindings::python::PyLong_FromUint32(std));
           if (PyObject_CallObject(tracer::pintool::options::callbackSyscallExit, args) == nullptr) {
             PyErr_Print();
             exit(1);

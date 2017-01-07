@@ -2,7 +2,7 @@
 /*
 **  Copyright (C) - Triton
 **
-**  This program is under the terms of the LGPLv3 License.
+**  This program is under the terms of the BSD License.
 */
 
 #ifdef  TRITON_PYTHON_BINDINGS
@@ -14,14 +14,14 @@
 
 
 
-//! \module The Triton namespace
+//! The Triton namespace
 namespace triton {
 /*!
  *  \addtogroup triton
  *  @{
  */
 
-  //! \module The Bindings namespace
+  //! The Bindings namespace
   namespace bindings {
   /*!
    *  \ingroup triton
@@ -29,7 +29,7 @@ namespace triton {
    *  @{
    */
 
-    //! \module The Python namespace
+    //! The Python namespace
     namespace python {
     /*!
      *  \ingroup bindings

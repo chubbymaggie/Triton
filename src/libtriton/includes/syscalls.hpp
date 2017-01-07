@@ -2,7 +2,7 @@
 /*
 **  Copyright (C) - Triton
 **
-**  This program is under the terms of the LGPLv3 License.
+**  This program is under the terms of the BSD License.
 */
 
 #ifndef TRITON_SYSCALLS_H
@@ -23,14 +23,14 @@
 
 
 
-//! \module The Triton namespace
+//! The Triton namespace
 namespace triton {
 /*!
  *  \addtogroup triton
  *  @{
  */
 
-  //! \module The Operating System namespace
+  //! The Operating System namespace
   namespace os {
   /*!
    *  \ingroup triton
@@ -38,7 +38,7 @@ namespace triton {
    *  @{
    */
 
-    //! \module The Unix namespace
+    //! The Unix namespace
     namespace unix {
     /*!
      *  \ingroup os
@@ -56,11 +56,11 @@ namespace triton {
 
       #if defined(__unix__)
       //! The syscall map 32
-      extern const char *syscallmap32[];
+      extern const char* syscallmap32[];
       #endif
 
       //! The syscall map 64
-      extern const char *syscallmap64[];
+      extern const char* syscallmap64[];
 
     /*! @} End of unix namespace */
     };

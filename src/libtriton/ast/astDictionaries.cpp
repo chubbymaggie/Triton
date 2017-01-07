@@ -2,7 +2,7 @@
 /*
 **  Copyright (C) - Triton
 **
-**  This program is under the terms of the LGPLv3 License.
+**  This program is under the terms of the BSD License.
 */
 
 #include <astDictionaries.hpp>
@@ -13,9 +13,83 @@ namespace triton {
   namespace ast {
 
     AstDictionaries::AstDictionaries() {
-      this->allocatedNodes        = 0;
-      this->allocatedDictionaries = 0;
+      this->allocatedNodes = 0;
+      this->linkDictionaries();
+    }
 
+
+    AstDictionaries::AstDictionaries(const AstDictionaries& copy) {
+      this->copy(copy);
+    }
+
+
+    AstDictionaries::~AstDictionaries() {
+      for (auto it = this->allocatedDictionaries.begin(); it != this->allocatedDictionaries.end(); it++)
+        delete *it;
+    }
+
+
+    void AstDictionaries::copy(const AstDictionaries& other) {
+      /* Global information */
+      this->allocatedNodes              = other.allocatedNodes;
+      this->allocatedDictionaries       = other.allocatedDictionaries;
+
+      /* Dictionnaries */
+      this->assertDictionary            = other.assertDictionary;
+      this->bvaddDictionary             = other.bvaddDictionary;
+      this->bvandDictionary             = other.bvandDictionary;
+      this->bvashrDictionary            = other.bvashrDictionary;
+      this->bvdeclDictionary            = other.bvdeclDictionary;
+      this->bvlshrDictionary            = other.bvlshrDictionary;
+      this->bvmulDictionary             = other.bvmulDictionary;
+      this->bvnandDictionary            = other.bvnandDictionary;
+      this->bvnegDictionary             = other.bvnegDictionary;
+      this->bvnorDictionary             = other.bvnorDictionary;
+      this->bvnotDictionary             = other.bvnotDictionary;
+      this->bvorDictionary              = other.bvorDictionary;
+      this->bvrolDictionary             = other.bvrolDictionary;
+      this->bvrorDictionary             = other.bvrorDictionary;
+      this->bvsdivDictionary            = other.bvsdivDictionary;
+      this->bvsgeDictionary             = other.bvsgeDictionary;
+      this->bvsgtDictionary             = other.bvsgtDictionary;
+      this->bvshlDictionary             = other.bvshlDictionary;
+      this->bvsleDictionary             = other.bvsleDictionary;
+      this->bvsltDictionary             = other.bvsltDictionary;
+      this->bvsmodDictionary            = other.bvsmodDictionary;
+      this->bvsremDictionary            = other.bvsremDictionary;
+      this->bvsubDictionary             = other.bvsubDictionary;
+      this->bvudivDictionary            = other.bvudivDictionary;
+      this->bvugeDictionary             = other.bvugeDictionary;
+      this->bvugtDictionary             = other.bvugtDictionary;
+      this->bvuleDictionary             = other.bvuleDictionary;
+      this->bvultDictionary             = other.bvultDictionary;
+      this->bvuremDictionary            = other.bvuremDictionary;
+      this->bvxnorDictionary            = other.bvxnorDictionary;
+      this->bvxorDictionary             = other.bvxorDictionary;
+      this->bvDictionary                = other.bvDictionary;
+      this->compoundDictionary          = other.compoundDictionary;
+      this->concatDictionary            = other.concatDictionary;
+      this->decimalDictionary           = other.decimalDictionary;
+      this->declareFunctionDictionary   = other.declareFunctionDictionary;
+      this->distinctDictionary          = other.distinctDictionary;
+      this->equalDictionary             = other.equalDictionary;
+      this->extractDictionary           = other.extractDictionary;
+      this->iteDictionary               = other.iteDictionary;
+      this->landDictionary              = other.landDictionary;
+      this->letDictionary               = other.letDictionary;
+      this->lnotDictionary              = other.lnotDictionary;
+      this->lorDictionary               = other.lorDictionary;
+      this->referenceDictionary         = other.referenceDictionary;
+      this->stringDictionary            = other.stringDictionary;
+      this->sxDictionary                = other.sxDictionary;
+      this->variableDictionary          = other.variableDictionary;
+      this->zxDictionary                = other.zxDictionary;
+
+      this->linkDictionaries();
+    }
+
+
+    void AstDictionaries::linkDictionaries(void) {
       this->dictionaries[triton::ast::ASSERT_NODE]             = &this->assertDictionary;
       this->dictionaries[triton::ast::BVADD_NODE]              = &this->bvaddDictionary;
       this->dictionaries[triton::ast::BVAND_NODE]              = &this->bvandDictionary;
@@ -68,108 +142,6 @@ namespace triton {
     }
 
 
-    AstDictionaries::~AstDictionaries() {
-      for (auto it = this->assertDictionary.begin(); it != this->assertDictionary.end(); it++)
-        delete it->second;
-      for (auto it = this->bvaddDictionary.begin(); it != this->bvaddDictionary.end(); it++)
-        delete it->second;
-      for (auto it = this->bvandDictionary.begin(); it != this->bvandDictionary.end(); it++)
-        delete it->second;
-      for (auto it = this->bvashrDictionary.begin(); it != this->bvashrDictionary.end(); it++)
-        delete it->second;
-      for (auto it = this->bvdeclDictionary.begin(); it != this->bvdeclDictionary.end(); it++)
-        delete it->second;
-      for (auto it = this->bvlshrDictionary.begin(); it != this->bvlshrDictionary.end(); it++)
-        delete it->second;
-      for (auto it = this->bvmulDictionary.begin(); it != this->bvmulDictionary.end(); it++)
-        delete it->second;
-      for (auto it = this->bvnandDictionary.begin(); it != this->bvnandDictionary.end(); it++)
-        delete it->second;
-      for (auto it = this->bvnegDictionary.begin(); it != this->bvnegDictionary.end(); it++)
-        delete it->second;
-      for (auto it = this->bvnorDictionary.begin(); it != this->bvnorDictionary.end(); it++)
-        delete it->second;
-      for (auto it = this->bvnotDictionary.begin(); it != this->bvnotDictionary.end(); it++)
-        delete it->second;
-      for (auto it = this->bvorDictionary.begin(); it != this->bvorDictionary.end(); it++)
-        delete it->second;
-      for (auto it = this->bvrolDictionary.begin(); it != this->bvrolDictionary.end(); it++)
-        delete it->second;
-      for (auto it = this->bvrorDictionary.begin(); it != this->bvrorDictionary.end(); it++)
-        delete it->second;
-      for (auto it = this->bvsdivDictionary.begin(); it != this->bvsdivDictionary.end(); it++)
-        delete it->second;
-      for (auto it = this->bvsgeDictionary.begin(); it != this->bvsgeDictionary.end(); it++)
-        delete it->second;
-      for (auto it = this->bvsgtDictionary.begin(); it != this->bvsgtDictionary.end(); it++)
-        delete it->second;
-      for (auto it = this->bvshlDictionary.begin(); it != this->bvshlDictionary.end(); it++)
-        delete it->second;
-      for (auto it = this->bvsleDictionary.begin(); it != this->bvsleDictionary.end(); it++)
-        delete it->second;
-      for (auto it = this->bvsltDictionary.begin(); it != this->bvsltDictionary.end(); it++)
-        delete it->second;
-      for (auto it = this->bvsmodDictionary.begin(); it != this->bvsmodDictionary.end(); it++)
-        delete it->second;
-      for (auto it = this->bvsremDictionary.begin(); it != this->bvsremDictionary.end(); it++)
-        delete it->second;
-      for (auto it = this->bvsubDictionary.begin(); it != this->bvsubDictionary.end(); it++)
-        delete it->second;
-      for (auto it = this->bvudivDictionary.begin(); it != this->bvudivDictionary.end(); it++)
-        delete it->second;
-      for (auto it = this->bvugeDictionary.begin(); it != this->bvugeDictionary.end(); it++)
-        delete it->second;
-      for (auto it = this->bvugtDictionary.begin(); it != this->bvugtDictionary.end(); it++)
-        delete it->second;
-      for (auto it = this->bvuleDictionary.begin(); it != this->bvuleDictionary.end(); it++)
-        delete it->second;
-      for (auto it = this->bvultDictionary.begin(); it != this->bvultDictionary.end(); it++)
-        delete it->second;
-      for (auto it = this->bvuremDictionary.begin(); it != this->bvuremDictionary.end(); it++)
-        delete it->second;
-      for (auto it = this->bvxnorDictionary.begin(); it != this->bvxnorDictionary.end(); it++)
-        delete it->second;
-      for (auto it = this->bvxorDictionary.begin(); it != this->bvxorDictionary.end(); it++)
-        delete it->second;
-      for (auto it = this->bvDictionary.begin(); it != this->bvDictionary.end(); it++)
-        delete it->second;
-      for (auto it = this->compoundDictionary.begin(); it != this->compoundDictionary.end(); it++)
-        delete it->second;
-      for (auto it = this->concatDictionary.begin(); it != this->concatDictionary.end(); it++)
-        delete it->second;
-      for (auto it = this->decimalDictionary.begin(); it != this->decimalDictionary.end(); it++)
-        delete it->second;
-      for (auto it = this->declareFunctionDictionary.begin(); it != this->declareFunctionDictionary.end(); it++)
-        delete it->second;
-      for (auto it = this->distinctDictionary.begin(); it != this->distinctDictionary.end(); it++)
-        delete it->second;
-      for (auto it = this->equalDictionary.begin(); it != this->equalDictionary.end(); it++)
-        delete it->second;
-      for (auto it = this->extractDictionary.begin(); it != this->extractDictionary.end(); it++)
-        delete it->second;
-      for (auto it = this->iteDictionary.begin(); it != this->iteDictionary.end(); it++)
-        delete it->second;
-      for (auto it = this->landDictionary.begin(); it != this->landDictionary.end(); it++)
-        delete it->second;
-      for (auto it = this->letDictionary.begin(); it != this->letDictionary.end(); it++)
-        delete it->second;
-      for (auto it = this->lnotDictionary.begin(); it != this->lnotDictionary.end(); it++)
-        delete it->second;
-      for (auto it = this->lorDictionary.begin(); it != this->lorDictionary.end(); it++)
-        delete it->second;
-      for (auto it = this->referenceDictionary.begin(); it != this->referenceDictionary.end(); it++)
-        delete it->second;
-      for (auto it = this->stringDictionary.begin(); it != this->stringDictionary.end(); it++)
-        delete it->second;
-      for (auto it = this->sxDictionary.begin(); it != this->sxDictionary.end(); it++)
-        delete it->second;
-      for (auto it = this->variableDictionary.begin(); it != this->variableDictionary.end(); it++)
-        delete it->second;
-      for (auto it = this->zxDictionary.begin(); it != this->zxDictionary.end(); it++)
-        delete it->second;
-    }
-
-
     triton::ast::AbstractNode* AstDictionaries::browseAstDictionaries(triton::ast::AbstractNode* node) {
       this->allocatedNodes++;
       triton::uint32 kind = node->getKind();
@@ -189,7 +161,7 @@ namespace triton {
 
         case triton::ast::REFERENCE_NODE: {
           auto value       = static_cast<triton::ast::ReferenceNode*>(node)->getValue();
-          auto dictionary  = static_cast<std::map<triton::uint512, triton::ast::AbstractNode*>*>((this->dictionaries[kind]));
+          auto dictionary  = static_cast<std::map<triton::usize, triton::ast::AbstractNode*>*>((this->dictionaries[kind]));
           if (dictionary->find(value) != dictionary->end()) {
             delete node;
             return (*dictionary)[value];
@@ -233,13 +205,13 @@ namespace triton {
 
       }
 
-      this->allocatedDictionaries++;
+      this->allocatedDictionaries.insert(node);
       return nullptr;
     }
 
 
-    std::map<std::string, triton::uint32> AstDictionaries::getAstDictionariesStats(void) {
-      std::map<std::string, triton::uint32> stats;
+    std::map<std::string, triton::usize> AstDictionaries::getAstDictionariesStats(void) {
+      std::map<std::string, triton::usize> stats;
       stats["assert"]                 = this->assertDictionary.size();
       stats["bvadd"]                  = this->bvaddDictionary.size();
       stats["bvand"]                  = this->bvandDictionary.size();
@@ -289,9 +261,14 @@ namespace triton {
       stats["sx"]                     = this->sxDictionary.size();
       stats["variable"]               = this->variableDictionary.size();
       stats["zx"]                     = this->zxDictionary.size();
-      stats["allocatedDictionaries"]  = this->allocatedDictionaries;
+      stats["allocatedDictionaries"]  = this->allocatedDictionaries.size();
       stats["allocatedNodes"]         = this->allocatedNodes;
       return stats;
+    }
+
+
+    void AstDictionaries::operator=(const AstDictionaries& other) {
+      this->copy(other);
     }
 
   }; /* ast namespace */

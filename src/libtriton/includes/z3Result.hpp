@@ -2,7 +2,7 @@
 /*
 **  Copyright (C) - Triton
 **
-**  This program is under the terms of the LGPLv3 License.
+**  This program is under the terms of the BSD License.
 */
 
 #ifndef TRITON_Z3RESULT_H
@@ -13,14 +13,14 @@
 
 
 
-//! \module The Triton namespace
+//! The Triton namespace
 namespace triton {
 /*!
  *  \addtogroup triton
  *  @{
  */
 
-  //! \module The AST namespace
+  //! The AST namespace
   namespace ast {
   /*!
    *  \ingroup triton
@@ -39,7 +39,6 @@ namespace triton {
         z3::expr expr;
 
       public:
-
         //! Constructor.
         Z3Result();
 
@@ -47,7 +46,7 @@ namespace triton {
         Z3Result(const Z3Result& copy);
 
         //! Destructor.
-        ~Z3Result();
+        virtual ~Z3Result();
 
         //! Displays the expression.
         void printExpr(void) const;

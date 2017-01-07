@@ -2,13 +2,11 @@
 /*
 **  Copyright (C) - Triton
 **
-**  This program is under the terms of the LGPLv3 License.
+**  This program is under the terms of the BSD License.
 */
 
-#include <stdexcept>
-
-#include <api.hpp>
 #include <astPythonRepresentation.hpp>
+#include <exceptions.hpp>
 
 
 
@@ -77,7 +75,7 @@ namespace triton {
           case VARIABLE_NODE:             return this->print(stream, reinterpret_cast<triton::ast::VariableNode*>(node)); break;
           case ZX_NODE:                   return this->print(stream, reinterpret_cast<triton::ast::ZxNode*>(node)); break;
           default:
-            throw std::invalid_argument("AstPythonRepresentation::print(AbstractNode): Invalid kind node.");
+            throw triton::exceptions::AstRepresentation("AstPythonRepresentation::print(AbstractNode): Invalid kind node.");
         }
         return stream;
       }
@@ -134,7 +132,7 @@ namespace triton {
 
       /* bvnand representation */
       std::ostream& AstPythonRepresentation::print(std::ostream& stream, triton::ast::BvnandNode* node) {
-        stream << "~(" << node->getChilds()[0] << " & " << node->getChilds()[1] << ")";
+        stream << "(~(" << node->getChilds()[0] << " & " << node->getChilds()[1] << ") & 0x" << std::hex << node->getBitvectorMask() << std::dec << ")";
         return stream;
       }
 
@@ -148,14 +146,14 @@ namespace triton {
 
       /* bvnor representation */
       std::ostream& AstPythonRepresentation::print(std::ostream& stream, triton::ast::BvnorNode* node) {
-        stream << "~(" << node->getChilds()[0] << " | " << node->getChilds()[1] << ")";
+        stream << "(~(" << node->getChilds()[0] << " | " << node->getChilds()[1] << ") & 0x" << std::hex << node->getBitvectorMask() << std::dec << ")";
         return stream;
       }
 
 
       /* bvnot representation */
       std::ostream& AstPythonRepresentation::print(std::ostream& stream, triton::ast::BvnotNode* node) {
-        stream << "~" << node->getChilds()[0];
+        stream << "(~(" << node->getChilds()[0] << ") & 0x" << std::hex << node->getBitvectorMask() << std::dec << ")";
         return stream;
       }
 
@@ -288,7 +286,7 @@ namespace triton {
 
       /* bvxnor representation */
       std::ostream& AstPythonRepresentation::print(std::ostream& stream, triton::ast::BvxnorNode* node) {
-        stream << "~(" << node->getChilds()[0] << " ^ " << node->getChilds()[1] << ")";
+        stream << "(~(" << node->getChilds()[0] << " ^ " << node->getChilds()[1] << ") & 0x" << std::hex << node->getBitvectorMask() << std::dec << ")";
         return stream;
       }
 
@@ -309,7 +307,7 @@ namespace triton {
 
       /* compound representation */
       std::ostream& AstPythonRepresentation::print(std::ostream& stream, triton::ast::CompoundNode* node) {
-        for (triton::uint32 index = 0; index < node->getChilds().size(); index++)
+        for (triton::usize index = 0; index < node->getChilds().size(); index++)
           stream << node->getChilds()[index] << std::endl;
         return stream;
       }
@@ -317,12 +315,12 @@ namespace triton {
 
       /* concat representation */
       std::ostream& AstPythonRepresentation::print(std::ostream& stream, triton::ast::ConcatNode* node) {
-        triton::uint32 size = node->getChilds().size();
+        triton::usize size = node->getChilds().size();
 
-        for (triton::uint32 index = 0; index < size; index++)
+        for (triton::usize index = 0; index < size; index++)
           stream << "(";
 
-        for (triton::uint32 index = 0; index < size-1; index++)
+        for (triton::usize index = 0; index < size-1; index++)
           stream << node->getChilds()[index] << ") << " << node->getChilds()[index+1]->getBitvectorSize() << " | ";
 
         stream << node->getChilds()[size-1] << ")";
@@ -360,11 +358,9 @@ namespace triton {
 
       /* extract representation */
       std::ostream& AstPythonRepresentation::print(std::ostream& stream, triton::ast::ExtractNode* node) {
-        triton::uint64 low = reinterpret_cast<triton::ast::DecimalNode*>(node->getChilds()[1])->getValue().convert_to<triton::uint64>();
+        triton::uint32 low = reinterpret_cast<triton::ast::DecimalNode*>(node->getChilds()[1])->getValue().convert_to<triton::uint32>();
 
-        if (node->getBitvectorSize() == triton::api.cpuRegisterBitSize())
-          stream << node->getChilds()[2];
-        else if (low == 0)
+        if (low == 0)
           stream << "(" << node->getChilds()[2] << " & " << std::hex << "0x" << node->getBitvectorMask() << std::dec << ")";
         else
           stream << "((" << node->getChilds()[2] << " >> " << low << ")" << " & " << std::hex << "0x" << node->getBitvectorMask() << std::dec << ")";

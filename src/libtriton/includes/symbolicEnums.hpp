@@ -2,7 +2,7 @@
 /*
 **  Copyright (C) - Triton
 **
-**  This program is under the terms of the LGPLv3 License.
+**  This program is under the terms of the BSD License.
 */
 
 #ifndef TRITON_SYMBOLICENUMS_H
@@ -18,14 +18,14 @@
 
 
 
-//! \module The Triton namespace
+//! The Triton namespace
 namespace triton {
 /*!
  *  \addtogroup triton
  *  @{
  */
 
-  //! \module The Engines namespace
+  //! The Engines namespace
   namespace engines {
   /*!
    *  \ingroup triton
@@ -33,7 +33,7 @@ namespace triton {
    *  @{
    */
 
-    //! \module The Symbolic Execution namespace
+    //! The Symbolic Execution namespace
     namespace symbolic {
     /*!
      *  \ingroup engines
@@ -42,7 +42,7 @@ namespace triton {
      */
 
       //! Defines an UNSET symbolic expression.
-      const triton::__uint UNSET = -1;
+      const triton::usize UNSET = static_cast<triton::usize>(-1);
 
       //! Enumerates all kinds of symbolic variable.
       enum symkind_e {

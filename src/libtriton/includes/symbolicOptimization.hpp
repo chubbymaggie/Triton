@@ -2,7 +2,7 @@
 /*
 **  Copyright (C) - Triton
 **
-**  This program is under the terms of the LGPLv3 License.
+**  This program is under the terms of the BSD License.
 */
 
 #ifndef TRITON_SYMBOLICOPTIMIZATION_H
@@ -19,14 +19,14 @@
 
 
 
-//! \module The Triton namespace
+//! The Triton namespace
 namespace triton {
 /*!
  *  \addtogroup triton
  *  @{
  */
 
-  //! \module The Engines namespace
+  //! The Engines namespace
   namespace engines {
   /*!
    *  \ingroup triton
@@ -34,7 +34,7 @@ namespace triton {
    *  @{
    */
 
-    //! \module The Symbolic Execution namespace
+    //! The Symbolic Execution namespace
     namespace symbolic {
     /*!
      *  \ingroup engines
@@ -45,7 +45,6 @@ namespace triton {
       //! \class SymbolicOptimization
       /*! \brief The symbolic simplification class */
       class SymbolicOptimization {
-
         protected:
           //! The set of enabled optimization
           std::set<enum optimization_e> enabledOptimizations;
@@ -54,14 +53,23 @@ namespace triton {
           //! Constructor.
           SymbolicOptimization();
 
+          //! Constructor.
+          SymbolicOptimization(const SymbolicOptimization& copy);
+
           //! Destructor.
-          ~SymbolicOptimization();
+          virtual ~SymbolicOptimization();
+
+          //! Copies a SymbolicOptimization.
+          void copy(const SymbolicOptimization& other);
 
           //! Returns true if the symbolic optimization is enabled.
           bool isOptimizationEnabled(enum optimization_e opti) const;
 
           //! Enables or disables a symbolic optimization.
           void enableOptimization(enum optimization_e opti, bool flag);
+
+          //! Copies a SymbolicOptimization.
+          void operator=(const SymbolicOptimization& other);
       };
 
     /*! @} End of symbolic namespace */

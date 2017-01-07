@@ -2,13 +2,13 @@
 /*
 **  Copyright (C) - Triton
 **
-**  This program is under the terms of the LGPLv3 License.
+**  This program is under the terms of the BSD License.
 */
 
-#include <stdexcept>
+#include <new>
 
-#include <api.hpp>
 #include <architecture.hpp>
+#include <exceptions.hpp>
 #include <x8664Cpu.hpp>
 #include <x86Cpu.hpp>
 
@@ -17,13 +17,15 @@
 namespace triton {
   namespace arch {
 
-    Architecture::Architecture() {
-      this->arch = triton::arch::ARCH_INVALID;
-      this->cpu  = nullptr;
+    Architecture::Architecture(triton::callbacks::Callbacks* callbacks) {
+      this->arch      = triton::arch::ARCH_INVALID;
+      this->callbacks = callbacks;
+      this->cpu       = nullptr;
     }
 
 
     Architecture::~Architecture() {
+      delete this->cpu;
     }
 
 
@@ -32,9 +34,9 @@ namespace triton {
     }
 
 
-    triton::arch::cpuInterface* Architecture::getCpu(void) {
+    triton::arch::CpuInterface* Architecture::getCpu(void) {
       if (!this->cpu)
-        throw std::runtime_error("Architecture::getCpu(): CPU undefined.");
+        throw triton::exceptions::Architecture("Architecture::getCpu(): CPU undefined.");
       return this->cpu;
     }
 
@@ -42,7 +44,7 @@ namespace triton {
     void Architecture::setArchitecture(triton::uint32 arch) {
       /* Check if the architecture is valid */
       if (!(arch > triton::arch::ARCH_INVALID && arch < triton::arch::ARCH_LAST_ITEM))
-        throw std::runtime_error("Architecture::setArchitecture(): Invalid architecture.");
+        throw triton::exceptions::Architecture("Architecture::setArchitecture(): Invalid architecture.");
 
       /* Setup global variables */
       this->arch = arch;
@@ -50,15 +52,12 @@ namespace triton {
       /* Allocate and init the good arch */
       switch (this->arch) {
         case triton::arch::ARCH_X86_64:
-          #if defined(__i386) || defined(_M_IX86)
-            throw std::runtime_error("Architecture::setArchitecture(): You cannot analyze 64-bits code on a 32-bits machine.");
-          #endif
           /* remove previous CPU instance (when setArchitecture() has been called twice) */
           delete this->cpu;
           /* init the new instance */
-          this->cpu = new triton::arch::x86::x8664Cpu();
-          if (!this->cpu)
-            throw std::runtime_error("Architecture::setArchitecture(): Not enough memory.");
+          this->cpu = new(std::nothrow) triton::arch::x86::x8664Cpu(this->callbacks);
+          if (this->cpu == nullptr)
+            throw triton::exceptions::Architecture("Architecture::setArchitecture(): Not enough memory.");
           this->cpu->init();
           break;
 
@@ -66,9 +65,9 @@ namespace triton {
           /* remove previous CPU instance (when setArchitecture() has been called twice) */
           delete this->cpu;
           /* init the new instance */
-          this->cpu = new triton::arch::x86::x86Cpu();
-          if (!this->cpu)
-            throw std::runtime_error("Architecture::setArchitecture(): Not enough memory.");
+          this->cpu = new(std::nothrow) triton::arch::x86::x86Cpu(this->callbacks);
+          if (this->cpu == nullptr)
+            throw triton::exceptions::Architecture("Architecture::setArchitecture(): Not enough memory.");
           this->cpu->init();
           break;
       }
@@ -77,7 +76,7 @@ namespace triton {
 
     void Architecture::clearArchitecture(void) {
       if (!this->cpu)
-        throw std::runtime_error("Architecture::clearArchitecture(): You must define an architecture.");
+        throw triton::exceptions::Architecture("Architecture::clearArchitecture(): You must define an architecture.");
       this->cpu->clear();
     }
 
@@ -96,10 +95,20 @@ namespace triton {
     }
 
 
+    bool Architecture::isFlag(const triton::arch::Register& reg) const {
+      return this->isFlag(reg.getId());
+    }
+
+
     bool Architecture::isRegister(triton::uint32 regId) const {
       if (!this->cpu)
         return false;
       return this->cpu->isRegister(regId);
+    }
+
+
+    bool Architecture::isRegister(const triton::arch::Register& reg) const {
+      return this->isRegister(reg.getId());
     }
 
 
@@ -110,10 +119,8 @@ namespace triton {
     }
 
 
-    triton::uint32 Architecture::invalidRegister(void) const {
-      if (!this->cpu)
-        return 0;
-      return this->cpu->invalidRegister();
+    bool Architecture::isRegisterValid(const triton::arch::Register& reg) const {
+      return this->isRegisterValid(reg.getId());
     }
 
 
@@ -138,193 +145,111 @@ namespace triton {
     }
 
 
-    std::tuple<std::string, triton::uint32, triton::uint32, triton::uint32> Architecture::getRegisterInformation(triton::uint32 reg) const {
-      std::tuple<std::string, triton::uint32, triton::uint32, triton::uint32> ret;
-
-      std::get<0>(ret) = "unknown"; /* name           */
-      std::get<1>(ret) = 0;         /* highest bit    */
-      std::get<2>(ret) = 0;         /* lower bit      */
-      std::get<3>(ret) = 0;         /* higest reg id  */
+    triton::arch::RegisterSpecification Architecture::getRegisterSpecification(triton::uint32 regId) const {
+      triton::arch::RegisterSpecification ret;
 
       if (this->cpu)
-        ret = this->cpu->getRegisterInformation(reg);
+        ret = this->cpu->getRegisterSpecification(regId);
 
       return ret;
     }
 
 
-    std::set<triton::arch::RegisterOperand*> Architecture::getAllRegisters(void) const {
+    std::set<triton::arch::Register*> Architecture::getAllRegisters(void) const {
       if (!this->cpu)
-        throw std::runtime_error("Architecture::getAllRegisters(): You must define an architecture.");
+        throw triton::exceptions::Architecture("Architecture::getAllRegisters(): You must define an architecture.");
       return this->cpu->getAllRegisters();
     }
 
 
-    std::set<triton::arch::RegisterOperand*> Architecture::getParentRegisters(void) const {
+    std::set<triton::arch::Register*> Architecture::getParentRegisters(void) const {
       if (!this->cpu)
-        throw std::runtime_error("Architecture::getParentRegisters(): You must define an architecture.");
+        throw triton::exceptions::Architecture("Architecture::getParentRegisters(): You must define an architecture.");
       return this->cpu->getParentRegisters();
     }
 
 
-    void Architecture::disassembly(triton::arch::Instruction &inst) const {
+    void Architecture::disassembly(triton::arch::Instruction& inst) const {
       if (!this->cpu)
-        throw std::runtime_error("Architecture::disassembly(): You must define an architecture.");
+        throw triton::exceptions::Architecture("Architecture::disassembly(): You must define an architecture.");
       this->cpu->disassembly(inst);
     }
 
 
-    void Architecture::buildSemantics(triton::arch::Instruction &inst) const {
+    triton::uint8 Architecture::getConcreteMemoryValue(triton::uint64 addr) const {
       if (!this->cpu)
-        throw std::runtime_error("Architecture::buildSemantics(): You must define an architecture.");
-
-      /* Pre IR processing */
-      inst.preIRInit();
-
-      /* If the symbolic and taint engine are disable we skip the processing */
-      if (!triton::api.isSymbolicEngineEnabled() && !triton::api.isTaintEngineEnabled())
-        return;
-
-      /* Backup the symbolic engine in the case where only taint is available. */
-      if (!triton::api.isSymbolicEngineEnabled())
-        triton::api.backupSymbolicEngine();
-
-      /* Processing */
-      this->cpu->buildSemantics(inst);
-
-      /* Post IR processing */
-      inst.postIRInit();
-
-      /*
-       * If the symbolic engine is disable we delete symbolic
-       * expressions and AST nodes. Note that if the taint engine
-       * is enable we must compute semanitcs to spread the taint.
-       */
-      if (!triton::api.isSymbolicEngineEnabled()) {
-        std::set<triton::ast::AbstractNode*> uniqueNodes;
-        std::vector<triton::engines::symbolic::SymbolicExpression*>::iterator it;
-        for (it = inst.symbolicExpressions.begin(); it != inst.symbolicExpressions.end(); it++) {
-          triton::api.extractUniqueAstNodes(uniqueNodes, (*it)->getAst());
-          triton::api.removeSymbolicExpression((*it)->getId());
-        }
-
-        if (!triton::api.isSymbolicOptimizationEnabled(triton::engines::symbolic::AST_DICTIONARIES)) {
-          /* Remove node only if AST_DICTIONARIES is disabled */
-          triton::api.freeAstNodes(uniqueNodes);
-        }
-
-        inst.symbolicExpressions.clear();
-        triton::api.restoreSymbolicEngine();
-      }
-
-      /*
-       * If the symbolic engine is defined to process symbolic
-       * execution only on tainted instructions, we delete all
-       * expressions untainted and their AST nodes.
-       */
-      if (triton::api.isSymbolicOptimizationEnabled(triton::engines::symbolic::ONLY_ON_TAINTED)) {
-        std::set<triton::ast::AbstractNode*> uniqueNodes;
-        std::vector<triton::engines::symbolic::SymbolicExpression*> newVector;
-        std::vector<triton::engines::symbolic::SymbolicExpression*>::iterator it;
-        for (it = inst.symbolicExpressions.begin(); it != inst.symbolicExpressions.end(); it++) {
-          if ((*it)->isTainted == triton::engines::taint::UNTAINTED) {
-            triton::api.extractUniqueAstNodes(uniqueNodes, (*it)->getAst());
-            triton::api.removeSymbolicExpression((*it)->getId());
-          }
-          else
-            newVector.push_back(*it);
-        }
-
-        if (!triton::api.isSymbolicOptimizationEnabled(triton::engines::symbolic::AST_DICTIONARIES)) {
-          /* Remove node only if AST_DICTIONARIES is disabled */
-          triton::api.freeAstNodes(uniqueNodes);
-        }
-
-        inst.symbolicExpressions = newVector;
-      }
-
-      /*
-       * If the symbolic engine is defined to process symbolic
-       * execution only on symbolized expressions, we delete all
-       * concrete expressions and their AST nodes.
-       */
-      if (triton::api.isSymbolicOptimizationEnabled(triton::engines::symbolic::ONLY_ON_SYMBOLIZED)) {
-        std::set<triton::ast::AbstractNode*> uniqueNodes;
-        std::vector<triton::engines::symbolic::SymbolicExpression*> newVector;
-        std::vector<triton::engines::symbolic::SymbolicExpression*>::iterator it;
-        for (it = inst.symbolicExpressions.begin(); it != inst.symbolicExpressions.end(); it++) {
-          if ((*it)->getAst()->isSymbolized() == false) {
-            triton::api.extractUniqueAstNodes(uniqueNodes, (*it)->getAst());
-            triton::api.removeSymbolicExpression((*it)->getId());
-          }
-          else
-            newVector.push_back(*it);
-        }
-
-        if (!triton::api.isSymbolicOptimizationEnabled(triton::engines::symbolic::AST_DICTIONARIES)) {
-          /* Remove node only if AST_DICTIONARIES is disabled */
-          triton::api.freeAstNodes(uniqueNodes);
-        }
-
-        inst.symbolicExpressions = newVector;
-      }
-
+        throw triton::exceptions::Architecture("Architecture::getConcreteMemoryValue(): You must define an architecture.");
+      return this->cpu->getConcreteMemoryValue(addr);
     }
 
 
-    triton::uint8 Architecture::getLastMemoryValue(triton::__uint addr) const {
+    triton::uint512 Architecture::getConcreteMemoryValue(const triton::arch::MemoryAccess& mem, bool execCallbacks) const {
       if (!this->cpu)
-        throw std::runtime_error("Architecture::getLastMemoryValue(): You must define an architecture.");
-      return this->cpu->getLastMemoryValue(addr);
+        throw triton::exceptions::Architecture("Architecture::getConcreteMemoryValue(): You must define an architecture.");
+      return this->cpu->getConcreteMemoryValue(mem, execCallbacks);
     }
 
 
-    triton::uint512 Architecture::getLastMemoryValue(const triton::arch::MemoryOperand& mem) const {
+    std::vector<triton::uint8> Architecture::getConcreteMemoryAreaValue(triton::uint64 baseAddr, triton::usize size, bool execCallbacks) const {
       if (!this->cpu)
-        throw std::runtime_error("Architecture::getLastMemoryValue(): You must define an architecture.");
-      return this->cpu->getLastMemoryValue(mem);
+        throw triton::exceptions::Architecture("Architecture::getConcreteMemoryAreaValue(): You must define an architecture.");
+      return this->cpu->getConcreteMemoryAreaValue(baseAddr, size, execCallbacks);
     }
 
 
-    std::vector<triton::uint8> Architecture::getLastMemoryAreaValue(triton::__uint baseAddr, triton::uint32 size) const {
+    triton::uint512 Architecture::getConcreteRegisterValue(const triton::arch::Register& reg, bool execCallbacks) const {
       if (!this->cpu)
-        throw std::runtime_error("Architecture::getLastMemoryAreaValue(): You must define an architecture.");
-      return this->cpu->getLastMemoryAreaValue(baseAddr, size);
+        throw triton::exceptions::Architecture("Architecture::getConcreteRegisterValue(): You must define an architecture.");
+      return this->cpu->getConcreteRegisterValue(reg, execCallbacks);
     }
 
 
-    triton::uint512 Architecture::getLastRegisterValue(const triton::arch::RegisterOperand& reg) const {
+    void Architecture::setConcreteMemoryValue(triton::uint64 addr, triton::uint8 value) {
       if (!this->cpu)
-        throw std::runtime_error("Architecture::getLastRegisterValue(): You must define an architecture.");
-      return this->cpu->getLastRegisterValue(reg);
+        throw triton::exceptions::Architecture("Architecture::setConcreteMemoryValue(): You must define an architecture.");
+      this->cpu->setConcreteMemoryValue(addr, value);
     }
 
 
-    void Architecture::setLastMemoryValue(triton::__uint addr, triton::uint8 value) {
+    void Architecture::setConcreteMemoryValue(const triton::arch::MemoryAccess& mem) {
       if (!this->cpu)
-        throw std::runtime_error("Architecture::setLastMemoryValue(): You must define an architecture.");
-      this->cpu->setLastMemoryValue(addr, value);
+        throw triton::exceptions::Architecture("Architecture::setConcreteMemoryValue(): You must define an architecture.");
+      this->cpu->setConcreteMemoryValue(mem);
     }
 
 
-    void Architecture::setLastMemoryValue(const triton::arch::MemoryOperand& mem) {
+    void Architecture::setConcreteMemoryAreaValue(triton::uint64 baseAddr, const std::vector<triton::uint8>& values) {
       if (!this->cpu)
-        throw std::runtime_error("Architecture::setLastMemoryValue(): You must define an architecture.");
-      this->cpu->setLastMemoryValue(mem);
+        throw triton::exceptions::Architecture("Architecture::setConcreteMemoryAreaValue(): You must define an architecture.");
+      this->cpu->setConcreteMemoryAreaValue(baseAddr, values);
     }
 
 
-    void Architecture::setLastMemoryAreaValue(triton::__uint baseAddr, const std::vector<triton::uint8>& values) {
+    void Architecture::setConcreteMemoryAreaValue(triton::uint64 baseAddr, const triton::uint8* area, triton::usize size) {
       if (!this->cpu)
-        throw std::runtime_error("Architecture::setLastMemoryAreaValue(): You must define an architecture.");
-      this->cpu->setLastMemoryAreaValue(baseAddr, values);
+        throw triton::exceptions::Architecture("Architecture::setConcreteMemoryAreaValue(): You must define an architecture.");
+      this->cpu->setConcreteMemoryAreaValue(baseAddr, area, size);
     }
 
 
-    void Architecture::setLastRegisterValue(const triton::arch::RegisterOperand& reg) {
+    void Architecture::setConcreteRegisterValue(const triton::arch::Register& reg) {
       if (!this->cpu)
-        throw std::runtime_error("Architecture::setLastRegisterValue(): You must define an architecture.");
-      this->cpu->setLastRegisterValue(reg);
+        throw triton::exceptions::Architecture("Architecture::setConcreteRegisterValue(): You must define an architecture.");
+      this->cpu->setConcreteRegisterValue(reg);
+    }
+
+
+    bool Architecture::isMemoryMapped(triton::uint64 baseAddr, triton::usize size) {
+      if (!this->cpu)
+        throw triton::exceptions::Architecture("Architecture::isMemoryMapped(): You must define an architecture.");
+      return this->cpu->isMemoryMapped(baseAddr, size);
+    }
+
+
+    void Architecture::unmapMemory(triton::uint64 baseAddr, triton::usize size) {
+      if (!this->cpu)
+        throw triton::exceptions::Architecture("Architecture::unmapMemory(): You must define an architecture.");
+      this->cpu->unmapMemory(baseAddr, size);
     }
 
   }; /* arch namespace */

@@ -2,11 +2,12 @@
 /*
 **  Copyright (C) - Triton
 **
-**  This program is under the terms of the LGPLv3 License.
+**  This program is under the terms of the BSD License.
 */
 
 #ifdef TRITON_PYTHON_BINDINGS
 
+#include <exceptions.hpp>
 #include <pathConstraint.hpp>
 #include <pythonObjects.hpp>
 #include <pythonUtils.hpp>
@@ -59,16 +60,19 @@ B1: SymVar_0 = 65 (e)  |  B2: SymVar_0 = 0 ()
 \section PathConstraint_py_api Python API - Methods of the PathConstraint class
 <hr>
 
-- **getBranchConstraints(void)**<br>
-Returns the branch constraints as list of dictionary `{taken, target, constraint}`.
+- <b>dict getBranchConstraints(void)</b><br>
+Returns the branch constraints as list of dictionary `{isTaken, srcAddr, dstAddr, constraint}`. The source address is the location
+of the branch instruction and the destination address is the destination of the jump. E.g: `"0x11223344: jne 0x55667788"`, 0x11223344
+is the source address and 0x55667788 is the destination if and only if the branch is taken, otherwise the destination is the next
+instruction address.
 
-- **getTakenAddress(void)**<br>
-Returns the address of the taken branch as integer.
+- <b>integer getTakenAddress(void)</b><br>
+Returns the address of the taken branch.
 
-- **getTakenPathConstraintAst(void)**<br>
-Returns the path constraint AST of the taken branch as \ref py_AstNode_page.
+- <b>\ref py_AstNode_page getTakenPathConstraintAst(void)</b><br>
+Returns the path constraint AST of the taken branch.
 
-- **isMultipleBranches(void)**<br>
+- <b>bool isMultipleBranches(void)</b><br>
 Returns true if it is not a direct jump.
 
 */
@@ -90,20 +94,21 @@ namespace triton {
       static PyObject* PathConstraint_getBranchConstraints(PyObject* self, PyObject* noarg) {
         try {
           PyObject* ret = nullptr;
-          const std::vector<std::tuple<bool, triton::__uint, triton::ast::AbstractNode*>>& branches = PyPathConstraint_AsPathConstraint(self)->getBranchConstraints();
+          const auto& branches = PyPathConstraint_AsPathConstraint(self)->getBranchConstraints();
 
           ret = xPyList_New(branches.size());
-          for (triton::uint32 index = 0; index != branches.size(); index++) {
+          for (triton::usize index = 0; index != branches.size(); index++) {
             PyObject* dict = xPyDict_New();
-            PyDict_SetItem(dict, PyString_FromString("taken"),      PyBool_FromLong(std::get<0>(branches[index])));
-            PyDict_SetItem(dict, PyString_FromString("target"),     PyLong_FromUint(std::get<1>(branches[index])));
-            PyDict_SetItem(dict, PyString_FromString("constraint"), PyAstNode(std::get<2>(branches[index])));
+            PyDict_SetItem(dict, PyString_FromString("isTaken"),    PyBool_FromLong(std::get<0>(branches[index])));
+            PyDict_SetItem(dict, PyString_FromString("srcAddr"),    PyLong_FromUint64(std::get<1>(branches[index])));
+            PyDict_SetItem(dict, PyString_FromString("dstAddr"),    PyLong_FromUint64(std::get<2>(branches[index])));
+            PyDict_SetItem(dict, PyString_FromString("constraint"), PyAstNode(std::get<3>(branches[index])));
             PyList_SetItem(ret, index, dict);
           }
 
           return ret;
         }
-        catch (const std::exception& e) {
+        catch (const triton::exceptions::Exception& e) {
           return PyErr_Format(PyExc_TypeError, "%s", e.what());
         }
       }
@@ -111,9 +116,9 @@ namespace triton {
 
       static PyObject* PathConstraint_getTakenAddress(PyObject* self, PyObject* noarg) {
         try {
-          return PyLong_FromUint(PyPathConstraint_AsPathConstraint(self)->getTakenAddress());
+          return PyLong_FromUint64(PyPathConstraint_AsPathConstraint(self)->getTakenAddress());
         }
-        catch (const std::exception& e) {
+        catch (const triton::exceptions::Exception& e) {
           return PyErr_Format(PyExc_TypeError, "%s", e.what());
         }
       }
@@ -123,7 +128,7 @@ namespace triton {
         try {
           return PyAstNode(PyPathConstraint_AsPathConstraint(self)->getTakenPathConstraintAst());
         }
-        catch (const std::exception& e) {
+        catch (const triton::exceptions::Exception& e) {
           return PyErr_Format(PyExc_TypeError, "%s", e.what());
         }
       }
@@ -135,7 +140,7 @@ namespace triton {
             Py_RETURN_TRUE;
           Py_RETURN_FALSE;
         }
-        catch (const std::exception& e) {
+        catch (const triton::exceptions::Exception& e) {
           return PyErr_Format(PyExc_TypeError, "%s", e.what());
         }
       }
@@ -152,45 +157,54 @@ namespace triton {
 
 
       PyTypeObject PathConstraint_Type = {
-          PyObject_HEAD_INIT(&PyType_Type)
-          0,                                          /* ob_size*/
-          "PathConstraint",                           /* tp_name*/
-          sizeof(PathConstraint_Object),              /* tp_basicsize*/
-          0,                                          /* tp_itemsize*/
-          (destructor)PathConstraint_dealloc,         /* tp_dealloc*/
-          0,                                          /* tp_print*/
-          0,                                          /* tp_getattr*/
-          0,                                          /* tp_setattr*/
-          0,                                          /* tp_compare*/
-          0,                                          /* tp_repr*/
-          0,                                          /* tp_as_number*/
-          0,                                          /* tp_as_sequence*/
-          0,                                          /* tp_as_mapping*/
-          0,                                          /* tp_hash */
-          0,                                          /* tp_call*/
-          0,                                          /* tp_str*/
-          0,                                          /* tp_getattro*/
-          0,                                          /* tp_setattro*/
-          0,                                          /* tp_as_buffer*/
-          Py_TPFLAGS_DEFAULT,                         /* tp_flags*/
-          "PathConstraint objects",                   /* tp_doc */
-          0,                                          /* tp_traverse */
-          0,                                          /* tp_clear */
-          0,                                          /* tp_richcompare */
-          0,                                          /* tp_weaklistoffset */
-          0,                                          /* tp_iter */
-          0,                                          /* tp_iternext */
-          PathConstraint_callbacks,                   /* tp_methods */
-          0,                                          /* tp_members */
-          0,                                          /* tp_getset */
-          0,                                          /* tp_base */
-          0,                                          /* tp_dict */
-          0,                                          /* tp_descr_get */
-          0,                                          /* tp_descr_set */
-          0,                                          /* tp_dictoffset */
-          0,                                          /* tp_init */
-          0,                                          /* tp_alloc */
-          0,                                          /* tp_new */
+        PyObject_HEAD_INIT(&PyType_Type)
+        0,                                          /* ob_size */
+        "PathConstraint",                           /* tp_name */
+        sizeof(PathConstraint_Object),              /* tp_basicsize */
+        0,                                          /* tp_itemsize */
+        (destructor)PathConstraint_dealloc,         /* tp_dealloc */
+        0,                                          /* tp_print */
+        0,                                          /* tp_getattr */
+        0,                                          /* tp_setattr */
+        0,                                          /* tp_compare */
+        0,                                          /* tp_repr */
+        0,                                          /* tp_as_number */
+        0,                                          /* tp_as_sequence */
+        0,                                          /* tp_as_mapping */
+        0,                                          /* tp_hash */
+        0,                                          /* tp_call */
+        0,                                          /* tp_str */
+        0,                                          /* tp_getattro */
+        0,                                          /* tp_setattro */
+        0,                                          /* tp_as_buffer */
+        Py_TPFLAGS_DEFAULT,                         /* tp_flags */
+        "PathConstraint objects",                   /* tp_doc */
+        0,                                          /* tp_traverse */
+        0,                                          /* tp_clear */
+        0,                                          /* tp_richcompare */
+        0,                                          /* tp_weaklistoffset */
+        0,                                          /* tp_iter */
+        0,                                          /* tp_iternext */
+        PathConstraint_callbacks,                   /* tp_methods */
+        0,                                          /* tp_members */
+        0,                                          /* tp_getset */
+        0,                                          /* tp_base */
+        0,                                          /* tp_dict */
+        0,                                          /* tp_descr_get */
+        0,                                          /* tp_descr_set */
+        0,                                          /* tp_dictoffset */
+        0,                                          /* tp_init */
+        0,                                          /* tp_alloc */
+        0,                                          /* tp_new */
+        0,                                          /* tp_free */
+        0,                                          /* tp_is_gc */
+        0,                                          /* tp_bases */
+        0,                                          /* tp_mro */
+        0,                                          /* tp_cache */
+        0,                                          /* tp_subclasses */
+        0,                                          /* tp_weaklist */
+        0,                                          /* tp_del */
+        0                                           /* tp_version_tag */
       };
 
 

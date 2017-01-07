@@ -2,12 +2,11 @@
 /*
 **  Copyright (C) - Triton
 **
-**  This program is under the terms of the LGPLv3 License.
+**  This program is under the terms of the BSD License.
 */
 
 #ifdef TRITON_PYTHON_BINDINGS
 
-#include <operandInterface.hpp>
 #include <pythonBindings.hpp>
 #include <pythonUtils.hpp>
 #include <version.hpp>
@@ -40,9 +39,9 @@ namespace triton {
     namespace python {
 
       void initVersionNamespace(PyObject* versionDict) {
-        PyDict_SetItemString(versionDict, "MAJOR", PyLong_FromUint(triton::MAJOR));
-        PyDict_SetItemString(versionDict, "MINOR", PyLong_FromUint(triton::MINOR));
-        PyDict_SetItemString(versionDict, "BUILD", PyLong_FromUint(triton::BUILD));
+        PyDict_SetItemString(versionDict, "MAJOR", PyLong_FromUint32(triton::MAJOR));
+        PyDict_SetItemString(versionDict, "MINOR", PyLong_FromUint32(triton::MINOR));
+        PyDict_SetItemString(versionDict, "BUILD", PyLong_FromUint32(triton::BUILD));
       }
 
     }; /* python namespace */

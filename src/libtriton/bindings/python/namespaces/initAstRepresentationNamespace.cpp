@@ -2,7 +2,7 @@
 /*
 **  Copyright (C) - Triton
 **
-**  This program is under the terms of the LGPLv3 License.
+**  This program is under the terms of the BSD License.
 */
 
 #ifdef TRITON_PYTHON_BINDINGS
@@ -48,8 +48,8 @@ namespace triton {
     namespace python {
 
       void initAstRepresentationNamespace(PyObject* astRepresentationDict) {
-        PyDict_SetItemString(astRepresentationDict, "SMT",    PyLong_FromUint(triton::ast::representations::SMT_REPRESENTATION));
-        PyDict_SetItemString(astRepresentationDict, "PYTHON", PyLong_FromUint(triton::ast::representations::PYTHON_REPRESENTATION));
+        PyDict_SetItemString(astRepresentationDict, "SMT",    PyLong_FromUint32(triton::ast::representations::SMT_REPRESENTATION));
+        PyDict_SetItemString(astRepresentationDict, "PYTHON", PyLong_FromUint32(triton::ast::representations::PYTHON_REPRESENTATION));
       }
 
     }; /* python namespace */

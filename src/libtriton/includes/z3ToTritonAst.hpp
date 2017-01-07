@@ -2,26 +2,28 @@
 /*
 **  Copyright (C) - Triton
 **
-**  This program is under the terms of the LGPLv3 License.
+**  This program is under the terms of the BSD License.
 */
 
 #ifndef TRITON_Z3TOTRITONAST_H
 #define TRITON_Z3TOTRITONAST_H
 
 #include <z3++.h>
+
 #include "ast.hpp"
+#include "symbolicEngine.hpp"
 #include "tritonTypes.hpp"
 
 
 
-//! \module The Triton namespace
+//! The Triton namespace
 namespace triton {
 /*!
  *  \addtogroup triton
  *  @{
  */
 
-  //! \module The AST namespace
+  //! The AST namespace
   namespace ast {
   /*!
    *  \ingroup triton
@@ -32,6 +34,13 @@ namespace triton {
     //! \class Z3ToTritonAst
     /*! \brief Converts a Z3's AST to a Triton's AST. */
     class Z3ToTritonAst {
+      private:
+        //! Symbolic Engine API
+        triton::engines::symbolic::SymbolicEngine* symbolicEngine;
+
+        //! Vists and converts
+        triton::ast::AbstractNode* visit(z3::expr const& expr);
+
       protected:
         //! Z3's context
         z3::context context;
@@ -39,24 +48,18 @@ namespace triton {
         //! The Z3's expression which must be converted to a Triton's expression.
         z3::expr expr;
 
-
-      private:
-        //! Vists and converts
-        triton::ast::AbstractNode* visit(z3::expr const& expr);
-
-
       public:
         //! Constructor.
-        Z3ToTritonAst();
+        Z3ToTritonAst(triton::engines::symbolic::SymbolicEngine* symbolicEngine);
 
         //! Constructor.
-        Z3ToTritonAst(z3::expr& expr);
+        Z3ToTritonAst(triton::engines::symbolic::SymbolicEngine* symbolicEngine, z3::expr& expr);
 
         //! Constructor by copy.
         Z3ToTritonAst(const Z3ToTritonAst& copy);
 
         //! Destructor.
-        ~Z3ToTritonAst();
+        virtual ~Z3ToTritonAst();
 
         //! Sets the expression.
         void setExpr(z3::expr& expr);

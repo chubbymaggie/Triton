@@ -25,9 +25,9 @@
 ##  Possible solution: 80:09:d4:40:03:96:00:00
 ##
 
-from triton  import *
-from ast     import *
-from pintool import *
+from triton     import *
+from triton.ast import *
+from pintool    import *
 
 # What value you want that strlen must return?
 STRLEN_ASSERT_LEN = 6
@@ -58,11 +58,11 @@ def tainting(threadId):
     rsi = getCurrentRegisterValue(REG.RSI) # argv
 
     while rdi > 1:
-        argv = getCurrentMemoryValue(rsi + ((rdi-1) * CPUSIZE.REG), CPUSIZE.REG)
+        argv = getCurrentMemoryValue(rsi + ((rdi-1) * CPUSIZE.QWORD), CPUSIZE.QWORD)
         offset = 0
         while offset != STRLEN_ASSERT_LEN+5:
             taintMemory(argv + offset)
-            convertMemoryToSymbolicVariable(Memory(argv + offset, CPUSIZE.BYTE))
+            convertMemoryToSymbolicVariable(MemoryAccess(argv + offset, CPUSIZE.BYTE))
             offset += 1
         print '[+] %03d bytes tainted from the argv[%d] (%#x) pointer' %(offset, rdi-1, argv)
         rdi -= 1
@@ -78,8 +78,8 @@ if __name__ == '__main__':
     startAnalysisFromSymbol('main')
 
     # Add callbacks
-    addCallback(tainting, CALLBACK.ROUTINE_ENTRY, 'main')
-    addCallback(before,   CALLBACK.BEFORE_SYMPROC)
+    insertCall(tainting, INSERT_POINT.ROUTINE_ENTRY, 'main')
+    insertCall(before,   INSERT_POINT.BEFORE_SYMPROC)
 
     # Run the instrumentation - Never returns
     runProgram()

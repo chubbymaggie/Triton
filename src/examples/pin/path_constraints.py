@@ -46,9 +46,9 @@
 ##  B1: SymVar_4 = 65 (e)  |  B2: SymVar_4 = 0 ()
 ##
 
-from triton  import *
-from ast     import *
-from pintool import *
+from triton     import *
+from triton.ast import *
+from pintool    import *
 
 TAINTING_SIZE = 10
 
@@ -59,12 +59,12 @@ def tainting(threadId):
     rsi = getCurrentRegisterValue(REG.RSI) # argv
 
     while rdi > 1:
-        argv = getCurrentMemoryValue(rsi + ((rdi-1) * CPUSIZE.REG), CPUSIZE.REG)
+        argv = getCurrentMemoryValue(rsi + ((rdi-1) * CPUSIZE.QWORD), CPUSIZE.QWORD)
         offset = 0
         while offset != TAINTING_SIZE:
             taintMemory(argv + offset)
             concreteValue = getCurrentMemoryValue(argv + offset)
-            convertMemoryToSymbolicVariable(Memory(argv + offset, CPUSIZE.BYTE, concreteValue))
+            convertMemoryToSymbolicVariable(MemoryAccess(argv + offset, CPUSIZE.BYTE, concreteValue))
             offset += 1
         print '[+] %02d bytes tainted from the argv[%d] (%#x) pointer' %(offset, rdi-1, argv)
         rdi -= 1
@@ -113,8 +113,8 @@ if __name__ == '__main__':
     setupImageWhitelist(['crackme_xor'])
 
     # Add callbacks
-    addCallback(tainting, CALLBACK.ROUTINE_ENTRY, 'main')
-    addCallback(fini,     CALLBACK.FINI)
+    insertCall(tainting, INSERT_POINT.ROUTINE_ENTRY, 'main')
+    insertCall(fini,     INSERT_POINT.FINI)
 
     # Run the instrumentation - Never returns
     runProgram()

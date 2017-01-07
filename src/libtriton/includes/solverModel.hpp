@@ -2,7 +2,7 @@
 /*
 **  Copyright (C) - Triton
 **
-**  This program is under the terms of the LGPLv3 License.
+**  This program is under the terms of the BSD License.
 */
 
 #ifndef TRITON_SOLVERMODEL_H
@@ -13,20 +13,20 @@
 
 
 
-//! \module The Triton namespace
+//! The Triton namespace
 namespace triton {
 /*!
  *  \addtogroup triton
  *  @{
  */
-  //! \module The Engines namespace
+  //! The Engines namespace
   namespace engines {
   /*!
    *  \ingroup triton
    *  \addtogroup engines
    *  @{
    */
-    //! \module The Solver namespace
+    //! The Solver namespace
     namespace solver {
     /*!
      *  \ingroup engines
@@ -39,7 +39,7 @@ namespace triton {
       class SolverModel
       {
         protected:
-          //! The name of the variable.
+          //! The name of the variable. Names are always something like this: SymVar_X.
           std::string name;
 
           //! The id of the variable.
@@ -71,7 +71,7 @@ namespace triton {
           SolverModel(const SolverModel& other);
 
           //! Destructor.
-          ~SolverModel();
+          virtual ~SolverModel();
 
           //! Copies a SolverModel
           void operator=(const SolverModel& other);

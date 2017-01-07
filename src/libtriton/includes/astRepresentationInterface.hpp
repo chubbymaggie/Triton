@@ -2,7 +2,7 @@
 /*
 **  Copyright (C) - Triton
 **
-**  This program is under the terms of the LGPLv3 License.
+**  This program is under the terms of the BSD License.
 */
 
 #ifndef TRITON_ASTREPRESENTATIONINTERFACE_HPP
@@ -13,14 +13,14 @@
 
 
 
-//! \module The Triton namespace
+//! The Triton namespace
 namespace triton {
 /*!
  *  \addtogroup triton
  *  @{
  */
 
-  //! \module The AST namespace
+  //! The AST namespace
   namespace ast {
   /*!
    *  \ingroup triton
@@ -28,14 +28,13 @@ namespace triton {
    *  @{
    */
 
-    //! \module The Representations namespace
+    //! The Representations namespace
     namespace representations {
     /*!
      *  \ingroup ast
      *  \addtogroup representations
      *  @{
      */
-
 
       /*!
        *  \interface AstRepresentationInterface
@@ -48,7 +47,6 @@ namespace triton {
           //! Entry point of print.
           virtual std::ostream& print(std::ostream& stream, triton::ast::AbstractNode* node) = 0;
       };
-
 
     /*! @} End of representations namespace */
     };

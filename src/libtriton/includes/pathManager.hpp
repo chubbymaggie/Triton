@@ -2,7 +2,7 @@
 /*
 **  Copyright (C) - Triton
 **
-**  This program is under the terms of the LGPLv3 License.
+**  This program is under the terms of the BSD License.
 */
 
 #ifndef TRITON_PATHMANAGER_H
@@ -10,20 +10,22 @@
 
 #include <vector>
 
+#include "instruction.hpp"
 #include "pathConstraint.hpp"
 #include "symbolicExpression.hpp"
+#include "symbolicOptimization.hpp"
 #include "tritonTypes.hpp"
 
 
 
-//! \module The Triton namespace
+//! The Triton namespace
 namespace triton {
 /*!
  *  \addtogroup triton
  *  @{
  */
 
-  //! \module The Engines namespace
+  //! The Engines namespace
   namespace engines {
   /*!
    *  \ingroup triton
@@ -31,7 +33,7 @@ namespace triton {
    *  @{
    */
 
-    //! \module The Symbolic Execution namespace
+    //! The Symbolic Execution namespace
     namespace symbolic {
     /*!
      *  \ingroup engines
@@ -41,21 +43,25 @@ namespace triton {
 
       /*! \class PathManager
           \brief The path manager class. */
-      class PathManager {
+      class PathManager
+        : public virtual triton::engines::symbolic::SymbolicOptimization {
+
         protected:
           //! \brief The logical conjunction vector of path constraints.
           std::vector<triton::engines::symbolic::PathConstraint> pathConstraints;
-
 
         public:
           //! Constructor.
           PathManager();
 
           //! Constructor by copy.
-          PathManager(const PathManager &copy);
+          PathManager(const PathManager& copy);
 
           //! Destructore.
-          ~PathManager();
+          virtual ~PathManager();
+
+          //! Copies a PathManager.
+          void copy(const PathManager& other);
 
           //! Returns the logical conjunction vector of path constraints.
           const std::vector<triton::engines::symbolic::PathConstraint>& getPathConstraints(void) const;
@@ -64,13 +70,16 @@ namespace triton {
           triton::ast::AbstractNode* getPathConstraintsAst(void) const;
 
           //! Returns the number of constraints.
-          triton::uint32 getNumberOfPathConstraints(void) const;
+          triton::usize getNumberOfPathConstraints(void) const;
 
           //! Adds a path constraint.
-          void addPathConstraint(triton::engines::symbolic::SymbolicExpression* expr);
+          void addPathConstraint(const triton::arch::Instruction& inst, triton::engines::symbolic::SymbolicExpression* expr);
 
           //! Clears the logical conjunction vector of path constraints.
           void clearPathConstraints(void);
+
+          //! Copies a PathManager.
+          void operator=(const PathManager& other);
       };
 
     /*! @} End of symbolic namespace */

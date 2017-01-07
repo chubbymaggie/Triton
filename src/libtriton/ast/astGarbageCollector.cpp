@@ -2,18 +2,21 @@
 /*
 **  Copyright (C) - Triton
 **
-**  This program is under the terms of the LGPLv3 License.
+**  This program is under the terms of the BSD License.
 */
 
-#include <api.hpp>
 #include <astGarbageCollector.hpp>
+#include <exceptions.hpp>
 
 
 
 namespace triton {
   namespace ast {
 
-    AstGarbageCollector::AstGarbageCollector() {
+    AstGarbageCollector::AstGarbageCollector(triton::engines::symbolic::SymbolicEngine* symbolicEngine) {
+      if (symbolicEngine == nullptr)
+        throw triton::exceptions::AstGarbageCollector("AstGarbageCollector::AstGarbageCollector(): The symbolicEngine API cannot be null.");
+      this->symbolicEngine = symbolicEngine;
     }
 
 
@@ -35,6 +38,11 @@ namespace triton {
 
     void AstGarbageCollector::freeAstNodes(std::set<triton::ast::AbstractNode*>& nodes) {
       std::set<triton::ast::AbstractNode*>::iterator it;
+
+      /* Do not delete AST nodes if the AST_DICTIONARIES optimization is enabled */
+      if (this->symbolicEngine->isOptimizationEnabled(triton::engines::symbolic::AST_DICTIONARIES))
+        return;
+
       for (it = nodes.begin(); it != nodes.end(); it++) {
         /* Remove the node from the global set */
         this->allocatedNodes.erase(*it);
@@ -46,6 +54,7 @@ namespace triton {
         /* Delete the node */
         delete *it;
       }
+
       nodes.clear();
     }
 
@@ -60,8 +69,8 @@ namespace triton {
 
     triton::ast::AbstractNode* AstGarbageCollector::recordAstNode(triton::ast::AbstractNode* node) {
       /* Check if the AST_DICTIONARIES is enabled. */
-      if (triton::api.isSymbolicOptimizationEnabled(triton::engines::symbolic::AST_DICTIONARIES)) {
-        triton::ast::AbstractNode* ret = triton::api.browseAstDictionaries(node);
+      if (this->symbolicEngine->isOptimizationEnabled(triton::engines::symbolic::AST_DICTIONARIES)) {
+        triton::ast::AbstractNode* ret = this->symbolicEngine->browseAstDictionaries(node);
         if (ret != nullptr)
           return ret;
       }
@@ -96,7 +105,7 @@ namespace triton {
 
 
     void AstGarbageCollector::setAllocatedAstNodes(const std::set<triton::ast::AbstractNode*>& nodes) {
-        /* Remove unused nodes before the assignation */
+      /* Remove unused nodes before the assignation */
       for (std::set<triton::ast::AbstractNode*>::iterator it = this->allocatedNodes.begin(); it != this->allocatedNodes.end(); it++) {
         if (nodes.find(*it) == nodes.end())
           delete *it;

@@ -2,7 +2,7 @@
 /*
 **  Copyright (C) - Triton
 **
-**  This program is under the terms of the LGPLv3 License.
+**  This program is under the terms of the BSD License.
 */
 
 #ifdef TRITON_PYTHON_BINDINGS
@@ -38,10 +38,8 @@ namespace triton {
     namespace python {
 
       void initArchNamespace(PyObject* archDict) {
-        PyDict_SetItemString(archDict, "X86", PyLong_FromUint(triton::arch::ARCH_X86));
-        #if defined(__x86_64__) || defined(_M_X64)
-        PyDict_SetItemString(archDict, "X86_64", PyLong_FromUint(triton::arch::ARCH_X86_64));
-        #endif
+        PyDict_SetItemString(archDict, "X86",     PyLong_FromUint32(triton::arch::ARCH_X86));
+        PyDict_SetItemString(archDict, "X86_64",  PyLong_FromUint32(triton::arch::ARCH_X86_64));
       }
 
     }; /* python namespace */

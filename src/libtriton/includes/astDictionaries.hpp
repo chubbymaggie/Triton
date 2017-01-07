@@ -2,27 +2,28 @@
 /*
 **  Copyright (C) - Triton
 **
-**  This program is under the terms of the LGPLv3 License.
+**  This program is under the terms of the BSD License.
 */
 
 #ifndef TRITON_ASTDICTIONARIES_H
 #define TRITON_ASTDICTIONARIES_H
 
-#include <list>
+#include <set>
+#include <vector>
 
 #include "ast.hpp"
 #include "tritonTypes.hpp"
 
 
 
-//! \module The Triton namespace
+//! The Triton namespace
 namespace triton {
 /*!
  *  \addtogroup triton
  *  @{
  */
 
-  //! \module The AST namespace
+  //! The AST namespace
   namespace ast {
   /*!
    *  \ingroup triton
@@ -36,10 +37,10 @@ namespace triton {
 
       protected:
         //! Total of allocated nodes.
-        triton::uint32 allocatedNodes;
+        triton::usize allocatedNodes;
 
         //! Total of allocated dictionaries.
-        triton::uint32 allocatedDictionaries;
+        std::set<triton::ast::AbstractNode*> allocatedDictionaries;
 
         //! Assert Dictionary
         std::map<std::vector<triton::ast::AbstractNode*>, triton::ast::AbstractNode*> assertDictionary;
@@ -174,7 +175,7 @@ namespace triton {
         std::map<std::vector<triton::ast::AbstractNode*>, triton::ast::AbstractNode*> lorDictionary;
 
         //! Reference Dictionary
-        std::map<triton::uint512, triton::ast::AbstractNode*> referenceDictionary;
+        std::map<triton::usize, triton::ast::AbstractNode*> referenceDictionary;
 
         //! String Dictionary
         std::map<std::string, triton::ast::AbstractNode*> stringDictionary;
@@ -195,14 +196,26 @@ namespace triton {
         //! Constructor.
         AstDictionaries();
 
+        //! Constructor.
+        AstDictionaries(const AstDictionaries& copy);
+
         //! Destructor.
-        ~AstDictionaries();
+        virtual ~AstDictionaries();
+
+        //! Copies a AstDictionaries.
+        void copy(const AstDictionaries& other);
+
+        //! Links all sub dictionaries to the root one.
+        void linkDictionaries(void);
 
         //! Browses into dictionaries.
         triton::ast::AbstractNode* browseAstDictionaries(triton::ast::AbstractNode* node);
 
         //! Returns stats about dictionaries.
-        std::map<std::string, triton::uint32> getAstDictionariesStats(void);
+        std::map<std::string, triton::usize> getAstDictionariesStats(void);
+
+        //! Copies a AstDictionaries.
+        void operator=(const AstDictionaries& other);
     };
 
   /*! @} End of ast namespace */

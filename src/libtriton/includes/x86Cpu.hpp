@@ -2,7 +2,7 @@
 /*
 **  Copyright (C) - Triton
 **
-**  This program is under the terms of the LGPLv3 License.
+**  This program is under the terms of the BSD License.
 */
 
 #ifndef TRITON_X86CPU_HPP
@@ -10,25 +10,26 @@
 
 #include <map>
 #include <set>
-#include <tuple>
 #include <vector>
 
+#include "callbacks.hpp"
 #include "cpuInterface.hpp"
 #include "instruction.hpp"
-#include "memoryOperand.hpp"
-#include "registerOperand.hpp"
+#include "memoryAccess.hpp"
+#include "register.hpp"
+#include "registerSpecification.hpp"
 #include "tritonTypes.hpp"
-#include "x86Semantics.hpp"
+#include "x86Specifications.hpp"
 
 
-//! \module The Triton namespace
+//! The Triton namespace
 namespace triton {
 /*!
  *  \addtogroup triton
  *  @{
  */
 
-  //! \module The Architecture namespace
+  //! The Architecture namespace
   namespace arch {
   /*!
    *  \ingroup triton
@@ -36,7 +37,7 @@ namespace triton {
    *  @{
    */
 
-    //! \module The x86 namespace
+    //! The x86 namespace
     namespace x86 {
     /*!
      *  \ingroup arch
@@ -46,17 +47,19 @@ namespace triton {
 
       //! \class x86Cpu
       /*! \brief This class is used to describe the x86 (32-bits) spec. */
-      class x86Cpu : public cpuInterface {
+      class x86Cpu : public virtual CpuInterface, public virtual x86Specifications {
+        private:
+          //! Callbacks API
+          triton::callbacks::Callbacks* callbacks;
 
         protected:
-
           /*! \brief map of address -> concrete value
            *
            * \description
            * **item1**: memory address<br>
            * **item2**: concrete value
            */
-          std::map<triton::__uint, triton::uint8> memory;
+          std::map<triton::uint64, triton::uint8> memory;
 
           //! Concrete value of eax
           triton::uint8 eax[DWORD_SIZE];
@@ -173,21 +176,21 @@ namespace triton {
           //! Concrete value of SS
           triton::uint8 ss[DWORD_SIZE];
 
-
         public:
-          x86Cpu();
+          //! Constructor.
+          x86Cpu(triton::callbacks::Callbacks* callbacks=nullptr);
+
           //! Constructor by copy.
           x86Cpu(const x86Cpu& other);
-          ~x86Cpu();
+
+          //! Destructor.
+          virtual ~x86Cpu();
+
+          //! Copies a x86Cpu class.
+          void operator=(const x86Cpu& other);
 
           //! Copies a x86Cpu class.
           void copy(const x86Cpu& other);
-
-          void init(void);
-          void clear(void);
-          bool isFlag(triton::uint32 regId) const;
-          bool isRegister(triton::uint32 regId) const;
-          bool isRegisterValid(triton::uint32 regId) const;
 
           //! Returns true if regId is a GRP.
           bool isGPR(triton::uint32 regId) const;
@@ -207,26 +210,31 @@ namespace triton {
           //! Returns true if regId is a Segment.
           bool isSegment(triton::uint32 regId) const;
 
-          std::tuple<std::string, triton::uint32, triton::uint32, triton::uint32> getRegisterInformation(triton::uint32 reg) const;
-          std::set<triton::arch::RegisterOperand*> getAllRegisters(void) const;
-          std::set<triton::arch::RegisterOperand*> getParentRegisters(void) const;
-          triton::uint512 getLastMemoryValue(const triton::arch::MemoryOperand& mem) const;
-          std::vector<triton::uint8> getLastMemoryAreaValue(triton::__uint baseAddr, triton::uint32 size) const;
-          triton::uint512 getLastRegisterValue(const triton::arch::RegisterOperand& reg) const;
-          triton::uint32 invalidRegister(void) const;
+          /* Virtual pure inheritance ================================================= */
+          bool isFlag(triton::uint32 regId) const;
+          bool isMemoryMapped(triton::uint64 baseAddr, triton::usize size=1);
+          bool isRegister(triton::uint32 regId) const;
+          bool isRegisterValid(triton::uint32 regId) const;
+          std::set<triton::arch::Register*> getAllRegisters(void) const;
+          std::set<triton::arch::Register*> getParentRegisters(void) const;
+          std::vector<triton::uint8> getConcreteMemoryAreaValue(triton::uint64 baseAddr, triton::usize size, bool execCallbacks=true) const;
+          triton::arch::RegisterSpecification getRegisterSpecification(triton::uint32 regId) const;
           triton::uint32 numberOfRegisters(void) const;
           triton::uint32 registerBitSize(void) const;
           triton::uint32 registerSize(void) const;
-          triton::uint8 getLastMemoryValue(triton::__uint addr) const;
-          void buildSemantics(triton::arch::Instruction &inst) const;
-          void disassembly(triton::arch::Instruction &inst) const;
-          void setLastMemoryValue(triton::__uint addr, triton::uint8 value);
-          void setLastMemoryValue(const triton::arch::MemoryOperand& mem);
-          void setLastMemoryAreaValue(triton::__uint baseAddr, const std::vector<triton::uint8>& values);
-          void setLastRegisterValue(const triton::arch::RegisterOperand& reg);
-
-          //! Copies a x86Cpu class.
-          void operator=(const x86Cpu& other);
+          triton::uint512 getConcreteMemoryValue(const triton::arch::MemoryAccess& mem, bool execCallbacks=true) const;
+          triton::uint512 getConcreteRegisterValue(const triton::arch::Register& reg, bool execCallbacks=true) const;
+          triton::uint8 getConcreteMemoryValue(triton::uint64 addr) const;
+          void clear(void);
+          void disassembly(triton::arch::Instruction& inst) const;
+          void init(void);
+          void setConcreteMemoryAreaValue(triton::uint64 baseAddr, const std::vector<triton::uint8>& values);
+          void setConcreteMemoryAreaValue(triton::uint64 baseAddr, const triton::uint8* area, triton::usize size);
+          void setConcreteMemoryValue(const triton::arch::MemoryAccess& mem);
+          void setConcreteMemoryValue(triton::uint64 addr, triton::uint8 value);
+          void setConcreteRegisterValue(const triton::arch::Register& reg);
+          void unmapMemory(triton::uint64 baseAddr, triton::usize size=1);
+          /* End of virtual pure inheritance ========================================== */
       };
 
     /*! @} End of x86 namespace */

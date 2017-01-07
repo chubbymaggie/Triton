@@ -2,7 +2,7 @@
 /*
 **  Copyright (C) - Triton
 **
-**  This program is under the terms of the LGPLv3 License.
+**  This program is under the terms of the BSD License.
 */
 
 #ifndef PINTOOL_SNAPSHOT_H
@@ -22,14 +22,14 @@
 #include <x86Cpu.hpp>
 
 
-//! \module The Tracer namespace
+//! The Tracer namespace
 namespace tracer {
 /*!
  *  \addtogroup tracer
  *  @{
  */
 
-  //! \module The pintool namespace
+  //! The Pintool namespace
   namespace pintool {
   /*!
    *  \ingroup tracer
