@@ -286,6 +286,78 @@ namespace triton {
     }
 
 
+    bool Instruction::isReadFrom(const triton::arch::OperandWrapper& target) const {
+      switch(target.getType()) {
+
+        case triton::arch::OP_IMM:
+          for (auto&& pair : readImmediates) {
+            if (pair.first == target.getConstImmediate())
+              return true;
+          }
+          break;
+
+        case triton::arch::OP_MEM:
+          for (auto&& pair : loadAccess) {
+            const triton::arch::MemoryAccess& m1 = pair.first;
+            const triton::arch::MemoryAccess& m2 = target.getConstMemory();
+
+            if (m1.isOverlapWith(m2))
+              return true;
+          }
+          break;
+
+        case triton::arch::OP_REG:
+          for (auto&& pair : readRegisters) {
+            const triton::arch::Register& r1 = pair.first;
+            const triton::arch::Register& r2 = target.getConstRegister();
+
+            if (r1.isOverlapWith(r2))
+              return true;
+          }
+          break;
+
+        default:
+          throw triton::exceptions::Instruction("Instruction::isReadFrom(): Invalid type operand.");
+      }
+
+      return false;
+    }
+
+
+    bool Instruction::isWriteTo(const triton::arch::OperandWrapper& target) const {
+      switch(target.getType()) {
+
+        case triton::arch::OP_IMM:
+          break;
+
+        case triton::arch::OP_MEM:
+          for (auto&& pair : storeAccess) {
+            const triton::arch::MemoryAccess& m1 = pair.first;
+            const triton::arch::MemoryAccess& m2 = target.getConstMemory();
+
+            if (m1.isOverlapWith(m2))
+              return true;
+          }
+          break;
+
+        case triton::arch::OP_REG:
+          for (auto&& pair : writtenRegisters) {
+            const triton::arch::Register& r1 = pair.first;
+            const triton::arch::Register& r2 = target.getConstRegister();
+
+            if (r1.isOverlapWith(r2))
+              return true;
+          }
+          break;
+
+        default:
+          throw triton::exceptions::Instruction("Instruction::isWriteTo(): Invalid type operand.");
+      }
+
+      return false;
+    }
+
+
     bool Instruction::isPrefixed(void) const {
       if (this->prefix)
         return true;

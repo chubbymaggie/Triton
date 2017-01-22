@@ -31,6 +31,7 @@ own semantics into the [appropriate file](x86Semantics_8cpp_source.html). Thanks
 
 Mnemonic                     | Extensions | Description
 -----------------------------|------------|----------------------------------------------------
+AAD                          |            | ASCII Adjust AX Before Division
 ADC                          |            | Add with Carry
 ADD                          |            | Add
 AND                          |            | Logical AND
@@ -344,6 +345,7 @@ namespace triton {
 
       bool x86Semantics::buildSemantics(triton::arch::Instruction& inst) {
         switch (inst.getType()) {
+          case ID_INS_AAD:            this->aad_s(inst);          break;
           case ID_INS_ADC:            this->adc_s(inst);          break;
           case ID_INS_ADD:            this->add_s(inst);          break;
           case ID_INS_AND:            this->and_s(inst);          break;
@@ -2094,6 +2096,47 @@ namespace triton {
 
         /* Spread the taint from the parent to the child */
         expr->isTainted = this->taintEngine->setTaintRegister(TRITON_X86_REG_ZF, parent->isTainted);
+      }
+
+
+      void x86Semantics::aad_s(triton::arch::Instruction& inst) {
+        auto  src1   = triton::arch::OperandWrapper(triton::arch::Immediate(0x0a, BYTE_SIZE)); /* D5 0A */
+        auto  src2   = triton::arch::OperandWrapper(TRITON_X86_REG_AL);
+        auto  src3   = triton::arch::OperandWrapper(TRITON_X86_REG_AH);
+        auto  dst    = triton::arch::OperandWrapper(TRITON_X86_REG_AX);
+        auto  dsttmp = triton::arch::OperandWrapper(TRITON_X86_REG_AL);
+
+        /* D5 ib */
+        if (inst.operands.size() == 1)
+          src1 = inst.operands[0];
+
+        /* Create symbolic operands */
+        auto op1 = this->symbolicEngine->buildSymbolicOperand(inst, src1);
+        auto op2 = this->symbolicEngine->buildSymbolicOperand(inst, src2);
+        auto op3 = this->symbolicEngine->buildSymbolicOperand(inst, src3);
+
+        /* Create the semantics */
+        auto node = triton::ast::zx(
+                      BYTE_SIZE_BIT,
+                      triton::ast::bvadd(
+                        op2,
+                        triton::ast::bvmul(op3, op1)
+                      )
+                    );
+
+        /* Create symbolic expression */
+        auto expr = this->symbolicEngine->createSymbolicExpression(inst, node, dst, "AAD operation");
+
+        /* Spread taint */
+        expr->isTainted = this->taintEngine->taintUnion(dst, dst);
+
+        /* Upate symbolic flags */
+        this->pf_s(inst, expr, dsttmp);
+        this->sf_s(inst, expr, dsttmp);
+        this->zf_s(inst, expr, dsttmp);
+
+        /* Upate the symbolic control flow */
+        this->controlFlow_s(inst);
       }
 
 
@@ -5635,6 +5678,32 @@ namespace triton {
         /* Create the semantics */
         auto node = this->symbolicEngine->buildSymbolicOperand(inst, src);
 
+        /*
+         * Special cases:
+         *
+         * Triton defines segment registers as 32 or 64  bits vector to
+         * avoid to simulate the GDT which allows users to directly define
+         * their segments offset.
+         *
+         * The code below, handles the case: MOV r/m{16/32/64}, Sreg
+         */
+        if (src.getType() == triton::arch::OP_REG) {
+          uint32 id = src.getConstRegister().getId();
+          if (id >= triton::arch::x86::ID_REG_CS && id <= triton::arch::x86::ID_REG_SS) {
+            node = triton::ast::extract(dst.getBitSize()-1, 0, node);
+          }
+        }
+
+        /*
+         * The code below, handles the case: MOV Sreg, r/m{16/32/64}
+         */
+        if (dst.getType() == triton::arch::OP_REG) {
+          uint32 id = dst.getConstRegister().getId();
+          if (id >= triton::arch::x86::ID_REG_CS && id <= triton::arch::x86::ID_REG_SS) {
+            node = triton::ast::extract(WORD_SIZE_BIT-1, 0, node);
+          }
+        }
+
         /* Create symbolic expression */
         auto expr = this->symbolicEngine->createSymbolicExpression(inst, node, dst, "MOV operation");
 
@@ -8171,16 +8240,36 @@ namespace triton {
 
 
       void x86Semantics::pop_s(triton::arch::Instruction& inst) {
-        auto  stack      = TRITON_X86_REG_SP.getParent();
-        auto  stackValue = this->architecture->getConcreteRegisterValue(stack).convert_to<triton::uint64>();
-        auto& dst        = inst.operands[0];
-        auto  src        = triton::arch::OperandWrapper(triton::arch::MemoryAccess(stackValue, dst.getSize()));
+        bool  stackRelative = false;
+        auto  stack         = TRITON_X86_REG_SP.getParent();
+        auto  stackValue    = this->architecture->getConcreteRegisterValue(stack).convert_to<triton::uint64>();
+        auto& dst           = inst.operands[0];
+        auto  src           = triton::arch::OperandWrapper(triton::arch::MemoryAccess(stackValue, dst.getSize()));
 
         /* Create symbolic operands */
         auto op1 = this->symbolicEngine->buildSymbolicOperand(inst, src);
 
         /* Create the semantics */
         auto node = op1;
+
+        /*
+         * Create the semantics - side effect
+         *
+         * Intel: If the ESP register is used as a base register for addressing a destination operand in
+         * memory, the POP instruction computes the effective address of the operand after it increments
+         * the ESP register.
+         */
+        if (dst.getType() == triton::arch::OP_MEM) {
+          if (dst.getMemory().getBaseRegister().getParent().getId() == stack.getId()) {
+            /* Align the stack */
+            alignAddStack_s(inst, src.getSize());
+
+            /* Re-initialize the memory access */
+            dst.getMemory().initAddress(triton::arch::FORCE_MEMORY_INITIALIZATION);
+
+            stackRelative = true;
+          }
+        }
 
         /* Create symbolic expression */
         auto expr = this->symbolicEngine->createSymbolicExpression(inst, node, dst, "POP operation");
@@ -8189,7 +8278,8 @@ namespace triton {
         expr->isTainted = this->taintEngine->taintAssignment(dst, src);
 
         /* Create the semantics - side effect */
-        alignAddStack_s(inst, src.getSize());
+        if (!stackRelative)
+          alignAddStack_s(inst, src.getSize());
 
         /* Upate the symbolic control flow */
         this->controlFlow_s(inst);
