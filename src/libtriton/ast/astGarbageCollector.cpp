@@ -5,30 +5,58 @@
 **  This program is under the terms of the BSD License.
 */
 
-#include <astGarbageCollector.hpp>
-#include <exceptions.hpp>
+#include <triton/astGarbageCollector.hpp>
+#include <triton/exceptions.hpp>
 
 
 
 namespace triton {
   namespace ast {
 
-    AstGarbageCollector::AstGarbageCollector(triton::engines::symbolic::SymbolicEngine* symbolicEngine) {
-      if (symbolicEngine == nullptr)
-        throw triton::exceptions::AstGarbageCollector("AstGarbageCollector::AstGarbageCollector(): The symbolicEngine API cannot be null.");
-      this->symbolicEngine = symbolicEngine;
+    AstGarbageCollector::AstGarbageCollector(triton::modes::Modes* modes, bool isBackup)
+      : triton::ast::AstDictionaries(isBackup) {
+
+      if (modes == nullptr)
+        throw triton::exceptions::AstGarbageCollector("AstGarbageCollector::AstGarbageCollector(): The modes API cannot be null.");
+
+      this->backupFlag = isBackup;
+      this->modes      = modes;
+    }
+
+
+    AstGarbageCollector::AstGarbageCollector(const AstGarbageCollector& other)
+      : triton::ast::AstDictionaries(other) {
+      this->copy(other);
+    }
+
+
+    void AstGarbageCollector::operator=(const AstGarbageCollector& other) {
+      triton::ast::AstDictionaries::operator=(other);
+      this->copy(other);
+    }
+
+
+    void AstGarbageCollector::copy(const AstGarbageCollector& other) {
+      /* Remove unused nodes before the assignation */
+      for (auto it = this->allocatedNodes.begin(); it != this->allocatedNodes.end(); it++) {
+        if (other.allocatedNodes.find(*it) == other.allocatedNodes.end())
+          delete *it;
+      }
+      this->allocatedNodes  = other.allocatedNodes;
+      this->backupFlag      = true;
+      this->modes           = other.modes;
+      this->variableNodes   = other.variableNodes;
     }
 
 
     AstGarbageCollector::~AstGarbageCollector() {
-      this->freeAllAstNodes();
+      if (this->backupFlag == false)
+        this->freeAllAstNodes();
     }
 
 
     void AstGarbageCollector::freeAllAstNodes(void) {
-      std::set<triton::ast::AbstractNode*>::iterator it;
-
-      for (it = this->allocatedNodes.begin(); it != this->allocatedNodes.end(); it++)
+      for (auto it = this->allocatedNodes.begin(); it != this->allocatedNodes.end(); it++)
         delete *it;
 
       this->variableNodes.clear();
@@ -40,7 +68,7 @@ namespace triton {
       std::set<triton::ast::AbstractNode*>::iterator it;
 
       /* Do not delete AST nodes if the AST_DICTIONARIES optimization is enabled */
-      if (this->symbolicEngine->isOptimizationEnabled(triton::engines::symbolic::AST_DICTIONARIES))
+      if (this->modes->isModeEnabled(triton::modes::AST_DICTIONARIES))
         return;
 
       for (it = nodes.begin(); it != nodes.end(); it++) {
@@ -69,8 +97,8 @@ namespace triton {
 
     triton::ast::AbstractNode* AstGarbageCollector::recordAstNode(triton::ast::AbstractNode* node) {
       /* Check if the AST_DICTIONARIES is enabled. */
-      if (this->symbolicEngine->isOptimizationEnabled(triton::engines::symbolic::AST_DICTIONARIES)) {
-        triton::ast::AbstractNode* ret = this->symbolicEngine->browseAstDictionaries(node);
+      if (this->modes->isModeEnabled(triton::modes::AST_DICTIONARIES)) {
+        triton::ast::AbstractNode* ret = this->browseAstDictionaries(node);
         if (ret != nullptr)
           return ret;
       }
@@ -106,7 +134,7 @@ namespace triton {
 
     void AstGarbageCollector::setAllocatedAstNodes(const std::set<triton::ast::AbstractNode*>& nodes) {
       /* Remove unused nodes before the assignation */
-      for (std::set<triton::ast::AbstractNode*>::iterator it = this->allocatedNodes.begin(); it != this->allocatedNodes.end(); it++) {
+      for (auto it = this->allocatedNodes.begin(); it != this->allocatedNodes.end(); it++) {
         if (nodes.find(*it) == nodes.end())
           delete *it;
       }

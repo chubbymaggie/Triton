@@ -9,8 +9,8 @@
 #include <map>
 #include <new>
 
-#include <api.hpp>
-#include <exceptions.hpp>
+#include <triton/api.hpp>
+#include <triton/exceptions.hpp>
 
 
 
@@ -36,7 +36,7 @@ automate reverse engineering and perform software verification.
 <ul>
   <li><b>How Triton can help to reverse virtual machine based software protections</b><br>
   Talk at CSAW SOS, NYC, 2016.
-  [<a href="http://triton.quarkslab.com/files/csaw2016-sos-rthomas-jsalwan.pdf">slide</a>]<br>
+  [<a href="https://triton.quarkslab.com/files/csaw2016-sos-rthomas-jsalwan.pdf">slide</a>]<br>
   Abstract: <i>The first part of the talk is going to be an introduction to the Triton framework
   to expose its components and to explain how they work together. Then, the second part will
   include demonstrations on how it's possible to reverse virtual machine based protections using
@@ -45,7 +45,7 @@ automate reverse engineering and perform software verification.
 
   <li><b>Dynamic Binary Analysis and Obfuscated Codes</b><br>
   Talk at St'Hack, Bordeaux, 2016.
-  [<a href="http://triton.quarkslab.com/files/sthack2016-rthomas-jsalwan.pdf">slide</a>]<br>
+  [<a href="https://triton.quarkslab.com/files/sthack2016-rthomas-jsalwan.pdf">slide</a>]<br>
   Abstract: <i>At this presentation we will talk about how a DBA (Dynamic Binary Analysis) may
   help a reverse engineer to reverse obfuscated code. We will first introduce some basic obfuscation
   techniques and then expose how it's possible to break some stuffs (using our open-source DBA framework - Triton) like
@@ -55,7 +55,7 @@ automate reverse engineering and perform software verification.
 
   <li><b>How Triton may help to analyse obfuscated binaries</b><br>
   MISC magazine 82, 2015.
-  [<a href="http://triton.quarkslab.com/files/misc82-triton.pdf">french article</a>]<br>
+  [<a href="https://triton.quarkslab.com/files/misc82-triton.pdf">french article</a>]<br>
   Abstract: <i>Binary obfuscation is used to protect software's intellectual property.
   There exist different kinds of obfucation but roughly, it transforms a binary structure
   into another binary structure by preserving the same semantic. The aim of obfuscation is
@@ -65,10 +65,10 @@ automate reverse engineering and perform software verification.
 
   <li><b>Triton: A Concolic Execution Framework</b><br>
   Talk at SSTIC, Rennes, 2015.
-  [<a href="http://triton.quarkslab.com/files/sstic2015_wp_fr_saudel_salwan.pdf">french paper</a>]
-  [<a href="http://triton.quarkslab.com/files/sstic2015_slide_en_saudel_salwan.pdf">detailed english slide</a>]
-  [<a href="http://triton.quarkslab.com/files/sstic2015_slide_fr_saudel_salwan.pdf">light french slide</a>]
-  [<a href="http://triton.quarkslab.com/files/TritonSSTIC2015.txt">bibtex</a>]<br>
+  [<a href="https://triton.quarkslab.com/files/sstic2015_wp_fr_saudel_salwan.pdf">french paper</a>]
+  [<a href="https://triton.quarkslab.com/files/sstic2015_slide_en_saudel_salwan.pdf">detailed english slide</a>]
+  [<a href="https://triton.quarkslab.com/files/sstic2015_slide_fr_saudel_salwan.pdf">light french slide</a>]
+  [<a href="https://triton.quarkslab.com/files/TritonSSTIC2015.txt">bibtex</a>]<br>
   Abstract: <i>This talk is about the release of Triton, a concolic execution framework based on Pin.
   It provides components like a taint engine, a dynamic symbolic execution engine, a snapshot engine,
   translation of x64 instruction to SMT2, a Z3 interface to solve constraints and Python bindings.
@@ -77,7 +77,7 @@ automate reverse engineering and perform software verification.
 
   <li><b>Dynamic Behavior Analysis Using Binary Instrumentation</b><br>
   Talk at St'Hack, Bordeaux, 2015.
-  [<a href="http://triton.quarkslab.com/files/sthack2015_salwan.pdf">slide</a>]<br>
+  [<a href="https://triton.quarkslab.com/files/sthack2015_salwan.pdf">slide</a>]<br>
   Abstract: <i>This talk can be considered like the part 2 of our talk at SecurityDay.
   In the previous part, we talked about how it was possible to cover a targeted
   function in memory using the DSE (Dynamic Symbolic Execution) approach. Cover
@@ -90,7 +90,7 @@ automate reverse engineering and perform software verification.
 
   <li><b>Covering a function using a Dynamic Symbolic Execution approach</b><br>
   Talk at Security Day, Lille, 2015.
-  [<a href="http://triton.quarkslab.com/files/secday2015_salwan.pdf">slide</a>]<br>
+  [<a href="https://triton.quarkslab.com/files/secday2015_salwan.pdf">slide</a>]<br>
   Abstract: <i>This talk is about binary analysis and instrumentation. We will see how it's possible to
   target a specific function, snapshot the context memory/registers before the function, translate the instrumentation
   into an intermediate representation,apply a taint analysis based on this IR, build/keep formulas for a Dynamic
@@ -192,6 +192,7 @@ namespace triton {
 
     this->astGarbageCollector = nullptr;
     this->irBuilder           = nullptr;
+    this->modes               = nullptr;
     this->solver              = nullptr;
     this->symbolic            = nullptr;
     this->taint               = nullptr;
@@ -247,32 +248,47 @@ namespace triton {
   }
 
 
-  bool API::isCpuFlag(triton::uint32 regId) const {
+  bool API::isFlag(triton::uint32 regId) const {
     return this->arch.isFlag(regId);
   }
 
 
-  bool API::isCpuRegister(triton::uint32 regId) const {
+  bool API::isFlag(const triton::arch::Register& reg) const {
+    return this->arch.isFlag(reg);
+  }
+
+
+  bool API::isRegister(triton::uint32 regId) const {
     return this->arch.isRegister(regId);
   }
 
 
-  bool API::isCpuRegisterValid(triton::uint32 regId) const {
+  bool API::isRegister(const triton::arch::Register& reg) const {
+    return this->arch.isRegister(reg);
+  }
+
+
+  bool API::isRegisterValid(triton::uint32 regId) const {
     return this->arch.isRegisterValid(regId);
   }
 
 
-  triton::uint32 API::cpuRegisterSize(void) const {
-    return this->arch.registerSize();
+  bool API::isRegisterValid(const triton::arch::Register& reg) const {
+    return this->arch.isRegisterValid(reg);
   }
 
 
-  triton::uint32 API::cpuRegisterBitSize(void) const {
+  triton::uint32 API::getRegisterBitSize(void) const {
     return this->arch.registerBitSize();
   }
 
 
-  triton::uint32 API::cpuNumberOfRegisters(void) const {
+  triton::uint32 API::getRegisterSize(void) const {
+    return this->arch.registerSize();
+  }
+
+
+  triton::uint32 API::getNumberOfRegisters(void) const {
     return this->arch.numberOfRegisters();
   }
 
@@ -361,7 +377,11 @@ namespace triton {
   void API::initEngines(void) {
     this->checkArchitecture();
 
-    this->symbolic = new(std::nothrow) triton::engines::symbolic::SymbolicEngine(&this->arch, &this->callbacks);
+    this->modes = new(std::nothrow) triton::modes::Modes();
+    if (this->modes == nullptr)
+      throw triton::exceptions::API("API::initEngines(): No enough memory.");
+
+    this->symbolic = new(std::nothrow) triton::engines::symbolic::SymbolicEngine(&this->arch, this->modes, &this->callbacks);
     if (this->symbolic == nullptr)
       throw triton::exceptions::API("API::initEngines(): No enough memory.");
 
@@ -369,7 +389,7 @@ namespace triton {
     if (this->solver == nullptr)
       throw triton::exceptions::API("API::initEngines(): No enough memory.");
 
-    this->astGarbageCollector = new(std::nothrow) triton::ast::AstGarbageCollector(this->symbolic);
+    this->astGarbageCollector = new(std::nothrow) triton::ast::AstGarbageCollector(this->modes);
     if (this->astGarbageCollector == nullptr)
       throw triton::exceptions::API("API::initEngines(): No enough memory.");
 
@@ -377,7 +397,7 @@ namespace triton {
     if (this->taint == nullptr)
       throw triton::exceptions::API("API::initEngines(): No enough memory.");
 
-    this->irBuilder = new(std::nothrow) triton::arch::IrBuilder(&this->arch, this->astGarbageCollector, this->symbolic, this->taint);
+    this->irBuilder = new(std::nothrow) triton::arch::IrBuilder(&this->arch, this->modes, this->astGarbageCollector, this->symbolic, this->taint);
     if (this->irBuilder == nullptr)
       throw triton::exceptions::API("API::initEngines(): No enough memory.");
 
@@ -391,6 +411,7 @@ namespace triton {
     if (this->isArchitectureValid()) {
       delete this->astGarbageCollector;
       delete this->irBuilder;
+      delete this->modes;
       delete this->solver;
       delete this->symbolic;
       delete this->taint;
@@ -398,6 +419,7 @@ namespace triton {
 
       this->astGarbageCollector = nullptr;
       this->irBuilder           = nullptr;
+      this->modes               = nullptr;
       this->solver              = nullptr;
       this->symbolic            = nullptr;
       this->taint               = nullptr;
@@ -479,6 +501,12 @@ namespace triton {
   const std::set<triton::ast::AbstractNode*>& API::getAllocatedAstNodes(void) const {
     this->checkAstGarbageCollector();
     return this->astGarbageCollector->getAllocatedAstNodes();
+  }
+
+
+  std::map<std::string, triton::usize> API::getAstDictionariesStats(void) const {
+    this->checkAstGarbageCollector();
+    return this->astGarbageCollector->getAstDictionariesStats();
   }
 
 
@@ -586,6 +614,27 @@ namespace triton {
   void API::processCallbacks(triton::callbacks::callback_e kind, const triton::arch::Register& reg) const {
     if (this->callbacks.isDefined)
       this->callbacks.processCallbacks(kind, reg);
+  }
+
+
+
+  /* Modes API======================================================================================= */
+
+  void API::checkModes(void) const {
+    if (!this->modes)
+      throw triton::exceptions::API("API::checkModes(): Modes interface is undefined.");
+  }
+
+
+  void API::enableMode(enum triton::modes::mode_e mode, bool flag) {
+    this->checkModes();
+    this->modes->enableMode(mode, flag);
+  }
+
+
+  bool API::isModeEnabled(enum triton::modes::mode_e mode) const {
+    this->checkModes();
+    return this->modes->isModeEnabled(mode);
   }
 
 
@@ -778,12 +827,6 @@ namespace triton {
   }
 
 
-  std::map<std::string, triton::usize> API::getAstDictionariesStats(void) {
-    this->checkSymbolic();
-    return this->symbolic->getAstDictionariesStats();
-  }
-
-
   triton::ast::AbstractNode* API::processSimplification(triton::ast::AbstractNode* node, bool z3) const {
     this->checkSymbolic();
     if (z3 == true)
@@ -841,12 +884,6 @@ namespace triton {
   }
 
 
-  void API::enableSymbolicOptimization(enum triton::engines::symbolic::optimization_e opti, bool flag) {
-    this->checkSymbolic();
-    this->symbolic->enableOptimization(opti, flag);
-  }
-
-
   bool API::isSymbolicEngineEnabled(void) const {
     this->checkSymbolic();
     return this->symbolic->isEnabled();
@@ -856,12 +893,6 @@ namespace triton {
   bool API::isSymbolicExpressionIdExists(triton::usize symExprId) const {
     this->checkSymbolic();
     return this->symbolic->isSymbolicExpressionIdExists(symExprId);
-  }
-
-
-  bool API::isSymbolicOptimizationEnabled(enum triton::engines::symbolic::optimization_e opti) {
-    this->checkSymbolic();
-    return this->symbolic->isOptimizationEnabled(opti);
   }
 
 

@@ -7,8 +7,8 @@
 
 #include <cstdio>
 
-#include <exceptions.hpp>
-#include <peImportDirectory.hpp>
+#include <triton/exceptions.hpp>
+#include <triton/peImportDirectory.hpp>
 
 
 
@@ -58,7 +58,7 @@ namespace triton {
 
       bool PeImportDirectory::parse(const triton::uint8* raw) {
         std::memcpy(&this->st, raw, sizeof(this->st));
-        return this->st.importLookupTableRVA;
+        return (this->st.importLookupTableRVA ? true : false);
       }
 
 
@@ -109,5 +109,4 @@ namespace triton {
     }; /* pe namespace */
   }; /* format namespace */
 }; /* triton namespace */
-
 

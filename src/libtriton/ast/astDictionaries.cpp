@@ -5,15 +5,17 @@
 **  This program is under the terms of the BSD License.
 */
 
-#include <astDictionaries.hpp>
+#include <triton/astDictionaries.hpp>
 
 
 
 namespace triton {
   namespace ast {
 
-    AstDictionaries::AstDictionaries() {
-      this->allocatedNodes = 0;
+    AstDictionaries::AstDictionaries(bool isBackup) {
+      this->allocatedNodes  = 0;
+      this->backupFlag      = isBackup;
+
       this->linkDictionaries();
     }
 
@@ -24,8 +26,15 @@ namespace triton {
 
 
     AstDictionaries::~AstDictionaries() {
-      for (auto it = this->allocatedDictionaries.begin(); it != this->allocatedDictionaries.end(); it++)
-        delete *it;
+      if (this->backupFlag == false) {
+        for (auto it = this->allocatedDictionaries.begin(); it != this->allocatedDictionaries.end(); it++)
+          delete *it;
+      }
+    }
+
+
+    void AstDictionaries::operator=(const AstDictionaries& other) {
+      this->copy(other);
     }
 
 
@@ -33,6 +42,7 @@ namespace triton {
       /* Global information */
       this->allocatedNodes              = other.allocatedNodes;
       this->allocatedDictionaries       = other.allocatedDictionaries;
+      this->backupFlag                  = true;
 
       /* Dictionnaries */
       this->assertDictionary            = other.assertDictionary;
@@ -210,7 +220,7 @@ namespace triton {
     }
 
 
-    std::map<std::string, triton::usize> AstDictionaries::getAstDictionariesStats(void) {
+    std::map<std::string, triton::usize> AstDictionaries::getAstDictionariesStats(void) const {
       std::map<std::string, triton::usize> stats;
       stats["assert"]                 = this->assertDictionary.size();
       stats["bvadd"]                  = this->bvaddDictionary.size();
@@ -264,11 +274,6 @@ namespace triton {
       stats["allocatedDictionaries"]  = this->allocatedDictionaries.size();
       stats["allocatedNodes"]         = this->allocatedNodes;
       return stats;
-    }
-
-
-    void AstDictionaries::operator=(const AstDictionaries& other) {
-      this->copy(other);
     }
 
   }; /* ast namespace */

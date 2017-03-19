@@ -7,8 +7,8 @@
 
 #include <cstdlib>
 
-#include <solverModel.hpp>
-#include <symbolicEnums.hpp>
+#include <triton/solverModel.hpp>
+#include <triton/symbolicEnums.hpp>
 
 
 
@@ -67,7 +67,7 @@ namespace triton {
 
 
       std::ostream& operator<<(std::ostream& stream, const SolverModel& model) {
-        stream << model.getName() << " = " << std::hex << model.getValue() << std::dec;
+        stream << model.getName() << " = 0x" << std::hex << model.getValue() << std::dec;
         return stream;
       }
 

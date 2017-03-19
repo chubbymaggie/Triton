@@ -5,10 +5,10 @@
 **  This program is under the terms of the BSD License.
 */
 
-#include <api.hpp>
-#include <exceptions.hpp>
-#include <register.hpp>
-#include <registerSpecification.hpp>
+#include <triton/api.hpp>
+#include <triton/exceptions.hpp>
+#include <triton/register.hpp>
+#include <triton/registerSpecification.hpp>
 
 
 
@@ -79,7 +79,7 @@ namespace triton {
       triton::arch::RegisterSpecification regInfo;
 
       this->id = regId;
-      if (!triton::api.isCpuRegisterValid(regId))
+      if (!triton::api.isRegisterValid(regId))
         this->id = triton::arch::INVALID_REGISTER_ID;
 
       regInfo      = triton::api.getRegisterSpecification(this->id);
@@ -168,21 +168,6 @@ namespace triton {
     }
 
 
-    bool Register::isValid(void) const {
-      return triton::api.isCpuRegisterValid(this->id);
-    }
-
-
-    bool Register::isRegister(void) const {
-      return triton::api.isCpuRegister(this->id);
-    }
-
-
-    bool Register::isFlag(void) const {
-      return triton::api.isCpuFlag(this->id);
-    }
-
-
     bool Register::isImmutable(void) const {
       return this->immutable;
     }
@@ -231,14 +216,12 @@ namespace triton {
 
 
     bool operator!=(const Register& reg1, const Register& reg2) {
-      if (reg1 == reg2)
-        return false;
-      return true;
+      return !(reg1 == reg2);
     }
 
 
     bool operator<(const Register& reg1, const Register& reg2) {
-      return reg1.getId() < reg2.getId();
+      return (reg1.getId() < reg2.getId());
     }
 
   }; /* arch namespace */

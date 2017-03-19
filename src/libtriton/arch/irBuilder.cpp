@@ -7,12 +7,12 @@
 
 #include <new>
 
-#include <exceptions.hpp>
-#include <irBuilder.hpp>
-#include <memoryAccess.hpp>
-#include <operandWrapper.hpp>
-#include <register.hpp>
-#include <x86Semantics.hpp>
+#include <triton/exceptions.hpp>
+#include <triton/irBuilder.hpp>
+#include <triton/memoryAccess.hpp>
+#include <triton/operandWrapper.hpp>
+#include <triton/register.hpp>
+#include <triton/x86Semantics.hpp>
 
 
 
@@ -20,12 +20,16 @@ namespace triton {
   namespace arch {
 
     IrBuilder::IrBuilder(triton::arch::Architecture* architecture,
+                         triton::modes::Modes* modes,
                          triton::ast::AstGarbageCollector* astGarbageCollector,
                          triton::engines::symbolic::SymbolicEngine* symbolicEngine,
                          triton::engines::taint::TaintEngine* taintEngine) {
 
       if (architecture == nullptr)
         throw triton::exceptions::IrBuilder("IrBuilder::IrBuilder(): The architecture API must be defined.");
+
+      if (modes == nullptr)
+        throw triton::exceptions::IrBuilder("IrBuilder::IrBuilder(): The modes API must be defined.");
 
       if (astGarbageCollector == nullptr)
         throw triton::exceptions::IrBuilder("IrBuilder::IrBuilder(): The AST garbage collector API must be defined.");
@@ -36,20 +40,23 @@ namespace triton {
       if (taintEngine == nullptr)
         throw triton::exceptions::IrBuilder("IrBuilder::IrBuilder(): The taint engines API must be defined.");
 
-      this->architecture         = architecture;
-      this->astGarbageCollector  = astGarbageCollector;
-      this->backupSymbolicEngine = new(std::nothrow) triton::engines::symbolic::SymbolicEngine(architecture, nullptr, true);
-      this->symbolicEngine       = symbolicEngine;
-      this->taintEngine          = taintEngine;
-      this->x86Isa               = new(std::nothrow) triton::arch::x86::x86Semantics(architecture, symbolicEngine, taintEngine);
+      this->architecture              = architecture;
+      this->astGarbageCollector       = astGarbageCollector;
+      this->backupAstGarbageCollector = new(std::nothrow) triton::ast::AstGarbageCollector(modes, true);
+      this->backupSymbolicEngine      = new(std::nothrow) triton::engines::symbolic::SymbolicEngine(architecture, modes, nullptr, true);
+      this->modes                     = modes;
+      this->symbolicEngine            = symbolicEngine;
+      this->taintEngine               = taintEngine;
+      this->x86Isa                    = new(std::nothrow) triton::arch::x86::x86Semantics(architecture, symbolicEngine, taintEngine);
 
-      if (this->x86Isa == nullptr || this->backupSymbolicEngine == nullptr)
+      if (this->x86Isa == nullptr || this->backupSymbolicEngine == nullptr || this->backupAstGarbageCollector == nullptr)
         throw triton::exceptions::IrBuilder("IrBuilder::IrBuilder(): Not enough memory.");
     }
 
 
     IrBuilder::~IrBuilder() {
       delete this->backupSymbolicEngine;
+      delete this->backupAstGarbageCollector;
       delete this->x86Isa;
     }
 
@@ -76,7 +83,7 @@ namespace triton {
       std::vector<triton::arch::OperandWrapper>::iterator it3;
       for (it3 = inst.operands.begin(); it3 != inst.operands.end(); it3++) {
         if (it3->getType() == triton::arch::OP_MEM) {
-          it3->getMemory().initAddress();
+          this->symbolicEngine->initLeaAst(it3->getMemory());
         }
       }
 
@@ -102,8 +109,10 @@ namespace triton {
       inst.symbolicExpressions.clear();
 
       /* Backup the symbolic engine in the case where only the taint is available. */
-      if (!this->symbolicEngine->isEnabled())
+      if (!this->symbolicEngine->isEnabled()) {
         *this->backupSymbolicEngine = *this->symbolicEngine;
+        *this->backupAstGarbageCollector = *this->astGarbageCollector;
+      }
     }
 
 
@@ -115,7 +124,7 @@ namespace triton {
       inst.memoryAccess.clear();
       inst.registerState.clear();
 
-      ///* Set the taint */
+      /* Set the taint */
       inst.setTaint();
 
       /*
@@ -133,7 +142,7 @@ namespace triton {
        * execution only on tainted instructions, we delete all
        * expressions untainted and their AST nodes.
        */
-      if (this->symbolicEngine->isOptimizationEnabled(triton::engines::symbolic::ONLY_ON_TAINTED) && !inst.isTainted()) {
+      if (this->modes->isModeEnabled(triton::modes::ONLY_ON_TAINTED) && !inst.isTainted()) {
         this->removeSymbolicExpressions(inst, uniqueNodes);
       }
 
@@ -142,7 +151,7 @@ namespace triton {
        * execution only on symbolized expressions, we delete all
        * concrete expressions and their AST nodes.
        */
-      if (this->symbolicEngine->isOptimizationEnabled(triton::engines::symbolic::ONLY_ON_SYMBOLIZED)) {
+      if (this->modes->isModeEnabled(triton::modes::ONLY_ON_SYMBOLIZED)) {
         for (auto it = inst.symbolicExpressions.begin(); it != inst.symbolicExpressions.end(); it++) {
           if ((*it)->getAst()->isSymbolized() == false) {
             this->astGarbageCollector->extractUniqueAstNodes(uniqueNodes, (*it)->getAst());
@@ -185,6 +194,9 @@ namespace triton {
 
       /* Free collected nodes */
       this->astGarbageCollector->freeAstNodes(uniqueNodes);
+
+      if (!this->symbolicEngine->isEnabled())
+        *this->astGarbageCollector = *this->backupAstGarbageCollector;
     }
 
 

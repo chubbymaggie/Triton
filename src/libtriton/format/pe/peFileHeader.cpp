@@ -7,8 +7,8 @@
 
 #include <cstdio>
 
-#include <exceptions.hpp>
-#include <peFileHeader.hpp>
+#include <triton/exceptions.hpp>
+#include <triton/peFileHeader.hpp>
 
 
 
@@ -76,13 +76,13 @@ namespace triton {
       }
 
 
-      triton::uint16 PeFileHeader::getMachine(void) const {
-        return this->st.machine;
+      void PeFileHeader::setNumberOfSections(triton::uint16 numberOfSections) {
+        this->st.numberOfSections = numberOfSections;
       }
 
 
-      void PeFileHeader::setNumberOfSections(triton::uint16 numberOfSections) {
-        this->st.numberOfSections = numberOfSections;
+      triton::uint16 PeFileHeader::getMachine(void) const {
+        return this->st.machine;
       }
 
 

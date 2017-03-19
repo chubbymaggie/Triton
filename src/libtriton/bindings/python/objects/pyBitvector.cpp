@@ -7,11 +7,11 @@
 
 #ifdef TRITON_PYTHON_BINDINGS
 
-#include <bitsVector.hpp>
-#include <exceptions.hpp>
-#include <pythonObjects.hpp>
-#include <pythonUtils.hpp>
-#include <pythonXFunctions.hpp>
+#include <triton/bitsVector.hpp>
+#include <triton/exceptions.hpp>
+#include <triton/pythonObjects.hpp>
+#include <triton/pythonUtils.hpp>
+#include <triton/pythonXFunctions.hpp>
 
 
 
@@ -206,20 +206,6 @@ namespace triton {
         if (object != NULL) {
           object->high = reg.getHigh();
           object->low  = reg.getLow();
-        }
-
-        return (PyObject*)object;
-      }
-
-
-      PyObject* PyBitvector(triton::uint32 high, triton::uint32 low) {
-        Bitvector_Object* object;
-
-        PyType_Ready(&Bitvector_Type);
-        object = PyObject_NEW(Bitvector_Object, &Bitvector_Type);
-        if (object != NULL) {
-          object->high = high;
-          object->low  = low;
         }
 
         return (PyObject*)object;

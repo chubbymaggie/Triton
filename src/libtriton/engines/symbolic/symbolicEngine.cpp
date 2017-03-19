@@ -8,9 +8,9 @@
 #include <cstring>
 #include <new>
 
-#include <exceptions.hpp>
-#include <coreUtils.hpp>
-#include <symbolicEngine.hpp>
+#include <triton/exceptions.hpp>
+#include <triton/coreUtils.hpp>
+#include <triton/symbolicEngine.hpp>
 
 
 
@@ -70,11 +70,19 @@ namespace triton {
   namespace engines {
     namespace symbolic {
 
-      SymbolicEngine::SymbolicEngine(triton::arch::Architecture* architecture, triton::callbacks::Callbacks* callbacks, bool isBackup)
-        : triton::engines::symbolic::SymbolicSimplification(callbacks) {
+      SymbolicEngine::SymbolicEngine(triton::arch::Architecture* architecture,
+                                     triton::modes::Modes* modes,
+                                     triton::callbacks::Callbacks* callbacks,
+                                     bool isBackup)
+
+        : triton::engines::symbolic::SymbolicSimplification(callbacks),
+          triton::engines::symbolic::PathManager(modes) {
 
         if (architecture == nullptr)
           throw triton::exceptions::SymbolicEngine("SymbolicEngine::SymbolicEngine(): The architecture pointer must be valid.");
+
+        if (modes == nullptr)
+          throw triton::exceptions::SymbolicEngine("SymbolicEngine::SymbolicEngine(): The modes API cannot be null.");
 
         this->architecture      = architecture;
         this->numberOfRegisters = this->architecture->numberOfRegisters();
@@ -87,6 +95,7 @@ namespace triton {
         this->callbacks       = callbacks;
         this->backupFlag      = isBackup;
         this->enableFlag      = true;
+        this->modes           = modes;
         this->uniqueSymExprId = 0;
         this->uniqueSymVarId  = 0;
       }
@@ -103,12 +112,13 @@ namespace triton {
          * The backup flag cannot be spread. once a class is tagged as
          * backup, it always be a backup class.
          */
-        this->architecture                = other.architecture;
-        this->callbacks                   = other.callbacks;
-        this->backupFlag                  = true;
         this->alignedMemoryReference      = other.alignedMemoryReference;
+        this->architecture                = other.architecture;
+        this->backupFlag                  = true;
+        this->callbacks                   = other.callbacks;
         this->enableFlag                  = other.enableFlag;
         this->memoryReference             = other.memoryReference;
+        this->modes                       = other.modes;
         this->symbolicExpressions         = other.symbolicExpressions;
         this->symbolicVariables           = other.symbolicVariables;
         this->uniqueSymExprId             = other.uniqueSymExprId;
@@ -117,17 +127,13 @@ namespace triton {
 
 
       SymbolicEngine::SymbolicEngine(const SymbolicEngine& copy)
-        : triton::ast::AstDictionaries(copy),
-          triton::engines::symbolic::SymbolicOptimization(copy),
-          triton::engines::symbolic::SymbolicSimplification(copy),
+        : triton::engines::symbolic::SymbolicSimplification(copy),
           triton::engines::symbolic::PathManager(copy) {
         this->copy(copy);
       }
 
 
       void SymbolicEngine::operator=(const SymbolicEngine& other) {
-        triton::ast::AstDictionaries::operator=(other);
-        triton::engines::symbolic::SymbolicOptimization::operator=(other);
         triton::engines::symbolic::SymbolicSimplification::operator=(other);
         triton::engines::symbolic::PathManager::operator=(other);
 
@@ -160,7 +166,7 @@ namespace triton {
          * result in a double-free bug if the original symbolic engine
          * is deleted too (cf: #385).
          */
-        if (this->isBackup() == false) {
+        if (this->backupFlag == false) {
           /* Delete all symbolic expressions */
           for (; it1 != this->symbolicExpressions.end(); ++it1)
             delete it1->second;
@@ -218,7 +224,7 @@ namespace triton {
        */
       void SymbolicEngine::concretizeMemory(triton::uint64 addr) {
         this->memoryReference.erase(addr);
-        if (this->isOptimizationEnabled(triton::engines::symbolic::ALIGNED_MEMORY))
+        if (this->modes->isModeEnabled(triton::modes::ALIGNED_MEMORY))
           this->removeAlignedMemory(addr, BYTE_SIZE);
       }
 
@@ -613,7 +619,7 @@ namespace triton {
 
           /* Add the new memory reference */
           this->addMemoryReference(memAddr+index, se->getId());
-          if (this->isOptimizationEnabled(triton::engines::symbolic::ALIGNED_MEMORY))
+          if (this->modes->isModeEnabled(triton::modes::ALIGNED_MEMORY))
             removeAlignedMemory(memAddr+index, BYTE_SIZE);
         }
 
@@ -734,7 +740,7 @@ namespace triton {
          * Symbolic optimization
          * If the memory access is aligned, don't split the memory.
          */
-        if (this->isOptimizationEnabled(triton::engines::symbolic::ALIGNED_MEMORY) && this->isAlignedMemory(address, size))
+        if (this->modes->isModeEnabled(triton::modes::ALIGNED_MEMORY) && this->isAlignedMemory(address, size))
           return this->getAlignedMemory(address, size);
 
         /* Iterate on every memory cells to use their symbolic or concrete values */
@@ -832,7 +838,7 @@ namespace triton {
         triton::uint32 writeSize = mem.getSize();
 
         /* Record the aligned memory for a symbolic optimization */
-        if (this->isOptimizationEnabled(triton::engines::symbolic::ALIGNED_MEMORY))
+        if (this->modes->isModeEnabled(triton::modes::ALIGNED_MEMORY))
           this->addAlignedMemory(address, writeSize, node);
 
         /*
@@ -1001,7 +1007,7 @@ namespace triton {
           throw triton::exceptions::SymbolicEngine("SymbolicEngine::assignSymbolicExpressionToMemory(): The size of the symbolic expression is not equal to the memory access.");
 
         /* Record the aligned memory for a symbolic optimization */
-        if (this->isOptimizationEnabled(triton::engines::symbolic::ALIGNED_MEMORY))
+        if (this->modes->isModeEnabled(triton::modes::ALIGNED_MEMORY))
           this->addAlignedMemory(address, writeSize, node);
 
         /*
@@ -1023,12 +1029,6 @@ namespace triton {
       /* Returns true if the symbolic engine is enable */
       bool SymbolicEngine::isEnabled(void) const {
         return this->enableFlag;
-      }
-
-
-      /* Returns true if this symbolic engine is used as backup */
-      bool SymbolicEngine::isBackup(void) const {
-        return this->backupFlag;
       }
 
 
@@ -1081,6 +1081,58 @@ namespace triton {
       /* Enables or disables the symbolic engine */
       void SymbolicEngine::enable(bool flag) {
         this->enableFlag = flag;
+      }
+
+
+      /* Initializes the memory access AST (LOAD and STORE) */
+      void SymbolicEngine::initLeaAst(triton::arch::MemoryAccess& mem, bool force) {
+        if (mem.getBitSize() >= BYTE_SIZE_BIT) {
+          const triton::arch::Register& base  = mem.getConstBaseRegister();
+          const triton::arch::Register& index = mem.getConstIndexRegister();
+          const triton::arch::Register& seg   = mem.getConstSegmentRegister();
+          triton::uint64 segmentValue         = (this->architecture->isRegisterValid(seg) ? this->architecture->getConcreteRegisterValue(seg).convert_to<triton::uint64>() : 0);
+          triton::uint64 scaleValue           = mem.getConstScale().getValue();
+          triton::uint64 dispValue            = mem.getConstDisplacement().getValue();
+          triton::uint32 bitSize              = (this->architecture->isRegisterValid(index) ? index.getBitSize() :
+                                                  (this->architecture->isRegisterValid(base) ? base.getBitSize() :
+                                                    (mem.getConstDisplacement().getBitSize() ? mem.getConstDisplacement().getBitSize() :
+                                                      this->architecture->registerBitSize()
+                                                    )
+                                                  )
+                                                );
+
+
+          /* Initialize the AST of the memory access (LEA) -> ((pc + base) + (index * scale) + disp) */
+          auto leaAst = triton::ast::bvadd(
+                          (mem.getPcRelative() ? triton::ast::bv(mem.getPcRelative(), bitSize) :
+                            (this->architecture->isRegisterValid(base) ? this->buildSymbolicRegister(base) :
+                              triton::ast::bv(0, bitSize)
+                            )
+                          ),
+                          triton::ast::bvadd(
+                            triton::ast::bvmul(
+                              (this->architecture->isRegisterValid(index) ? this->buildSymbolicRegister(index) : triton::ast::bv(0, bitSize)),
+                              triton::ast::bv(scaleValue, bitSize)
+                            ),
+                            triton::ast::bv(dispValue, bitSize)
+                          )
+                        );
+
+          /* Use segments as base address instead of selector into the GDT. */
+          if (segmentValue) {
+            leaAst = triton::ast::bvadd(
+                       triton::ast::bv(segmentValue, seg.getBitSize()),
+                       triton::ast::sx((seg.getBitSize() - bitSize), leaAst)
+                     );
+          }
+
+          /* Set AST */
+          mem.setLeaAst(leaAst);
+
+          /* Initialize the address only if it is not already defined */
+          if (!mem.getAddress() || force)
+            mem.setAddress(leaAst->evaluate().convert_to<triton::uint64>());
+        }
       }
 
     }; /* symbolic namespace */

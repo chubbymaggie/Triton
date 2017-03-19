@@ -7,16 +7,16 @@
 
 #include <cstring>
 
-#include <architecture.hpp>
-#include <coreUtils.hpp>
-#include <cpuSize.hpp>
-#include <exceptions.hpp>
-#include <externalLibs.hpp>
-#include <immediate.hpp>
-#include <x86Cpu.hpp>
+#include <triton/architecture.hpp>
+#include <triton/coreUtils.hpp>
+#include <triton/cpuSize.hpp>
+#include <triton/exceptions.hpp>
+#include <triton/externalLibs.hpp>
+#include <triton/immediate.hpp>
+#include <triton/x86Cpu.hpp>
 
 #ifdef TRITON_PYTHON_BINDINGS
-  #include <pythonBindings.hpp>
+  #include <triton/pythonBindings.hpp>
 #endif
 
 
@@ -591,8 +591,15 @@ namespace triton {
                   triton::arch::Register segment(this->capstoneRegisterToTritonRegister(op->mem.segment));
                   triton::arch::Register base(this->capstoneRegisterToTritonRegister(op->mem.base));
                   triton::arch::Register index(this->capstoneRegisterToTritonRegister(op->mem.index));
-                  triton::arch::Immediate disp(op->mem.disp, base.isValid() ? base.getSize() : index.isValid() ? index.getSize() : this->registerSize());
-                  triton::arch::Immediate scale(op->mem.scale, base.isValid() ? base.getSize() : index.isValid() ? index.getSize() : this->registerSize());
+
+                  triton::uint32 immsize = (
+                                            this->isRegisterValid(base.getId()) ? base.getSize() :
+                                            this->isRegisterValid(index.getId()) ? index.getSize() :
+                                            this->registerSize()
+                                          );
+
+                  triton::arch::Immediate disp(op->mem.disp, immsize);
+                  triton::arch::Immediate scale(op->mem.scale, immsize);
 
                   /* Specify that LEA contains a PC relative */
                   if (base.getId() == TRITON_X86_REG_PC.getId())

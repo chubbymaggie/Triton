@@ -5,10 +5,10 @@
 **  This program is under the terms of the BSD License.
 */
 
-#include <cpuSize.hpp>
-#include <exceptions.hpp>
-#include <x86Semantics.hpp>
-#include <x86Specifications.hpp>
+#include <triton/cpuSize.hpp>
+#include <triton/exceptions.hpp>
+#include <triton/x86Semantics.hpp>
+#include <triton/x86Specifications.hpp>
 
 
 
@@ -33,6 +33,7 @@ Mnemonic                     | Extensions | Description
 -----------------------------|------------|----------------------------------------------------
 AAD                          |            | ASCII Adjust AX Before Division
 ADC                          |            | Add with Carry
+ADCX                         | adx        | Unsigned Integer Addition of Two Operands with Carry Flag
 ADD                          |            | Add
 AND                          |            | Logical AND
 ANDN                         | bmi1       | Logical AND NOT
@@ -299,6 +300,7 @@ UNPCKHPS                     | sse1       | Unpack and Interleave High Packed Si
 UNPCKLPD                     | sse2       | Unpack and Interleave Low Packed Double-Precision Floating-Point Values
 UNPCKLPS                     | sse1       | Unpack and Interleave Low Packed Single-Precision Floating-Point Values
 VMOVDQA                      | avx        | VEX Move aligned packed integer values
+VMOVDQU                      | avx        | VEX Move unaligned packed integer values
 VPAND                        | avx/avx2   | VEX Logical AND
 VPANDN                       | avx/avx2   | VEX Logical AND NOT
 VPOR                         | avx/avx2   | VEX Logical OR
@@ -347,6 +349,7 @@ namespace triton {
         switch (inst.getType()) {
           case ID_INS_AAD:            this->aad_s(inst);          break;
           case ID_INS_ADC:            this->adc_s(inst);          break;
+          case ID_INS_ADCX:           this->adcx_s(inst);         break;
           case ID_INS_ADD:            this->add_s(inst);          break;
           case ID_INS_AND:            this->and_s(inst);          break;
           case ID_INS_ANDN:           this->andn_s(inst);         break;
@@ -613,6 +616,7 @@ namespace triton {
           case ID_INS_UNPCKLPD:       this->unpcklpd_s(inst);     break;
           case ID_INS_UNPCKLPS:       this->unpcklps_s(inst);     break;
           case ID_INS_VMOVDQA:        this->vmovdqa_s(inst);      break;
+          case ID_INS_VMOVDQU:        this->vmovdqu_s(inst);      break;
           case ID_INS_VPAND:          this->vpand_s(inst);        break;
           case ID_INS_VPANDN:         this->vpandn_s(inst);       break;
           case ID_INS_VPOR:           this->vpor_s(inst);         break;
@@ -2167,6 +2171,34 @@ namespace triton {
         this->pf_s(inst, expr, dst);
         this->sf_s(inst, expr, dst);
         this->zf_s(inst, expr, dst);
+
+        /* Upate the symbolic control flow */
+        this->controlFlow_s(inst);
+      }
+
+
+      void x86Semantics::adcx_s(triton::arch::Instruction& inst) {
+        auto& dst = inst.operands[0];
+        auto& src = inst.operands[1];
+        auto  cf  = triton::arch::OperandWrapper(TRITON_X86_REG_CF);
+
+        /* Create symbolic operands */
+        auto op1 = this->symbolicEngine->buildSymbolicOperand(inst, dst);
+        auto op2 = this->symbolicEngine->buildSymbolicOperand(inst, src);
+        auto op3 = this->symbolicEngine->buildSymbolicOperand(inst, cf);
+
+        /* Create the semantics */
+        auto node = triton::ast::bvadd(triton::ast::bvadd(op1, op2), triton::ast::zx(dst.getBitSize()-1, op3));
+
+        /* Create symbolic expression */
+        auto expr = this->symbolicEngine->createSymbolicExpression(inst, node, dst, "ADCX operation");
+
+        /* Spread taint */
+        expr->isTainted = this->taintEngine->taintUnion(dst, src);
+        expr->isTainted = this->taintEngine->taintUnion(dst, cf);
+
+        /* Upate symbolic flags */
+        this->cfAdd_s(inst, expr, dst, op1, op2);
 
         /* Upate the symbolic control flow */
         this->controlFlow_s(inst);
@@ -8265,7 +8297,7 @@ namespace triton {
             alignAddStack_s(inst, src.getSize());
 
             /* Re-initialize the memory access */
-            dst.getMemory().initAddress(triton::arch::FORCE_MEMORY_INITIALIZATION);
+            this->symbolicEngine->initLeaAst(dst.getMemory(), triton::arch::FORCE_MEMORY_INITIALIZATION);
 
             stackRelative = true;
           }
@@ -11713,6 +11745,24 @@ namespace triton {
 
         /* Create symbolic expression */
         auto expr = this->symbolicEngine->createSymbolicExpression(inst, node, dst, "VMOVDQA operation");
+
+        /* Spread taint */
+        expr->isTainted = this->taintEngine->taintAssignment(dst, src);
+
+        /* Upate the symbolic control flow */
+        this->controlFlow_s(inst);
+      }
+
+
+      void x86Semantics::vmovdqu_s(triton::arch::Instruction& inst) {
+        auto& dst = inst.operands[0];
+        auto& src = inst.operands[1];
+
+        /* Create the semantics */
+        auto node = this->symbolicEngine->buildSymbolicOperand(inst, src);
+
+        /* Create symbolic expression */
+        auto expr = this->symbolicEngine->createSymbolicExpression(inst, node, dst, "VMOVDQU operation");
 
         /* Spread taint */
         expr->isTainted = this->taintEngine->taintAssignment(dst, src);
