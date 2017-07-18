@@ -5,13 +5,11 @@
 **  This program is under the terms of the BSD License.
 */
 
-#ifdef TRITON_PYTHON_BINDINGS
-
-#include <triton/exceptions.hpp>
-#include <triton/instruction.hpp>
 #include <triton/pythonObjects.hpp>
 #include <triton/pythonUtils.hpp>
 #include <triton/pythonXFunctions.hpp>
+#include <triton/exceptions.hpp>
+#include <triton/instruction.hpp>
 
 
 
@@ -682,7 +680,7 @@ namespace triton {
       static PyObject* Instruction_setOpcodes(PyObject* self, PyObject* opc) {
         try {
           if (!PyBytes_Check(opc))
-            return PyErr_Format(PyExc_TypeError, "Instruction::setOpcodes(): Expected a bytes array as argument.");
+            return PyErr_Format(PyExc_TypeError, "Instruction::setOpcodes(): Expected bytes as argument.");
 
           triton::uint8* opcodes = reinterpret_cast<triton::uint8*>(PyBytes_AsString(opc));
           triton::uint32 size    = static_cast<triton::uint32>(PyBytes_Size(opc));
@@ -886,5 +884,3 @@ namespace triton {
     }; /* python namespace */
   }; /* bindings namespace */
 }; /* triton namespace */
-
-#endif /* TRITON_PYTHON_BINDINGS */

@@ -163,7 +163,7 @@ $ cd build
 $ cmake -DPINTOOL=on ..
 $ make
 $ cd ..
-$ ./triton ./src/examples/pin/ir.py /usr/bin/id
+$ ./build/triton ./src/examples/pin/ir.py /usr/bin/id
 ~~~~~~~~~~~~~
 
 It's not recommended to use the pintool on a kernel `4.x`. The version `71313` of Pin doesn't support very well
@@ -183,20 +183,10 @@ Note that only the version `71313` of Pin is supported.
 namespace triton {
 
   /* External access to the API */
-  triton::API api = triton::API();
+  triton::API api;
 
 
-  API::API() {
-    this->callbacks           = triton::callbacks::Callbacks();
-    this->arch                = triton::arch::Architecture(&this->callbacks);
-
-    this->astGarbageCollector = nullptr;
-    this->irBuilder           = nullptr;
-    this->modes               = nullptr;
-    this->solver              = nullptr;
-    this->symbolic            = nullptr;
-    this->taint               = nullptr;
-    this->z3Interface         = nullptr;
+  API::API(): arch(&this->callbacks) {
   }
 
 
@@ -225,8 +215,7 @@ namespace triton {
 
 
   triton::arch::CpuInterface* API::getCpu(void) {
-    if (!this->isArchitectureValid())
-      throw triton::exceptions::API("API::checkArchitecture(): You must define an architecture.");
+    this->checkArchitecture();
     return this->arch.getCpu();
   }
 
@@ -564,13 +553,6 @@ namespace triton {
   }
 
 
-  #ifdef TRITON_PYTHON_BINDINGS
-  void API::addCallback(PyObject* function, triton::callbacks::callback_e kind) {
-    this->callbacks.addCallback(function, kind);
-  }
-  #endif
-
-
   void API::removeAllCallbacks(void) {
     this->callbacks.removeAllCallbacks();
   }
@@ -589,13 +571,6 @@ namespace triton {
   void API::removeCallback(triton::callbacks::symbolicSimplificationCallback cb) {
     this->callbacks.removeCallback(cb);
   }
-
-
-  #ifdef TRITON_PYTHON_BINDINGS
-  void API::removeCallback(PyObject* function, triton::callbacks::callback_e kind) {
-    this->callbacks.removeCallback(function, kind);
-  }
-  #endif
 
 
   triton::ast::AbstractNode* API::processCallbacks(triton::callbacks::callback_e kind, triton::ast::AbstractNode* node) const {

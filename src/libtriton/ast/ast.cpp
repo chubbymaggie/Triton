@@ -84,6 +84,18 @@ namespace triton {
     }
 
 
+    bool AbstractNode::equalTo(const AbstractNode& other) const {
+      return (this->evaluate() == other.evaluate()) &&
+             (this->getBitvectorSize() == other.getBitvectorSize()) &&
+             (this->hash(1) == other.hash(1));
+    }
+
+
+    bool AbstractNode::equalTo(AbstractNode* other) const {
+      return this->equalTo(*other);
+    }
+
+
     triton::uint512 AbstractNode::evaluate(void) const {
       return this->eval;
     }
@@ -186,7 +198,7 @@ namespace triton {
     }
 
 
-    triton::uint512 AssertNode::hash(triton::uint32 deep) {
+    triton::uint512 AssertNode::hash(triton::uint32 deep) const {
       triton::uint512 h = this->kind, s = this->childs.size();
       if (s) h = h * s;
       for (triton::uint32 index = 0; index < this->childs.size(); index++)
@@ -242,7 +254,7 @@ namespace triton {
     }
 
 
-    triton::uint512 BvaddNode::hash(triton::uint32 deep) {
+    triton::uint512 BvaddNode::hash(triton::uint32 deep) const {
       triton::uint512 h = this->kind, s = this->childs.size();
       if (s) h = h * s;
       for (triton::uint32 index = 0; index < this->childs.size(); index++)
@@ -298,7 +310,7 @@ namespace triton {
     }
 
 
-    triton::uint512 BvandNode::hash(triton::uint32 deep) {
+    triton::uint512 BvandNode::hash(triton::uint32 deep) const {
       triton::uint512 h = this->kind, s = this->childs.size();
       if (s) h = h * s;
       for (triton::uint32 index = 0; index < this->childs.size(); index++)
@@ -387,7 +399,7 @@ namespace triton {
     }
 
 
-    triton::uint512 BvashrNode::hash(triton::uint32 deep) {
+    triton::uint512 BvashrNode::hash(triton::uint32 deep) const {
       triton::uint512 h = this->kind, s = this->childs.size();
       if (s) h = h * s;
       for (triton::uint32 index = 0; index < this->childs.size(); index++)
@@ -451,7 +463,7 @@ namespace triton {
     }
 
 
-    triton::uint512 BvdeclNode::hash(triton::uint32 deep) {
+    triton::uint512 BvdeclNode::hash(triton::uint32 deep) const {
       triton::uint512 h = this->kind, s = this->childs.size();
       if (s) h = h * s;
       for (triton::uint32 index = 0; index < this->childs.size(); index++)
@@ -507,7 +519,7 @@ namespace triton {
     }
 
 
-    triton::uint512 BvlshrNode::hash(triton::uint32 deep) {
+    triton::uint512 BvlshrNode::hash(triton::uint32 deep) const {
       triton::uint512 h = this->kind, s = this->childs.size();
       if (s) h = h * s;
       for (triton::uint32 index = 0; index < this->childs.size(); index++)
@@ -563,7 +575,7 @@ namespace triton {
     }
 
 
-    triton::uint512 BvmulNode::hash(triton::uint32 deep) {
+    triton::uint512 BvmulNode::hash(triton::uint32 deep) const {
       triton::uint512 h = this->kind, s = this->childs.size();
       if (s) h = h * s;
       for (triton::uint32 index = 0; index < this->childs.size(); index++)
@@ -619,7 +631,7 @@ namespace triton {
     }
 
 
-    triton::uint512 BvnandNode::hash(triton::uint32 deep) {
+    triton::uint512 BvnandNode::hash(triton::uint32 deep) const {
       triton::uint512 h = this->kind, s = this->childs.size();
       if (s) h = h * s;
       for (triton::uint32 index = 0; index < this->childs.size(); index++)
@@ -671,7 +683,7 @@ namespace triton {
     }
 
 
-    triton::uint512 BvnegNode::hash(triton::uint32 deep) {
+    triton::uint512 BvnegNode::hash(triton::uint32 deep) const {
       triton::uint512 h = this->kind, s = this->childs.size();
       if (s) h = h * s;
       for (triton::uint32 index = 0; index < this->childs.size(); index++)
@@ -727,7 +739,7 @@ namespace triton {
     }
 
 
-    triton::uint512 BvnorNode::hash(triton::uint32 deep) {
+    triton::uint512 BvnorNode::hash(triton::uint32 deep) const {
       triton::uint512 h = this->kind, s = this->childs.size();
       if (s) h = h * s;
       for (triton::uint32 index = 0; index < this->childs.size(); index++)
@@ -779,7 +791,7 @@ namespace triton {
     }
 
 
-    triton::uint512 BvnotNode::hash(triton::uint32 deep) {
+    triton::uint512 BvnotNode::hash(triton::uint32 deep) const {
       triton::uint512 h = this->kind, s = this->childs.size();
       if (s) h = h * s;
       for (triton::uint32 index = 0; index < this->childs.size(); index++)
@@ -835,7 +847,7 @@ namespace triton {
     }
 
 
-    triton::uint512 BvorNode::hash(triton::uint32 deep) {
+    triton::uint512 BvorNode::hash(triton::uint32 deep) const {
       triton::uint512 h = this->kind, s = this->childs.size();
       if (s) h = h * s;
       for (triton::uint32 index = 0; index < this->childs.size(); index++)
@@ -907,7 +919,7 @@ namespace triton {
     }
 
 
-    triton::uint512 BvrolNode::hash(triton::uint32 deep) {
+    triton::uint512 BvrolNode::hash(triton::uint32 deep) const {
       triton::uint512 h = this->kind, s = this->childs.size();
       if (s) h = h * s;
       for (triton::uint32 index = 0; index < this->childs.size(); index++)
@@ -978,7 +990,7 @@ namespace triton {
     }
 
 
-    triton::uint512 BvrorNode::hash(triton::uint32 deep) {
+    triton::uint512 BvrorNode::hash(triton::uint32 deep) const {
       triton::uint512 h = this->kind, s = this->childs.size();
       if (s) h = h * s;
       for (triton::uint32 index = 0; index < this->childs.size(); index++)
@@ -1047,7 +1059,7 @@ namespace triton {
     }
 
 
-    triton::uint512 BvsdivNode::hash(triton::uint32 deep) {
+    triton::uint512 BvsdivNode::hash(triton::uint32 deep) const {
       triton::uint512 h = this->kind, s = this->childs.size();
       if (s) h = h * s;
       for (triton::uint32 index = 0; index < this->childs.size(); index++)
@@ -1110,7 +1122,7 @@ namespace triton {
     }
 
 
-    triton::uint512 BvsgeNode::hash(triton::uint32 deep) {
+    triton::uint512 BvsgeNode::hash(triton::uint32 deep) const {
       triton::uint512 h = this->kind, s = this->childs.size();
       if (s) h = h * s;
       for (triton::uint32 index = 0; index < this->childs.size(); index++)
@@ -1173,7 +1185,7 @@ namespace triton {
     }
 
 
-    triton::uint512 BvsgtNode::hash(triton::uint32 deep) {
+    triton::uint512 BvsgtNode::hash(triton::uint32 deep) const {
       triton::uint512 h = this->kind, s = this->childs.size();
       if (s) h = h * s;
       for (triton::uint32 index = 0; index < this->childs.size(); index++)
@@ -1229,7 +1241,7 @@ namespace triton {
     }
 
 
-    triton::uint512 BvshlNode::hash(triton::uint32 deep) {
+    triton::uint512 BvshlNode::hash(triton::uint32 deep) const {
       triton::uint512 h = this->kind, s = this->childs.size();
       if (s) h = h * s;
       for (triton::uint32 index = 0; index < this->childs.size(); index++)
@@ -1292,7 +1304,7 @@ namespace triton {
     }
 
 
-    triton::uint512 BvsleNode::hash(triton::uint32 deep) {
+    triton::uint512 BvsleNode::hash(triton::uint32 deep) const {
       triton::uint512 h = this->kind, s = this->childs.size();
       if (s) h = h * s;
       for (triton::uint32 index = 0; index < this->childs.size(); index++)
@@ -1355,7 +1367,7 @@ namespace triton {
     }
 
 
-    triton::uint512 BvsltNode::hash(triton::uint32 deep) {
+    triton::uint512 BvsltNode::hash(triton::uint32 deep) const {
       triton::uint512 h = this->kind, s = this->childs.size();
       if (s) h = h * s;
       for (triton::uint32 index = 0; index < this->childs.size(); index++)
@@ -1422,7 +1434,7 @@ namespace triton {
     }
 
 
-    triton::uint512 BvsmodNode::hash(triton::uint32 deep) {
+    triton::uint512 BvsmodNode::hash(triton::uint32 deep) const {
       triton::uint512 h = this->kind, s = this->childs.size();
       if (s) h = h * s;
       for (triton::uint32 index = 0; index < this->childs.size(); index++)
@@ -1489,7 +1501,7 @@ namespace triton {
     }
 
 
-    triton::uint512 BvsremNode::hash(triton::uint32 deep) {
+    triton::uint512 BvsremNode::hash(triton::uint32 deep) const {
       triton::uint512 h = this->kind, s = this->childs.size();
       if (s) h = h * s;
       for (triton::uint32 index = 0; index < this->childs.size(); index++)
@@ -1545,7 +1557,7 @@ namespace triton {
     }
 
 
-    triton::uint512 BvsubNode::hash(triton::uint32 deep) {
+    triton::uint512 BvsubNode::hash(triton::uint32 deep) const {
       triton::uint512 h = this->kind, s = this->childs.size();
       if (s) h = h * s;
       for (triton::uint32 index = 0; index < this->childs.size(); index++)
@@ -1605,7 +1617,7 @@ namespace triton {
     }
 
 
-    triton::uint512 BvudivNode::hash(triton::uint32 deep) {
+    triton::uint512 BvudivNode::hash(triton::uint32 deep) const {
       triton::uint512 h = this->kind, s = this->childs.size();
       if (s) h = h * s;
       for (triton::uint32 index = 0; index < this->childs.size(); index++)
@@ -1661,7 +1673,7 @@ namespace triton {
     }
 
 
-    triton::uint512 BvugeNode::hash(triton::uint32 deep) {
+    triton::uint512 BvugeNode::hash(triton::uint32 deep) const {
       triton::uint512 h = this->kind, s = this->childs.size();
       if (s) h = h * s;
       for (triton::uint32 index = 0; index < this->childs.size(); index++)
@@ -1717,7 +1729,7 @@ namespace triton {
     }
 
 
-    triton::uint512 BvugtNode::hash(triton::uint32 deep) {
+    triton::uint512 BvugtNode::hash(triton::uint32 deep) const {
       triton::uint512 h = this->kind, s = this->childs.size();
       if (s) h = h * s;
       for (triton::uint32 index = 0; index < this->childs.size(); index++)
@@ -1773,7 +1785,7 @@ namespace triton {
     }
 
 
-    triton::uint512 BvuleNode::hash(triton::uint32 deep) {
+    triton::uint512 BvuleNode::hash(triton::uint32 deep) const {
       triton::uint512 h = this->kind, s = this->childs.size();
       if (s) h = h * s;
       for (triton::uint32 index = 0; index < this->childs.size(); index++)
@@ -1829,7 +1841,7 @@ namespace triton {
     }
 
 
-    triton::uint512 BvultNode::hash(triton::uint32 deep) {
+    triton::uint512 BvultNode::hash(triton::uint32 deep) const {
       triton::uint512 h = this->kind, s = this->childs.size();
       if (s) h = h * s;
       for (triton::uint32 index = 0; index < this->childs.size(); index++)
@@ -1889,7 +1901,7 @@ namespace triton {
     }
 
 
-    triton::uint512 BvuremNode::hash(triton::uint32 deep) {
+    triton::uint512 BvuremNode::hash(triton::uint32 deep) const {
       triton::uint512 h = this->kind, s = this->childs.size();
       if (s) h = h * s;
       for (triton::uint32 index = 0; index < this->childs.size(); index++)
@@ -1945,7 +1957,7 @@ namespace triton {
     }
 
 
-    triton::uint512 BvxnorNode::hash(triton::uint32 deep) {
+    triton::uint512 BvxnorNode::hash(triton::uint32 deep) const {
       triton::uint512 h = this->kind, s = this->childs.size();
       if (s) h = h * s;
       for (triton::uint32 index = 0; index < this->childs.size(); index++)
@@ -2001,7 +2013,7 @@ namespace triton {
     }
 
 
-    triton::uint512 BvxorNode::hash(triton::uint32 deep) {
+    triton::uint512 BvxorNode::hash(triton::uint32 deep) const {
       triton::uint512 h = this->kind, s = this->childs.size();
       if (s) h = h * s;
       for (triton::uint32 index = 0; index < this->childs.size(); index++)
@@ -2069,7 +2081,7 @@ namespace triton {
     }
 
 
-    triton::uint512 BvNode::hash(triton::uint32 deep) {
+    triton::uint512 BvNode::hash(triton::uint32 deep) const {
       triton::uint512 h = this->kind, s = this->childs.size();
       if (s) h = h * s;
       for (triton::uint32 index = 0; index < this->childs.size(); index++)
@@ -2122,7 +2134,7 @@ namespace triton {
     }
 
 
-    triton::uint512 CompoundNode::hash(triton::uint32 deep) {
+    triton::uint512 CompoundNode::hash(triton::uint32 deep) const {
       triton::uint512 h = this->kind, s = this->childs.size();
       if (s) h = h * s;
       for (triton::uint32 index = 0; index < this->childs.size(); index++)
@@ -2200,7 +2212,7 @@ namespace triton {
     }
 
 
-    triton::uint512 ConcatNode::hash(triton::uint32 deep) {
+    triton::uint512 ConcatNode::hash(triton::uint32 deep) const {
       triton::uint512 h = this->kind, s = this->childs.size();
       if (s) h = h * s;
       for (triton::uint32 index = 0; index < this->childs.size(); index++)
@@ -2250,7 +2262,7 @@ namespace triton {
     }
 
 
-    triton::uint512 DecimalNode::hash(triton::uint32 deep) {
+    triton::uint512 DecimalNode::hash(triton::uint32 deep) const {
       triton::uint512 hash = this->kind ^ this->value;
       return hash;
     }
@@ -2306,7 +2318,7 @@ namespace triton {
     }
 
 
-    triton::uint512 DeclareFunctionNode::hash(triton::uint32 deep) {
+    triton::uint512 DeclareFunctionNode::hash(triton::uint32 deep) const {
       triton::uint512 h = this->kind, s = this->childs.size();
       if (s) h = h * s;
       for (triton::uint32 index = 0; index < this->childs.size(); index++)
@@ -2359,7 +2371,7 @@ namespace triton {
     }
 
 
-    triton::uint512 DistinctNode::hash(triton::uint32 deep) {
+    triton::uint512 DistinctNode::hash(triton::uint32 deep) const {
       triton::uint512 h = this->kind, s = this->childs.size();
       if (s) h = h * s;
       for (triton::uint32 index = 0; index < this->childs.size(); index++)
@@ -2412,7 +2424,7 @@ namespace triton {
     }
 
 
-    triton::uint512 EqualNode::hash(triton::uint32 deep) {
+    triton::uint512 EqualNode::hash(triton::uint32 deep) const {
       triton::uint512 h = this->kind, s = this->childs.size();
       if (s) h = h * s;
       for (triton::uint32 index = 0; index < this->childs.size(); index++)
@@ -2481,7 +2493,7 @@ namespace triton {
     }
 
 
-    triton::uint512 ExtractNode::hash(triton::uint32 deep) {
+    triton::uint512 ExtractNode::hash(triton::uint32 deep) const {
       triton::uint512 h = this->kind, s = this->childs.size();
       if (s) h = h * s;
       for (triton::uint32 index = 0; index < this->childs.size(); index++)
@@ -2538,7 +2550,7 @@ namespace triton {
     }
 
 
-    triton::uint512 IteNode::hash(triton::uint32 deep) {
+    triton::uint512 IteNode::hash(triton::uint32 deep) const {
       triton::uint512 h = this->kind, s = this->childs.size();
       if (s) h = h * s;
       for (triton::uint32 index = 0; index < this->childs.size(); index++)
@@ -2591,7 +2603,7 @@ namespace triton {
     }
 
 
-    triton::uint512 LandNode::hash(triton::uint32 deep) {
+    triton::uint512 LandNode::hash(triton::uint32 deep) const {
       triton::uint512 h = this->kind, s = this->childs.size();
       if (s) h = h * s;
       for (triton::uint32 index = 0; index < this->childs.size(); index++)
@@ -2648,7 +2660,7 @@ namespace triton {
     }
 
 
-    triton::uint512 LetNode::hash(triton::uint32 deep) {
+    triton::uint512 LetNode::hash(triton::uint32 deep) const {
       triton::uint512 h = this->kind, s = this->childs.size();
       if (s) h = h * s;
       for (triton::uint32 index = 0; index < this->childs.size(); index++)
@@ -2700,7 +2712,7 @@ namespace triton {
     }
 
 
-    triton::uint512 LnotNode::hash(triton::uint32 deep) {
+    triton::uint512 LnotNode::hash(triton::uint32 deep) const {
       triton::uint512 h = this->kind, s = this->childs.size();
       if (s) h = h * s;
       for (triton::uint32 index = 0; index < this->childs.size(); index++)
@@ -2753,7 +2765,7 @@ namespace triton {
     }
 
 
-    triton::uint512 LorNode::hash(triton::uint32 deep) {
+    triton::uint512 LorNode::hash(triton::uint32 deep) const {
       triton::uint512 h = this->kind, s = this->childs.size();
       if (s) h = h * s;
       for (triton::uint32 index = 0; index < this->childs.size(); index++)
@@ -2812,7 +2824,7 @@ namespace triton {
     }
 
 
-    triton::uint512 ReferenceNode::hash(triton::uint32 deep) {
+    triton::uint512 ReferenceNode::hash(triton::uint32 deep) const {
       triton::uint512 hash = this->kind ^ this->value;
       return hash;
     }
@@ -2859,10 +2871,10 @@ namespace triton {
     }
 
 
-    triton::uint512 StringNode::hash(triton::uint32 deep) {
+    triton::uint512 StringNode::hash(triton::uint32 deep) const {
       triton::uint512 h = this->kind;
       triton::uint32 index = 1;
-      for (std::string::iterator it=this->value.begin(); it != this->value.end(); it++)
+      for (std::string::const_iterator it = this->value.cbegin(); it != this->value.cend(); it++)
         h = h ^ triton::ast::pow(*it, index++);
       return triton::ast::rotl(h, deep);
     }
@@ -2922,7 +2934,7 @@ namespace triton {
     }
 
 
-    triton::uint512 SxNode::hash(triton::uint32 deep) {
+    triton::uint512 SxNode::hash(triton::uint32 deep) const {
       triton::uint512 h = this->kind, s = this->childs.size();
       if (s) h = h * s;
       for (triton::uint32 index = 0; index < this->childs.size(); index++)
@@ -2978,10 +2990,10 @@ namespace triton {
     }
 
 
-    triton::uint512 VariableNode::hash(triton::uint32 deep) {
+    triton::uint512 VariableNode::hash(triton::uint32 deep) const {
       triton::uint512 h = this->kind;
       triton::uint32 index = 1;
-      for (std::string::iterator it = this->value.begin(); it != this->value.end(); it++)
+      for (std::string::const_iterator it = this->value.cbegin(); it != this->value.cend(); it++)
         h = h ^ triton::ast::pow(*it, index++);
       return triton::ast::rotl(h, deep);
     }
@@ -3041,7 +3053,7 @@ namespace triton {
     }
 
 
-    triton::uint512 ZxNode::hash(triton::uint32 deep) {
+    triton::uint512 ZxNode::hash(triton::uint32 deep) const {
       triton::uint512 h = this->kind, s = this->childs.size();
       if (s) h = h * s;
       for (triton::uint32 index = 0; index < this->childs.size(); index++)
@@ -3063,15 +3075,6 @@ namespace triton {
     std::ostream& operator<<(std::ostream& stream, AbstractNode* node) {
       return triton::ast::representations::astRepresentation.print(stream, node);
     }
-
-
-    /* Compares two trees */
-    bool operator==(AbstractNode& node1, AbstractNode& node2) {
-      return (node1.evaluate() == node2.evaluate()) &&
-             (node1.getBitvectorSize() == node2.getBitvectorSize()) &&
-             (node1.hash(1) == node2.hash(1));
-    }
-
 
   }; /* ast namespace */
 }; /* triton namespace */
@@ -3122,426 +3125,432 @@ namespace triton {
 namespace triton {
   namespace ast {
 
-    AbstractNode* assert_(AbstractNode* expr) {
-      AbstractNode* node = new(std::nothrow) AssertNode(expr);
+    static inline void checkNode(AbstractNode* node) {
       if (node == nullptr)
         throw triton::exceptions::Ast("Node builders - Not enough memory");
+    }
+
+
+    AbstractNode* assert_(AbstractNode* expr) {
+      AbstractNode* node = new(std::nothrow) AssertNode(expr);
+      triton::ast::checkNode(node);
+
       return triton::api.recordAstNode(node);
     }
 
 
     AbstractNode* bv(triton::uint512 value, triton::uint32 size) {
       AbstractNode* node = new(std::nothrow) BvNode(value, size);
-      if (node == nullptr)
-        throw triton::exceptions::Ast("Node builders - Not enough memory");
+      triton::ast::checkNode(node);
+
       return triton::api.recordAstNode(node);
     }
 
 
     AbstractNode* bvadd(AbstractNode* expr1, AbstractNode* expr2) {
       AbstractNode* node = new(std::nothrow) BvaddNode(expr1, expr2);
-      if (node == nullptr)
-        throw triton::exceptions::Ast("Node builders - Not enough memory");
+      triton::ast::checkNode(node);
+
       return triton::api.recordAstNode(node);
     }
 
 
     AbstractNode* bvand(AbstractNode* expr1, AbstractNode* expr2) {
       AbstractNode* node = new(std::nothrow) BvandNode(expr1, expr2);
-      if (node == nullptr)
-        throw triton::exceptions::Ast("Node builders - Not enough memory");
+      triton::ast::checkNode(node);
+
       return triton::api.recordAstNode(node);
     }
 
 
     AbstractNode* bvashr(AbstractNode* expr1, AbstractNode* expr2) {
       AbstractNode* node = new(std::nothrow) BvashrNode(expr1, expr2);
-      if (node == nullptr)
-        throw triton::exceptions::Ast("Node builders - Not enough memory");
+      triton::ast::checkNode(node);
+
       return triton::api.recordAstNode(node);
     }
 
 
     AbstractNode* bvdecl(triton::uint32 size) {
       AbstractNode* node = new(std::nothrow) BvdeclNode(size);
-      if (node == nullptr)
-        throw triton::exceptions::Ast("Node builders - Not enough memory");
+      triton::ast::checkNode(node);
+
       return triton::api.recordAstNode(node);
     }
 
 
     AbstractNode* bvfalse(void) {
       AbstractNode* node = new(std::nothrow) BvNode(0, 1);
-      if (node == nullptr)
-        throw triton::exceptions::Ast("Node builders - Not enough memory");
+      triton::ast::checkNode(node);
+
       return triton::api.recordAstNode(node);
     }
 
 
     AbstractNode* bvlshr(AbstractNode* expr1, AbstractNode* expr2) {
       AbstractNode* node = new(std::nothrow) BvlshrNode(expr1, expr2);
-      if (node == nullptr)
-        throw triton::exceptions::Ast("Node builders - Not enough memory");
+      triton::ast::checkNode(node);
+
       return triton::api.recordAstNode(node);
     }
 
 
     AbstractNode* bvmul(AbstractNode* expr1, AbstractNode* expr2) {
       AbstractNode* node = new(std::nothrow) BvmulNode(expr1, expr2);
-      if (node == nullptr)
-        throw triton::exceptions::Ast("Node builders - Not enough memory");
+      triton::ast::checkNode(node);
+
       return triton::api.recordAstNode(node);
     }
 
 
     AbstractNode* bvnand(AbstractNode* expr1, AbstractNode* expr2) {
       AbstractNode* node = new(std::nothrow) BvnandNode(expr1, expr2);
-      if (node == nullptr)
-        throw triton::exceptions::Ast("Node builders - Not enough memory");
+      triton::ast::checkNode(node);
+
       return triton::api.recordAstNode(node);
     }
 
 
     AbstractNode* bvneg(AbstractNode* expr) {
       AbstractNode* node = new(std::nothrow) BvnegNode(expr);
-      if (node == nullptr)
-        throw triton::exceptions::Ast("Node builders - Not enough memory");
+      triton::ast::checkNode(node);
+
       return triton::api.recordAstNode(node);
     }
 
 
     AbstractNode* bvnor(AbstractNode* expr1, AbstractNode* expr2) {
       AbstractNode* node = new(std::nothrow) BvnorNode(expr1, expr2);
-      if (node == nullptr)
-        throw triton::exceptions::Ast("Node builders - Not enough memory");
+      triton::ast::checkNode(node);
+
       return triton::api.recordAstNode(node);
     }
 
 
     AbstractNode* bvnot(AbstractNode* expr) {
       AbstractNode* node = new(std::nothrow) BvnotNode(expr);
-      if (node == nullptr)
-        throw triton::exceptions::Ast("Node builders - Not enough memory");
+      triton::ast::checkNode(node);
+
       return triton::api.recordAstNode(node);
     }
 
 
     AbstractNode* bvor(AbstractNode* expr1, AbstractNode* expr2) {
       AbstractNode* node = new(std::nothrow) BvorNode(expr1, expr2);
-      if (node == nullptr)
-        throw triton::exceptions::Ast("Node builders - Not enough memory");
+      triton::ast::checkNode(node);
+
       return triton::api.recordAstNode(node);
     }
 
 
     AbstractNode* bvrol(triton::uint32 rot, AbstractNode* expr) {
       AbstractNode* node = new(std::nothrow) BvrolNode(rot, expr);
-      if (node == nullptr)
-        throw triton::exceptions::Ast("Node builders - Not enough memory");
+      triton::ast::checkNode(node);
+
       return triton::api.recordAstNode(node);
     }
 
 
     AbstractNode* bvrol(AbstractNode* rot, AbstractNode* expr) {
       AbstractNode* node = new(std::nothrow) BvrolNode(rot, expr);
-      if (node == nullptr)
-        throw triton::exceptions::Ast("Node builders - Not enough memory");
+      triton::ast::checkNode(node);
+
       return triton::api.recordAstNode(node);
     }
 
 
     AbstractNode* bvror(triton::uint32 rot, AbstractNode* expr) {
       AbstractNode* node = new(std::nothrow) BvrorNode(rot, expr);
-      if (node == nullptr)
-        throw triton::exceptions::Ast("Node builders - Not enough memory");
+      triton::ast::checkNode(node);
+
       return triton::api.recordAstNode(node);
     }
 
 
     AbstractNode* bvror(AbstractNode* rot, AbstractNode* expr) {
       AbstractNode* node = new(std::nothrow) BvrorNode(rot, expr);
-      if (node == nullptr)
-        throw triton::exceptions::Ast("Node builders - Not enough memory");
+      triton::ast::checkNode(node);
+
       return triton::api.recordAstNode(node);
     }
 
 
     AbstractNode* bvsdiv(AbstractNode* expr1, AbstractNode* expr2) {
       AbstractNode* node = new(std::nothrow) BvsdivNode(expr1, expr2);
-      if (node == nullptr)
-        throw triton::exceptions::Ast("Node builders - Not enough memory");
+      triton::ast::checkNode(node);
+
       return triton::api.recordAstNode(node);
     }
 
 
     AbstractNode* bvsge(AbstractNode* expr1, AbstractNode* expr2) {
       AbstractNode* node = new(std::nothrow) BvsgeNode(expr1, expr2);
-      if (node == nullptr)
-        throw triton::exceptions::Ast("Node builders - Not enough memory");
+      triton::ast::checkNode(node);
+
       return triton::api.recordAstNode(node);
     }
 
 
     AbstractNode* bvsgt(AbstractNode* expr1, AbstractNode* expr2) {
       AbstractNode* node = new(std::nothrow) BvsgtNode(expr1, expr2);
-      if (node == nullptr)
-        throw triton::exceptions::Ast("Node builders - Not enough memory");
+      triton::ast::checkNode(node);
+
       return triton::api.recordAstNode(node);
     }
 
 
     AbstractNode* bvshl(AbstractNode* expr1, AbstractNode* expr2) {
       AbstractNode* node = new(std::nothrow) BvshlNode(expr1, expr2);
-      if (node == nullptr)
-        throw triton::exceptions::Ast("Node builders - Not enough memory");
+      triton::ast::checkNode(node);
+
       return triton::api.recordAstNode(node);
     }
 
 
     AbstractNode* bvsle(AbstractNode* expr1, AbstractNode* expr2) {
       AbstractNode* node = new(std::nothrow) BvsleNode(expr1, expr2);
-      if (node == nullptr)
-        throw triton::exceptions::Ast("Node builders - Not enough memory");
+      triton::ast::checkNode(node);
+
       return triton::api.recordAstNode(node);
     }
 
 
     AbstractNode* bvslt(AbstractNode* expr1, AbstractNode* expr2) {
       AbstractNode* node = new(std::nothrow) BvsltNode(expr1, expr2);
-      if (node == nullptr)
-        throw triton::exceptions::Ast("Node builders - Not enough memory");
+      triton::ast::checkNode(node);
+
       return triton::api.recordAstNode(node);
     }
 
 
     AbstractNode* bvsmod(AbstractNode* expr1, AbstractNode* expr2) {
       AbstractNode* node = new(std::nothrow) BvsmodNode(expr1, expr2);
-      if (node == nullptr)
-        throw triton::exceptions::Ast("Node builders - Not enough memory");
+      triton::ast::checkNode(node);
+
       return triton::api.recordAstNode(node);
     }
 
 
     AbstractNode* bvsrem(AbstractNode* expr1, AbstractNode* expr2) {
       AbstractNode* node = new(std::nothrow) BvsremNode(expr1, expr2);
-      if (node == nullptr)
-        throw triton::exceptions::Ast("Node builders - Not enough memory");
+      triton::ast::checkNode(node);
+
       return triton::api.recordAstNode(node);
     }
 
 
     AbstractNode* bvsub(AbstractNode* expr1, AbstractNode* expr2) {
       AbstractNode* node = new(std::nothrow) BvsubNode(expr1, expr2);
-      if (node == nullptr)
-        throw triton::exceptions::Ast("Node builders - Not enough memory");
+      triton::ast::checkNode(node);
+
       return triton::api.recordAstNode(node);
     }
 
 
     AbstractNode* bvtrue(void) {
       AbstractNode* node = new(std::nothrow) BvNode(1, 1);
-      if (node == nullptr)
-        throw triton::exceptions::Ast("Node builders - Not enough memory");
+      triton::ast::checkNode(node);
+
       return triton::api.recordAstNode(node);
     }
 
 
     AbstractNode* bvudiv(AbstractNode* expr1, AbstractNode* expr2) {
       AbstractNode* node = new(std::nothrow) BvudivNode(expr1, expr2);
-      if (node == nullptr)
-        throw triton::exceptions::Ast("Node builders - Not enough memory");
+      triton::ast::checkNode(node);
+
       return triton::api.recordAstNode(node);
     }
 
 
     AbstractNode* bvuge(AbstractNode* expr1, AbstractNode* expr2) {
       AbstractNode* node = new(std::nothrow) BvugeNode(expr1, expr2);
-      if (node == nullptr)
-        throw triton::exceptions::Ast("Node builders - Not enough memory");
+      triton::ast::checkNode(node);
+
       return triton::api.recordAstNode(node);
     }
 
 
     AbstractNode* bvugt(AbstractNode* expr1, AbstractNode* expr2) {
       AbstractNode* node = new(std::nothrow) BvugtNode(expr1, expr2);
-      if (node == nullptr)
-        throw triton::exceptions::Ast("Node builders - Not enough memory");
+      triton::ast::checkNode(node);
+
       return triton::api.recordAstNode(node);
     }
 
 
     AbstractNode* bvule(AbstractNode* expr1, AbstractNode* expr2) {
       AbstractNode* node = new(std::nothrow) BvuleNode(expr1, expr2);
-      if (node == nullptr)
-        throw triton::exceptions::Ast("Node builders - Not enough memory");
+      triton::ast::checkNode(node);
+
       return triton::api.recordAstNode(node);
     }
 
 
     AbstractNode* bvult(AbstractNode* expr1, AbstractNode* expr2) {
       AbstractNode* node = new(std::nothrow) BvultNode(expr1, expr2);
-      if (node == nullptr)
-        throw triton::exceptions::Ast("Node builders - Not enough memory");
+      triton::ast::checkNode(node);
+
       return triton::api.recordAstNode(node);
     }
 
 
     AbstractNode* bvurem(AbstractNode* expr1, AbstractNode* expr2) {
       AbstractNode* node = new(std::nothrow) BvuremNode(expr1, expr2);
-      if (node == nullptr)
-        throw triton::exceptions::Ast("Node builders - Not enough memory");
+      triton::ast::checkNode(node);
+
       return triton::api.recordAstNode(node);
     }
 
 
      AbstractNode* bvxnor(AbstractNode* expr1, AbstractNode* expr2) {
       AbstractNode* node = new(std::nothrow) BvxnorNode(expr1, expr2);
-      if (node == nullptr)
-        throw triton::exceptions::Ast("Node builders - Not enough memory");
+      triton::ast::checkNode(node);
+
       return triton::api.recordAstNode(node);
     }
 
 
     AbstractNode* bvxor(AbstractNode* expr1, AbstractNode* expr2) {
       AbstractNode* node = new(std::nothrow) BvxorNode(expr1, expr2);
-      if (node == nullptr)
-        throw triton::exceptions::Ast("Node builders - Not enough memory");
+      triton::ast::checkNode(node);
+
       return triton::api.recordAstNode(node);
     }
 
 
     AbstractNode* compound(std::vector<AbstractNode*> exprs) {
       AbstractNode* node = new(std::nothrow) CompoundNode(exprs);
-      if (node == nullptr)
-        throw triton::exceptions::Ast("Node builders - Not enough memory");
+      triton::ast::checkNode(node);
+
       return triton::api.recordAstNode(node);
     }
 
 
     AbstractNode* concat(AbstractNode* expr1, AbstractNode* expr2) {
       AbstractNode* node = new(std::nothrow) ConcatNode(expr1, expr2);
-      if (node == nullptr)
-        throw triton::exceptions::Ast("Node builders - Not enough memory");
+      triton::ast::checkNode(node);
+
       return triton::api.recordAstNode(node);
     }
 
 
     AbstractNode* concat(std::vector<AbstractNode*> exprs) {
       AbstractNode* node = new(std::nothrow) ConcatNode(exprs);
-      if (node == nullptr)
-        throw triton::exceptions::Ast("Node builders - Not enough memory");
+      triton::ast::checkNode(node);
+
       return triton::api.recordAstNode(node);
     }
 
 
     AbstractNode* concat(std::list<AbstractNode*> exprs) {
       AbstractNode* node = new(std::nothrow) ConcatNode(exprs);
-      if (node == nullptr)
-        throw triton::exceptions::Ast("Node builders - Not enough memory");
+      triton::ast::checkNode(node);
+
       return triton::api.recordAstNode(node);
     }
 
 
     AbstractNode* decimal(triton::uint512 value) {
       AbstractNode* node = new(std::nothrow) DecimalNode(value);
-      if (node == nullptr)
-        throw triton::exceptions::Ast("Node builders - Not enough memory");
+      triton::ast::checkNode(node);
+
       return triton::api.recordAstNode(node);
     }
 
 
     AbstractNode* declareFunction(std::string name, AbstractNode* bvDecl) {
       AbstractNode* node = new(std::nothrow) DeclareFunctionNode(name, bvDecl);
-      if (node == nullptr)
-        throw triton::exceptions::Ast("Node builders - Not enough memory");
+      triton::ast::checkNode(node);
+
       return triton::api.recordAstNode(node);
     }
 
 
     AbstractNode* distinct(AbstractNode* expr1, AbstractNode* expr2) {
       AbstractNode* node = new(std::nothrow) DistinctNode(expr1, expr2);
-      if (node == nullptr)
-        throw triton::exceptions::Ast("Node builders - Not enough memory");
+      triton::ast::checkNode(node);
+
       return triton::api.recordAstNode(node);
     }
 
 
     AbstractNode* equal(AbstractNode* expr1, AbstractNode* expr2) {
       AbstractNode* node = new(std::nothrow) EqualNode(expr1, expr2);
-      if (node == nullptr)
-        throw triton::exceptions::Ast("Node builders - Not enough memory");
+      triton::ast::checkNode(node);
+
       return triton::api.recordAstNode(node);
     }
 
 
     AbstractNode* extract(triton::uint32 high, triton::uint32 low, AbstractNode* expr) {
       AbstractNode* node = new(std::nothrow) ExtractNode(high, low, expr);
-      if (node == nullptr)
-        throw triton::exceptions::Ast("Node builders - Not enough memory");
+      triton::ast::checkNode(node);
+
       return triton::api.recordAstNode(node);
     }
 
 
     AbstractNode* ite(AbstractNode* ifExpr, AbstractNode* thenExpr, AbstractNode* elseExpr) {
       AbstractNode* node = new(std::nothrow) IteNode(ifExpr, thenExpr, elseExpr);
-      if (node == nullptr)
-        throw triton::exceptions::Ast("Node builders - Not enough memory");
+      triton::ast::checkNode(node);
+
       return triton::api.recordAstNode(node);
     }
 
 
     AbstractNode* land(AbstractNode* expr1, AbstractNode* expr2) {
       AbstractNode* node = new(std::nothrow) LandNode(expr1, expr2);
-      if (node == nullptr)
-        throw triton::exceptions::Ast("Node builders - Not enough memory");
+      triton::ast::checkNode(node);
+
       return triton::api.recordAstNode(node);
     }
 
 
     AbstractNode* let(std::string alias, AbstractNode* expr2, AbstractNode* expr3) {
       AbstractNode* node = new(std::nothrow) LetNode(alias, expr2, expr3);
-      if (node == nullptr)
-        throw triton::exceptions::Ast("Node builders - Not enough memory");
+      triton::ast::checkNode(node);
+
       return triton::api.recordAstNode(node);
     }
 
 
     AbstractNode* lnot(AbstractNode* expr) {
       AbstractNode* node = new(std::nothrow) LnotNode(expr);
-      if (node == nullptr)
-        throw triton::exceptions::Ast("Node builders - Not enough memory");
+      triton::ast::checkNode(node);
+
       return triton::api.recordAstNode(node);
     }
 
 
     AbstractNode* lor(AbstractNode* expr1, AbstractNode* expr2) {
       AbstractNode* node = new(std::nothrow) LorNode(expr1, expr2);
-      if (node == nullptr)
-        throw triton::exceptions::Ast("Node builders - Not enough memory");
+      triton::ast::checkNode(node);
+
       return triton::api.recordAstNode(node);
     }
 
 
     AbstractNode* reference(triton::usize value) {
       AbstractNode* node = new(std::nothrow) ReferenceNode(value);
-      if (node == nullptr)
-        throw triton::exceptions::Ast("Node builders - Not enough memory");
+      triton::ast::checkNode(node);
+
       return triton::api.recordAstNode(node);
     }
 
 
     AbstractNode* string(std::string value) {
       AbstractNode* node = new(std::nothrow) StringNode(value);
-      if (node == nullptr)
-        throw triton::exceptions::Ast("Node builders - Not enough memory");
+      triton::ast::checkNode(node);
+
       return triton::api.recordAstNode(node);
     }
 
 
     AbstractNode* sx(triton::uint32 sizeExt, AbstractNode* expr) {
       AbstractNode* node = new(std::nothrow) SxNode(sizeExt, expr);
-      if (node == nullptr)
-        throw triton::exceptions::Ast("Node builders - Not enough memory");
+      triton::ast::checkNode(node);
+
       return triton::api.recordAstNode(node);
     }
 
@@ -3549,18 +3558,19 @@ namespace triton {
     AbstractNode* variable(triton::engines::symbolic::SymbolicVariable& symVar) {
       AbstractNode* ret  = nullptr;
       AbstractNode* node = new(std::nothrow) VariableNode(symVar);
-      if (node == nullptr)
-        throw triton::exceptions::Ast("Node builders - Not enough memory");
+
+      triton::ast::checkNode(node);
       ret = triton::api.recordAstNode(node);
       triton::api.recordVariableAstNode(symVar.getName(), ret);
+
       return ret;
     }
 
 
     AbstractNode* zx(triton::uint32 sizeExt, AbstractNode* expr) {
       AbstractNode* node = new(std::nothrow) ZxNode(sizeExt, expr);
-      if (node == nullptr)
-        throw triton::exceptions::Ast("Node builders - Not enough memory");
+      triton::ast::checkNode(node);
+
       return triton::api.recordAstNode(node);
     }
 

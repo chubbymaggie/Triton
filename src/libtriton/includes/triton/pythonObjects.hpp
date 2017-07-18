@@ -6,11 +6,10 @@
 */
 
 
-#ifdef TRITON_PYTHON_BINDINGS
-
 #ifndef TRITON_PYOBJECT_H
 #define TRITON_PYOBJECT_H
 
+#include <triton/pythonBindings.hpp>
 #include <triton/ast.hpp>
 #include <triton/bitsVector.hpp>
 #include <triton/elf.hpp>
@@ -26,7 +25,6 @@
 #include <triton/instruction.hpp>
 #include <triton/memoryAccess.hpp>
 #include <triton/pathConstraint.hpp>
-#include <triton/pythonBindings.hpp>
 #include <triton/register.hpp>
 #include <triton/solverModel.hpp>
 #include <triton/symbolicExpression.hpp>
@@ -571,4 +569,3 @@ namespace triton {
 #define PySymbolicVariable_AsSymbolicVariable(v) (((triton::bindings::python::SymbolicVariable_Object*)(v))->symVar)
 
 #endif /* TRITON_PYOBJECT_H */
-#endif /* TRITON_PYTHON_BINDINGS */

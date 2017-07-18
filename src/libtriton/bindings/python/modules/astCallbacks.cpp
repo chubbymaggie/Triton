@@ -5,13 +5,11 @@
 **  This program is under the terms of the BSD License.
 */
 
-#ifdef TRITON_PYTHON_BINDINGS
-
+#include <triton/pythonObjects.hpp>
+#include <triton/pythonUtils.hpp>
 #include <triton/api.hpp>
 #include <triton/ast.hpp>
 #include <triton/exceptions.hpp>
-#include <triton/pythonObjects.hpp>
-#include <triton/pythonUtils.hpp>
 
 
 
@@ -222,7 +220,7 @@ a / b             | (bvudiv a b)
 a \| b            | (bvor a b)
 a & b             | (bvand a b)
 a ^ b             | (bvxor a b)
-a % b             | (bvsrem a b)
+a % b             | (bvurem a b)
 a << b            | (bvshl a b)
 a \>> b           | (bvlshr a b)
 ~a                | (bvnot a)
@@ -1513,6 +1511,4 @@ namespace triton {
     }; /* python namespace */
   }; /* bindings namespace */
 }; /* triton namespace */
-
-#endif /* TRITON_PYTHON_BINDINGS */
 

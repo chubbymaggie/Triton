@@ -5,13 +5,11 @@
 **  This program is under the terms of the BSD License.
 */
 
-#ifdef TRITON_PYTHON_BINDINGS
-
-#include <triton/ast.hpp>
-#include <triton/exceptions.hpp>
 #include <triton/pythonObjects.hpp>
 #include <triton/pythonUtils.hpp>
 #include <triton/pythonXFunctions.hpp>
+#include <triton/ast.hpp>
+#include <triton/exceptions.hpp>
 
 
 
@@ -44,6 +42,9 @@ This object is used to represent each AST node of an expression.
 
 \section AstNode_py_api Python API - Methods of the AstNode class
 <hr>
+
+- <b>bool equalTo(\ref py_AstNode_page)</b><br>
+Compares the current tree to another one.
 
 - <b>integer evaluate(void)</b><br>
 Evaluates the tree and returns its value.
@@ -94,7 +95,7 @@ a / b             | (bvudiv a b)
 a \| b            | (bvor a b)
 a & b             | (bvand a b)
 a ^ b             | (bvxor a b)
-a % b             | (bvsmod a b)
+a % b             | (bvurem a b)
 a << b            | (bvshl a b)
 a \>> b           | (bvlshr a b)
 ~a                | (bvnot a)
@@ -118,6 +119,22 @@ namespace triton {
       void AstNode_dealloc(PyObject* self) {
         std::cout << std::flush;
         Py_DECREF(self);
+      }
+
+
+      static PyObject* AstNode_equalTo(PyObject* self, PyObject* other) {
+        try {
+          if (other == nullptr || !PyAstNode_Check(other))
+            return PyErr_Format(PyExc_TypeError, "AstNode::equalTo(): Expected a AstNode as argument.");
+
+          if (PyAstNode_AsAstNode(self)->equalTo(PyAstNode_AsAstNode(other)))
+            Py_RETURN_TRUE;
+
+          Py_RETURN_FALSE;
+        }
+        catch (const triton::exceptions::Exception& e) {
+          return PyErr_Format(PyExc_TypeError, "%s", e.what());
+        }
       }
 
 
@@ -357,7 +374,7 @@ namespace triton {
         try {
           if (!PyAstNode_Check(self) || !PyAstNode_Check(other))
             return PyErr_Format(PyExc_TypeError, "AstNode::operatorRem(): Expected a AstNode as arguments.");
-          return PyAstNode(triton::ast::bvsrem(PyAstNode_AsAstNode(self), PyAstNode_AsAstNode(other)));
+          return PyAstNode(triton::ast::bvurem(PyAstNode_AsAstNode(self), PyAstNode_AsAstNode(other)));
         }
         catch (const triton::exceptions::Exception& e) {
           return PyErr_Format(PyExc_TypeError, "%s", e.what());
@@ -484,10 +501,8 @@ namespace triton {
         if (PyLong_Check(other) || PyInt_Check(other)) {
           triton::uint512 value = PyLong_AsUint512(other);
           triton::uint32 size   = PyAstNode_AsAstNode(self)->getBitvectorSize();
-          if (size) {
-            Py_DECREF(other);
+          if (size)
             other = PyAstNode(triton::ast::bv(value, size));
-          }
         }
 
         if (!PyAstNode_Check(other)) {
@@ -527,6 +542,7 @@ namespace triton {
 
       //! AstNode methods.
       PyMethodDef AstNode_callbacks[] = {
+        {"equalTo",           AstNode_equalTo,           METH_O,          ""},
         {"evaluate",          AstNode_evaluate,          METH_NOARGS,     ""},
         {"getBitvectorMask",  AstNode_getBitvectorMask,  METH_NOARGS,     ""},
         {"getBitvectorSize",  AstNode_getBitvectorSize,  METH_NOARGS,     ""},
@@ -657,5 +673,3 @@ namespace triton {
     }; /* python namespace */
   }; /* bindings namespace */
 }; /* triton namespace */
-
-#endif /* TRITON_PYTHON_BINDINGS */

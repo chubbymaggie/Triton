@@ -592,10 +592,16 @@ namespace triton {
 
         /* First we create a symbolic variable */
         symVar = this->newSymbolicVariable(triton::engines::symbolic::MEM, memAddr, symVarSize * BYTE_SIZE_BIT, symVarComment);
+
         /* Setup the concrete value to the symbolic variable */
         symVar->setConcreteValue(cv);
+
         /* Create the AST node */
         triton::ast::AbstractNode* symVarNode = triton::ast::variable(*symVar);
+
+        /* Record the aligned symbolic variable for a symbolic optimization */
+        if (this->modes->isModeEnabled(triton::modes::ALIGNED_MEMORY))
+          this->addAlignedMemory(memAddr, symVarSize, symVarNode);
 
         /*  Split expression in bytes */
         for (triton::sint32 index = symVarSize-1; index >= 0; index--) {
@@ -619,8 +625,6 @@ namespace triton {
 
           /* Add the new memory reference */
           this->addMemoryReference(memAddr+index, se->getId());
-          if (this->modes->isModeEnabled(triton::modes::ALIGNED_MEMORY))
-            removeAlignedMemory(memAddr+index, BYTE_SIZE);
         }
 
         return symVar;
@@ -645,7 +649,7 @@ namespace triton {
           /* Setup the concrete value to the symbolic variable */
           symVar->setConcreteValue(cv);
           /* Create the AST node */
-          triton::ast::AbstractNode* tmp = triton::ast::variable(*symVar);
+          triton::ast::AbstractNode* tmp = triton::ast::zx(reg.getParent().getBitSize() - symVarSize, triton::ast::variable(*symVar));
           /* Create the symbolic expression */
           SymbolicExpression* se = this->newSymbolicExpression(tmp, triton::engines::symbolic::REG);
           se->setOriginRegister(reg);
@@ -660,7 +664,7 @@ namespace triton {
           /* Setup the concrete value to the symbolic variable */
           symVar->setConcreteValue(cv);
           /* Create the AST node */
-          triton::ast::AbstractNode* tmp = triton::ast::variable(*symVar);
+          triton::ast::AbstractNode* tmp = triton::ast::zx(reg.getParent().getBitSize() - symVarSize, triton::ast::variable(*symVar));
           /* Set the AST node */
           tmp->setParent(expression->getAst()->getParents());
           expression->setAst(tmp);
